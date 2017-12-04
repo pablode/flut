@@ -1,6 +1,7 @@
 ### Project specific ###
 
 3rdparty/*
+build
 
 ### C++ ###
 # Prerequisites
