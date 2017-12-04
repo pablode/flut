@@ -1,0 +1,15 @@
+[submodule "3rdparty/glbinding"]
+    path = 3rdparty/glbinding
+    url = https://github.com/cginternals/glbinding
+[submodule "3rdparty/globjects"]
+    path = 3rdparty/globjects
+    url = https://github.com/cginternals/globjects
+[submodule "3rdparty/assimp"]
+    path = 3rdparty/assimp
+    url = https://github.com/assimp/assimp
+[submodule "3rdparty/SDL"]
+    path = 3rdparty/SDL
+    url = https://github.com/SDL-mirror/SDL
+[submodule "3rdparty/SDL_image"]
+    path = 3rdparty/SDL_image
+    url = https://github.com/SDL-mirror/SDL_image
