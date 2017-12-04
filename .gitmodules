@@ -13,3 +13,6 @@
 [submodule "3rdparty/SDL_image"]
     path = 3rdparty/SDL_image
     url = https://github.com/SDL-mirror/SDL_image
+[submodule "3rdparty/glm"]
+    path = 3rdparty/glm
+    url = https://github.com/g-truc/glm
