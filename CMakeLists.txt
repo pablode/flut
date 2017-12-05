@@ -9,17 +9,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED 14)
 set(RESOURCES_PATH ${CMAKE_SOURCE_DIR}/res
     CACHE PATH "Location of the resources folder.")
 
-# TODO: resolve dependencies on linux
+set(THIRDPARTY_DIR "${CMAKE_SOURCE_DIR}/3rdparty/BUILD")
+set(INCLUDE_DIR "${THIRDPARTY_DIR}/include")
+set(LIB_DIR "${THIRDPARTY_DIR}/lib")
+
+set(EIGEN_INCLUDE_DIR_HINTS "${INCLUDE_DIR}")
+set(GLBINDING_DIR_HINTS "${INCLUDE_DIR}" "${LIB_DIR}")
+set(SDL2_DIR_HINTS "${INCLUDE_DIR}/SDL" "${LIB_DIR}")
+
 find_package(OpenGL REQUIRED)
-include_directories("${CMAKE_SOURCE_DIR}/3rdparty/BUILD/include")
-link_directories("${CMAKE_SOURCE_DIR}/3rdparty/BUILD/lib")
+find_package(Eigen REQUIRED)
+find_package(glbinding REQUIRED)
+find_package(SDL2 REQUIRED)
 
 if (CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter -Wno-reorder")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
 elseif(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall /WX")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2")
 endif()
 

@@ -10,18 +10,25 @@ set(ANSIMPROJ_SRCS
   Renderer.hpp
 )
 
-add_executable(ansimproj ${ANSIMPROJ_SRCS})
+add_executable(ansimproj WIN32 ${ANSIMPROJ_SRCS})
 
 target_compile_definitions(
   ansimproj PRIVATE
   RESOURCES_PATH="${RESOURCES_PATH}"
 )
 
+target_link_libraries(
+  ansimproj
+  ${SDL2_LIBRARY}
+  ${SDL2MAIN_LIBRARY}
+  ${GLBINDING_LIBRARIES}
+)
+
 target_include_directories(
   ansimproj PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${SDL2_INCLUDE_DIR}
+  ${OPENGL_INCLUDE_DIR}
+  ${EIGEN_INCLUDE_DIR}
 )
 
-target_link_libraries(
-  ansimproj
-)
