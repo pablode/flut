@@ -7,7 +7,7 @@ ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int3
   }
 
   window_ = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width,
-    height, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL);
+    height, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
   if (!window_) {
     throw std::runtime_error(SDL_GetError());
   }
