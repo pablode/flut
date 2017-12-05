@@ -1,5 +1,13 @@
 set(ANSIMPROJ_SRCS
   main.cpp
+  core/Camera.cpp
+  core/Camera.hpp
+  core/Image.cpp
+  core/Image.hpp
+  core/Window.cpp
+  core/Window.hpp
+  Renderer.cpp
+  Renderer.hpp
 )
 
 add_executable(ansimproj ${ANSIMPROJ_SRCS})
