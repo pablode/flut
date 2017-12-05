@@ -1,7 +1,7 @@
 ### Project specific ###
 
-3rdparty/*
-build
+3rdparty/BUILD/*.pdb
+BUILD
 
 ### C++ ###
 # Prerequisites
