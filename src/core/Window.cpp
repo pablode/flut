@@ -1,5 +1,7 @@
 #include "Window.hpp"
 
+#include <stdexcept>
+
 ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int32_t height)
   : shouldClose_{false} {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {

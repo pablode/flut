@@ -1,4 +1,5 @@
 #include "Renderer.hpp"
+#include "core/Utils.hpp"
 
 #include <glbinding/Binding.h>
 #include <glbinding/ContextInfo.h>
@@ -11,7 +12,7 @@ ansimproj::Renderer::Renderer() {
   glbinding::Binding::initialize();
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
-  auto extensions = glbinding::ContextInfo::extensions();
+  const auto &extensions = glbinding::ContextInfo::extensions();
 
 #ifndef NDEBUG
   if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 3)) ||
@@ -52,6 +53,13 @@ ansimproj::Renderer::Renderer() {
   glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
+
+  ///
+  const auto& vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePhong.vert");
+  const auto& frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePhong.frag");
+  const auto shader = createShader(vert, frag);
+  std::cout << "Shader compiled: " << shader << std::endl;
+  deleteShader(shader);
 }
 
 ansimproj::Renderer::~Renderer() {}
@@ -96,6 +104,78 @@ void ansimproj::Renderer::glDebugOutput(GLenum source, GLenum type, GLuint id, G
   // clang-format on
 }
 
-void ansimproj::Renderer::render() {
+void ansimproj::Renderer::render() const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+GLuint ansimproj::Renderer::createShader(
+  const std::vector<char> &vertSource, const std::vector<char> &fragSource) const {
+  GLuint handle = glCreateProgram();
+  if (!handle) {
+    throw std::runtime_error("Unable to create shader program.");
+  }
+
+  GLuint vertHandle = glCreateShader(GL_VERTEX_SHADER);
+  const GLint vertSize = vertSource.size();
+  const char *vertShaderPtr = vertSource.data();
+  glShaderSource(vertHandle, 1, &vertShaderPtr, &vertSize);
+  glCompileShader(vertHandle);
+  GLint logLength;
+  GLboolean result = GL_FALSE;
+  glGetShaderiv(vertHandle, GL_COMPILE_STATUS, &result);
+  if (result == GL_FALSE) {
+    glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+      std::vector<char> errorMessage(logLength + 1);
+      glGetShaderInfoLog(vertHandle, logLength, nullptr, &errorMessage.front());
+      std::string message(errorMessage.begin(), errorMessage.end());
+      throw std::runtime_error("Unable to compile shader: " + message);
+    } else {
+      throw std::runtime_error("Unable to compile shader.");
+    }
+  }
+
+  GLuint fragHandle = glCreateShader(GL_FRAGMENT_SHADER);
+  const GLint fragSize = fragSource.size();
+  const char *fragShaderPtr = fragSource.data();
+  glShaderSource(fragHandle, 1, &fragShaderPtr, &fragSize);
+  glCompileShader(fragHandle);
+  glGetShaderiv(fragHandle, GL_COMPILE_STATUS, &result);
+  if (result == GL_FALSE) {
+    glGetShaderiv(fragHandle, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+      std::vector<char> errorMessage(logLength + 1);
+      glGetShaderInfoLog(fragHandle, logLength, nullptr, &errorMessage.front());
+      std::string message(errorMessage.begin(), errorMessage.end());
+      throw std::runtime_error("Unable to compile shader: " + message);
+    } else {
+      throw std::runtime_error("Unable to compile shader.");
+    }
+  }
+
+  glAttachShader(handle, vertHandle);
+  glAttachShader(handle, fragHandle);
+  glLinkProgram(handle);
+  glGetProgramiv(handle, GL_LINK_STATUS, &result);
+  if (result == GL_FALSE) {
+    glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+      std::vector<char> errorMessage(logLength + 1);
+      glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
+      std::string message(errorMessage.begin(), errorMessage.end());
+      throw std::runtime_error("Unable to link program: " + message);
+    } else {
+      throw std::runtime_error("Unable to link program.");
+    }
+  }
+
+  glDetachShader(handle, vertHandle);
+  glDeleteShader(vertHandle);
+  glDetachShader(handle, fragHandle);
+  glDeleteShader(fragHandle);
+  return handle;
+}
+
+void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
+  glDeleteProgram(handle);
 }

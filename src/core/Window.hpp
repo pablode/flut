@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SDL/SDL.h>
 #include <string>
+#include <SDL.h>
 
 namespace ansimproj {
   namespace core {
