@@ -93,7 +93,7 @@ void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   glBindVertexArray(vao_);
 
   // Use compute shader to modify test data
-  constexpr bool useCompute = false;
+  constexpr bool useCompute = true;
   if (useCompute) {
     const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
     constexpr auto workGroupSize = 10;

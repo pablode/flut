@@ -2,7 +2,7 @@
 
 layout (location = 0) uniform vec3 colorOverride;
 
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 10, local_size_y = 10) in;
 
 // We could use a struct, but that would need padding..
 layout (std430, binding = 0) buffer points {
@@ -29,7 +29,15 @@ void setCol(uint index, vec3 col) {
 
 // Entry point
 void main() {
-  for (uint i = 0; i < data.length() / 6; ++i) {
-    setCol(i, colorOverride);
+  uint totalPoints = (data.length() / 6);
+  uint pointsPerGroup = totalPoints / gl_NumWorkGroups.x;
+  uint startIndex = gl_WorkGroupID.x * pointsPerGroup;
+  uint endIndex = startIndex + pointsPerGroup;
+  float c = gl_WorkGroupID.x;
+  float groupWorkSize = 10.0;
+  float groupWorkTotal = totalPoints / groupWorkSize;
+  vec3 color = vec3(0.0, c / groupWorkTotal, 0.0);
+  for (uint i = startIndex; i < endIndex; ++i) {
+    setCol(i, color);
   }
 }
