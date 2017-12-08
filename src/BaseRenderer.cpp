@@ -1,4 +1,4 @@
-#include "Renderer.hpp"
+#include "BaseRenderer.hpp"
 #include "core/Utils.hpp"
 
 #include <glbinding/Binding.h>
@@ -8,7 +8,7 @@
 
 using namespace gl;
 
-ansimproj::Renderer::Renderer() {
+ansimproj::BaseRenderer::BaseRenderer() {
   glbinding::Binding::initialize();
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
@@ -88,9 +88,9 @@ ansimproj::Renderer::Renderer() {
   deleteShader(compShader);
 }
 
-ansimproj::Renderer::~Renderer() {}
+ansimproj::BaseRenderer::~BaseRenderer() {}
 
-void ansimproj::Renderer::glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity,
+void ansimproj::BaseRenderer::glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar *message, const void *userParam) {
   // clang-format off
   if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
@@ -130,11 +130,11 @@ void ansimproj::Renderer::glDebugOutput(GLenum source, GLenum type, GLuint id, G
   // clang-format on
 }
 
-void ansimproj::Renderer::render() const {
+void ansimproj::BaseRenderer::render() const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-GLuint ansimproj::Renderer::createVertFragShader(
+GLuint ansimproj::BaseRenderer::createVertFragShader(
   const std::vector<char> &vertSource, const std::vector<char> &fragSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -202,11 +202,12 @@ GLuint ansimproj::Renderer::createVertFragShader(
   return handle;
 }
 
-void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
+void ansimproj::BaseRenderer::deleteShader(const GLuint &handle) const {
   glDeleteProgram(handle);
 }
 
-::gl::GLuint ansimproj::Renderer::createComputeShader(const std::vector<char> &shaderSource) const {
+::gl::GLuint ansimproj::BaseRenderer::createComputeShader(
+  const std::vector<char> &shaderSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
     throw std::runtime_error("Unable to create shader program.");
@@ -252,7 +253,7 @@ void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
   return handle;
 }
 
-::gl::GLuint ansimproj::Renderer::createBuffer(const std::vector<float> data) const {
+::gl::GLuint ansimproj::BaseRenderer::createBuffer(const std::vector<float> data) const {
   GLuint handle;
   glCreateBuffers(1, &handle);
   if (!handle) {
@@ -263,6 +264,6 @@ void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
   return handle;
 }
 
-void ansimproj::Renderer::deleteBuffer(const GLuint &handle) const {
+void ansimproj::BaseRenderer::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }

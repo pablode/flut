@@ -1,13 +1,13 @@
+#include "BaseRenderer.hpp"
 #include "core/Window.hpp"
-#include "Renderer.hpp"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
 
 int main(int argc, char *argv[]) {
   ansimproj::core::Window window{"TestWindow", 800, 600};
-  ansimproj::Renderer renderer{};
+  ansimproj::BaseRenderer renderer{};
 
   while (!window.shouldClose()) {
     window.pollEvents();

@@ -5,12 +5,12 @@
 
 namespace ansimproj {
 
-  class Renderer {
+  class BaseRenderer {
 
   public:
-    Renderer();
+    BaseRenderer();
 
-    ~Renderer();
+    ~BaseRenderer();
 
   private:
     static void glDebugOutput(::gl::GLenum source, ::gl::GLenum type, ::gl::GLuint id,
