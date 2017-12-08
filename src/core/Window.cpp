@@ -96,6 +96,10 @@ std::int32_t ansimproj::core::Window::mouseY() const {
   return y;
 }
 
+bool ansimproj::core::Window::mouseDown() const {
+  return static_cast<bool>(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT));
+}
+
 void ansimproj::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
   resizeCallback_ = callback;
 }

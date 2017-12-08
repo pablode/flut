@@ -19,14 +19,14 @@ ansimproj::Renderer::Renderer()
   // clang-format off
   const std::vector<float> data = {
     //   position    |      color
-    1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-    1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-    1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
+     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f
   };
   // clang-format on
   exampleBuffer_ = createBuffer(data);

@@ -29,6 +29,8 @@ namespace ansimproj {
 
       std::int32_t mouseY() const;
 
+      bool mouseDown() const;
+
       void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
 
     private:
