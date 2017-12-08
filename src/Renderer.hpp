@@ -26,7 +26,11 @@ namespace ansimproj {
 
     ::gl::GLuint createComputeShader(const std::vector<char> &shaderSource) const;
 
+    ::gl::GLuint createBuffer(const std::vector<float> data) const;
+
     void deleteShader(const ::gl::GLuint &handle) const;
+
+    void deleteBuffer(const ::gl::GLuint &handle) const;
 
   private:
     ::gl::GLint versionMajor_;

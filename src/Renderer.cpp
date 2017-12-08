@@ -64,6 +64,24 @@ ansimproj::Renderer::Renderer() {
   const auto shader = createVertFragShader(vert, frag);
   std::cout << "Vert/Frag Shader compiled: " << shader << std::endl;
   deleteShader(shader);
+
+  // clang-format off
+  const std::vector<float> data = {
+    //   position    |      color
+    1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
+    1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
+  };
+  // clang-format on
+  const auto bufferHandle = createBuffer(data);
+  std::cout << "Uploaded buffer: " << bufferHandle << std::endl;
+  deleteBuffer(bufferHandle);
+
   const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/simpleMod.comp");
   const auto compShader = createComputeShader(comp);
   std::cout << "Compute Shader compiled: " << compShader << std::endl;
@@ -232,4 +250,19 @@ void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
   glDetachShader(handle, sourceHandle);
   glDeleteShader(sourceHandle);
   return handle;
+}
+
+::gl::GLuint ansimproj::Renderer::createBuffer(const std::vector<float> data) const {
+  GLuint handle;
+  glCreateBuffers(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create buffer.");
+  }
+  const auto size = data.size();
+  glNamedBufferData(handle, size * sizeof(char), data.data(), GL_STATIC_DRAW);
+  return handle;
+}
+
+void ansimproj::Renderer::deleteBuffer(const GLuint &handle) const {
+  glDeleteBuffers(1, &handle);
 }
