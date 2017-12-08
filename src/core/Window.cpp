@@ -39,6 +39,21 @@ void ansimproj::core::Window::pollEvents() {
     case SDL_QUIT:
       shouldClose_ = true;
       break;
+    case SDL_WINDOWEVENT: {
+      switch (event.window.event) {
+      case SDL_WINDOWEVENT_RESIZED:
+      case SDL_WINDOWEVENT_SIZE_CHANGED: {
+        const std::uint32_t width = static_cast<std::uint32_t>(event.window.data1);
+        const std::uint32_t height = static_cast<std::uint32_t>(event.window.data2);
+        if (resizeCallback_) {
+          resizeCallback_(width, height);
+        }
+      } break;
+      default:
+        break;
+      }
+      break;
+    }
     case SDL_MOUSEBUTTONDOWN: {
       // TODO
       break;
@@ -57,14 +72,18 @@ void ansimproj::core::Window::swap() {
   SDL_GL_SwapWindow(window_);
 }
 
-std::int32_t ansimproj::core::Window::width() {
+std::uint32_t ansimproj::core::Window::width() const {
   int width;
   SDL_GL_GetDrawableSize(window_, &width, nullptr);
-  return width;
+  return static_cast<std::uint32_t>(width);
 }
 
-std::int32_t ansimproj::core::Window::height() {
+std::uint32_t ansimproj::core::Window::height() const {
   int height;
   SDL_GL_GetDrawableSize(window_, nullptr, &height);
-  return height;
+  return static_cast<std::uint32_t>(height);
+}
+
+void ansimproj::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
+  resizeCallback_ = callback;
 }
