@@ -1,7 +1,7 @@
 set(ANSIMPROJ_SRCS
   main.cpp
-  BaseRenderer.cpp
-  BaseRenderer.hpp
+  core/BaseRenderer.cpp
+  core/BaseRenderer.hpp
   core/Camera.cpp
   core/Camera.hpp
   core/Image.cpp

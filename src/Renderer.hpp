@@ -1,9 +1,10 @@
 #pragma once
 
-#include "BaseRenderer.hpp"
+#include "core/BaseRenderer.hpp"
 
 namespace ansimproj {
-  class Renderer : public BaseRenderer {
+
+  class Renderer : public core::BaseRenderer {
 
   public:
     Renderer();
