@@ -9,6 +9,8 @@ set(ANSIMPROJ_SRCS
   core/Utils.hpp
   core/Window.cpp
   core/Window.hpp
+  Renderer.cpp
+  Renderer.hpp
 )
 
 add_executable(ansimproj WIN32 ${ANSIMPROJ_SRCS})

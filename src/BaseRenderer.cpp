@@ -1,5 +1,4 @@
 #include "BaseRenderer.hpp"
-#include "core/Utils.hpp"
 
 #include <glbinding/Binding.h>
 #include <glbinding/ContextInfo.h>
@@ -57,35 +56,6 @@ ansimproj::BaseRenderer::BaseRenderer() {
   glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
-
-  // Example: simple point rendering
-  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
-  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
-  const auto shader = createVertFragShader(vert, frag);
-  std::cout << "Vert/Frag Shader compiled: " << shader << std::endl;
-  deleteShader(shader);
-
-  // clang-format off
-  const std::vector<float> data = {
-    //   position    |      color
-    1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-    1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-    1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
-  };
-  // clang-format on
-  const auto bufferHandle = createBuffer(data);
-  std::cout << "Uploaded buffer: " << bufferHandle << std::endl;
-  deleteBuffer(bufferHandle);
-
-  const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/simpleMod.comp");
-  const auto compShader = createComputeShader(comp);
-  std::cout << "Compute Shader compiled: " << compShader << std::endl;
-  deleteShader(compShader);
 }
 
 ansimproj::BaseRenderer::~BaseRenderer() {}
@@ -128,10 +98,6 @@ void ansimproj::BaseRenderer::glDebugOutput(GLenum source, GLenum type, GLuint i
   } std::cout << std::endl;
   std::cout << std::endl;
   // clang-format on
-}
-
-void ansimproj::BaseRenderer::render() const {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 GLuint ansimproj::BaseRenderer::createVertFragShader(

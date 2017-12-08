@@ -1,5 +1,5 @@
-#include "BaseRenderer.hpp"
 #include "core/Window.hpp"
+#include "Renderer.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
   ansimproj::core::Window window{"TestWindow", 800, 600};
-  ansimproj::BaseRenderer renderer{};
+  ansimproj::Renderer renderer{};
 
   while (!window.shouldClose()) {
     window.pollEvents();

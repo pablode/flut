@@ -3,6 +3,8 @@
 #include <glbinding/gl/gl.h>
 #include <vector>
 
+#include "core/Utils.hpp"
+
 namespace ansimproj {
 
   class BaseRenderer {
@@ -10,7 +12,7 @@ namespace ansimproj {
   public:
     BaseRenderer();
 
-    ~BaseRenderer();
+    virtual ~BaseRenderer();
 
   private:
     static void glDebugOutput(::gl::GLenum source, ::gl::GLenum type, ::gl::GLuint id,
@@ -18,9 +20,9 @@ namespace ansimproj {
       const void *userParam);
 
   public:
-    void render() const;
+    virtual void render() const = 0;
 
-  private:
+  protected:
     ::gl::GLuint createVertFragShader(
       const std::vector<char> &vertSource, const std::vector<char> &fragSource) const;
 
