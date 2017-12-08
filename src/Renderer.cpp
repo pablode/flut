@@ -47,19 +47,27 @@ ansimproj::Renderer::Renderer() {
   }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 2)) ||
         extensions.count(GLextension::GL_ARB_texture_storage))) {
-    throw std::runtime_error("OpenGL version 4.5 or ARB_texture_storage extension required.");
+    throw std::runtime_error("OpenGL version 4.2 or ARB_texture_storage extension required.");
+  }
+  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
+        extensions.count(GLextension::GL_ARB_compute_shader))) {
+    throw std::runtime_error("OpenGL version 4.3 or ARB_compute_shader extension required.");
   }
 
   glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 
-  ///
-  const auto& vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePhong.vert");
-  const auto& frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePhong.frag");
-  const auto shader = createShader(vert, frag);
-  std::cout << "Shader compiled: " << shader << std::endl;
+  // Example: simple point rendering
+  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
+  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
+  const auto shader = createVertFragShader(vert, frag);
+  std::cout << "Vert/Frag Shader compiled: " << shader << std::endl;
   deleteShader(shader);
+  const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/simpleMod.comp");
+  const auto compShader = createComputeShader(comp);
+  std::cout << "Compute Shader compiled: " << compShader << std::endl;
+  deleteShader(compShader);
 }
 
 ansimproj::Renderer::~Renderer() {}
@@ -108,7 +116,7 @@ void ansimproj::Renderer::render() const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-GLuint ansimproj::Renderer::createShader(
+GLuint ansimproj::Renderer::createVertFragShader(
   const std::vector<char> &vertSource, const std::vector<char> &fragSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -178,4 +186,50 @@ GLuint ansimproj::Renderer::createShader(
 
 void ansimproj::Renderer::deleteShader(const GLuint &handle) const {
   glDeleteProgram(handle);
+}
+
+::gl::GLuint ansimproj::Renderer::createComputeShader(const std::vector<char> &shaderSource) const {
+  GLuint handle = glCreateProgram();
+  if (!handle) {
+    throw std::runtime_error("Unable to create shader program.");
+  }
+
+  GLuint sourceHandle = glCreateShader(GL_COMPUTE_SHADER);
+  const GLint sourceSize = shaderSource.size();
+  const char *sourceShaderPtr = shaderSource.data();
+  glShaderSource(sourceHandle, 1, &sourceShaderPtr, &sourceSize);
+  glCompileShader(sourceHandle);
+  GLint logLength;
+  GLboolean result = GL_FALSE;
+  glGetShaderiv(sourceHandle, GL_COMPILE_STATUS, &result);
+  if (result == GL_FALSE) {
+    glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+      std::vector<char> errorMessage(logLength + 1);
+      glGetShaderInfoLog(sourceHandle, logLength, nullptr, &errorMessage.front());
+      std::string message(errorMessage.begin(), errorMessage.end());
+      throw std::runtime_error("Unable to compile shader: " + message);
+    } else {
+      throw std::runtime_error("Unable to compile shader.");
+    }
+  }
+
+  glAttachShader(handle, sourceHandle);
+  glLinkProgram(handle);
+  glGetProgramiv(handle, GL_LINK_STATUS, &result);
+  if (result == GL_FALSE) {
+    glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
+    if (logLength > 0) {
+      std::vector<char> errorMessage(logLength + 1);
+      glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
+      std::string message(errorMessage.begin(), errorMessage.end());
+      throw std::runtime_error("Unable to link program: " + message);
+    } else {
+      throw std::runtime_error("Unable to link program.");
+    }
+  }
+
+  glDetachShader(handle, sourceHandle);
+  glDeleteShader(sourceHandle);
+  return handle;
 }

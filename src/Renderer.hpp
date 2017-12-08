@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <glbinding/gl/gl.h>
+#include <vector>
 
 namespace ansimproj {
 
@@ -21,7 +21,10 @@ namespace ansimproj {
     void render() const;
 
   private:
-    ::gl::GLuint createShader(const std::vector<char> &vertSource, const std::vector<char> &fragSource) const;
+    ::gl::GLuint createVertFragShader(
+      const std::vector<char> &vertSource, const std::vector<char> &fragSource) const;
+
+    ::gl::GLuint createComputeShader(const std::vector<char> &shaderSource) const;
 
     void deleteShader(const ::gl::GLuint &handle) const;
 
