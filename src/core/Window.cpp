@@ -84,6 +84,18 @@ std::uint32_t ansimproj::core::Window::height() const {
   return static_cast<std::uint32_t>(height);
 }
 
+std::int32_t ansimproj::core::Window::mouseX() const {
+  int x;
+  SDL_GetMouseState(&x, nullptr);
+  return x;
+}
+
+std::int32_t ansimproj::core::Window::mouseY() const {
+  int y;
+  SDL_GetMouseState(nullptr, &y);
+  return y;
+}
+
 void ansimproj::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
   resizeCallback_ = callback;
 }

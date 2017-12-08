@@ -25,6 +25,10 @@ namespace ansimproj {
 
       std::uint32_t height() const;
 
+      std::int32_t mouseX() const;
+
+      std::int32_t mouseY() const;
+
       void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
 
     private:
