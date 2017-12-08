@@ -226,7 +226,7 @@ void ansimproj::core::BaseRenderer::deleteShader(const GLuint &handle) const {
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
-  glNamedBufferData(handle, size * sizeof(char), data.data(), GL_STATIC_DRAW);
+  glNamedBufferData(handle, size * sizeof(float), data.data(), GL_STATIC_DRAW);
   return handle;
 }
 

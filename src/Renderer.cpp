@@ -34,6 +34,8 @@ ansimproj::Renderer::Renderer()
 
   vao_ = createVAO(exampleBuffer_);
   std::cout << "VAO created: " << vao_ << std::endl;
+
+  glPointSize(10.0f);
 }
 
 ansimproj::Renderer::~Renderer() {
@@ -71,4 +73,8 @@ void ansimproj::Renderer::deleteVAO(GLuint handle) {
 
 void ansimproj::Renderer::render() const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glBindVertexArray(vao_);
+  glUseProgram(renderProgram_);
+  glDrawArrays(GL_POINTS, 0, 6);
 }
