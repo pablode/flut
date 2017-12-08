@@ -17,18 +17,31 @@ ansimproj::Renderer::Renderer()
   std::cout << "Vert/Frag Shader compiled: " << renderProgram_ << std::endl;
 
   // clang-format off
-  const std::vector<float> data = {
-    //   position    |      color
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f
-  };
+  std::vector<float> data;
+  const std::uint64_t dataSize = PARTICLE_COUNT * 6;
+  data.reserve(dataSize);
+  const std::uint64_t AXIS_COUNT = static_cast<std::uint64_t >(std::cbrt(PARTICLE_COUNT));
+  assert((std::cbrt(PARTICLE_COUNT) - AXIS_COUNT) < 0.00001);
+  for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
+    for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
+      for (std::uint64_t z = 0; z < AXIS_COUNT; ++z) {
+        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
+        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
+        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
+        const float colX = static_cast<float>(x) / AXIS_COUNT;
+        const float colY = static_cast<float>(y) / AXIS_COUNT;
+        const float colZ = static_cast<float>(z) / AXIS_COUNT;
+        data.push_back(valX);
+        data.push_back(valY);
+        data.push_back(valZ);
+        data.push_back(colX);
+        data.push_back(colY);
+        data.push_back(colZ);
+      }
+    }
+  }
   // clang-format on
+
   testBuffer_ = createBuffer(data, true);
   std::cout << "Uploaded buffer: " << testBuffer_ << std::endl;
 
@@ -39,7 +52,7 @@ ansimproj::Renderer::Renderer()
   vao_ = createVAO(testBuffer_);
   std::cout << "VAO created: " << vao_ << std::endl;
 
-  glPointSize(10.0f);
+  glPointSize(5.0f);
 }
 
 ansimproj::Renderer::~Renderer() {
@@ -80,14 +93,16 @@ void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   glBindVertexArray(vao_);
 
   // Use compute shader to modify test data
-  const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
-  constexpr auto workGroupSize = 16;
-  constexpr auto numParticles = 1000;
-  glUseProgram(computeProgram_);
-  glProgramUniform3f(computeProgram_, 0, color.x(), color.y(), color.z());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, testBuffer_);
-  glDispatchCompute(numParticles / workGroupSize, 1, 1);
-  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  constexpr bool useCompute = false;
+  if (useCompute) {
+    const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
+    constexpr auto workGroupSize = 10;
+    glUseProgram(computeProgram_);
+    glProgramUniform3f(computeProgram_, 0, color.x(), color.y(), color.z());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, testBuffer_);
+    glDispatchCompute(PARTICLE_COUNT / workGroupSize, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  }
 
   // Simple vert/frag rendering program
   glUseProgram(renderProgram_);
@@ -98,7 +113,7 @@ void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   const Eigen::Matrix4f mvp = projection * view;
   glProgramUniformMatrix4fv(renderProgram_, mvpLoc, 1, GL_FALSE, mvp.data());
   glProgramUniformMatrix4fv(renderProgram_, mvLoc, 1, GL_FALSE, view.data());
-  glDrawArrays(GL_POINTS, 0, 8);
+  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 }
 
 void ansimproj::Renderer::resize(std::uint32_t width, std::uint32_t height) {

@@ -58,7 +58,7 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
       "OpenGL version 4.3 or ARB_explicit_uniform_location extension required.");
   }
 
-  glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 }

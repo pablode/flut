@@ -6,6 +6,9 @@ namespace ansimproj {
 
   class Renderer : public core::BaseRenderer {
 
+  private:
+    constexpr static std::uint64_t PARTICLE_COUNT = 1000;
+
   public:
     Renderer();
 
