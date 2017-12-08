@@ -29,14 +29,14 @@ ansimproj::Renderer::Renderer()
     -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f
   };
   // clang-format on
-  exampleBuffer_ = createBuffer(data);
-  std::cout << "Uploaded buffer: " << exampleBuffer_ << std::endl;
+  testBuffer_ = createBuffer(data, true);
+  std::cout << "Uploaded buffer: " << testBuffer_ << std::endl;
 
   const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/simpleMod.comp");
   computeProgram_ = createComputeShader(comp);
   std::cout << "Compute Shader compiled: " << computeProgram_ << std::endl;
 
-  vao_ = createVAO(exampleBuffer_);
+  vao_ = createVAO(testBuffer_);
   std::cout << "VAO created: " << vao_ << std::endl;
 
   glPointSize(10.0f);
@@ -45,7 +45,7 @@ ansimproj::Renderer::Renderer()
 ansimproj::Renderer::~Renderer() {
   deleteShader(renderProgram_);
   deleteShader(computeProgram_);
-  deleteBuffer(exampleBuffer_);
+  deleteBuffer(testBuffer_);
   deleteVAO(vao_);
 }
 
@@ -77,10 +77,20 @@ void ansimproj::Renderer::deleteVAO(GLuint handle) {
 
 void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   glBindVertexArray(vao_);
-  glUseProgram(renderProgram_);
 
+  // Use compute shader to modify test data
+  const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
+  constexpr auto workGroupSize = 16;
+  constexpr auto numParticles = 1000;
+  glUseProgram(computeProgram_);
+  glProgramUniform3f(computeProgram_, 0, color.x(), color.y(), color.z());
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, testBuffer_);
+  glDispatchCompute(numParticles / workGroupSize, 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+  // Simple vert/frag rendering program
+  glUseProgram(renderProgram_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
   constexpr GLuint mvpLoc = 0;

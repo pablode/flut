@@ -23,7 +23,7 @@ namespace ansimproj {
   private:
     ::gl::GLuint renderProgram_;
     ::gl::GLuint computeProgram_;
-    ::gl::GLuint exampleBuffer_;
+    ::gl::GLuint testBuffer_;
     ::gl::GLuint vao_;
   };
 }
