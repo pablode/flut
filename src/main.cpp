@@ -9,6 +9,10 @@ int main(int argc, char *argv[]) {
   ansimproj::core::Window window{"TestWindow", 800, 600};
   ansimproj::Renderer renderer{};
 
+  window.resize([&](std::uint32_t width, std::uint32_t height) {
+    renderer.resize(width, height);
+  });
+  renderer.resize(window.width(), window.height());
   while (!window.shouldClose()) {
     window.pollEvents();
     renderer.render();

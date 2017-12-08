@@ -52,8 +52,13 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
         extensions.count(GLextension::GL_ARB_compute_shader))) {
     throw std::runtime_error("OpenGL version 4.3 or ARB_compute_shader extension required.");
   }
+  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
+        extensions.count(GLextension::GL_ARB_explicit_uniform_location))) {
+    throw std::runtime_error(
+      "OpenGL version 4.3 or ARB_explicit_uniform_location extension required.");
+  }
 
-  glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+  glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 }

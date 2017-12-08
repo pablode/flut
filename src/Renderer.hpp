@@ -13,6 +13,8 @@ namespace ansimproj {
 
     void render() const override;
 
+    void resize(std::uint32_t width, std::uint32_t height);
+
   private:
     ::gl::GLuint createVAO(const ::gl::GLuint &vbo) const;
 

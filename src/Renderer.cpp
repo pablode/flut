@@ -1,6 +1,10 @@
 #include "Renderer.hpp"
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <iostream>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 using namespace gl;
 
@@ -76,5 +80,23 @@ void ansimproj::Renderer::render() const {
 
   glBindVertexArray(vao_);
   glUseProgram(renderProgram_);
-  glDrawArrays(GL_POINTS, 0, 6);
+
+  constexpr float angle = (45.0f * 180.f) / static_cast<float>(M_PI);
+  const Eigen::Translation<GLfloat, 3> translation{-0.5f, -0.5f, 5.0f};
+  const Eigen::AngleAxis<GLfloat> rotationX{angle, Eigen::Vector3f::UnitX()};
+  const Eigen::AngleAxis<GLfloat> rotationY{angle, Eigen::Vector3f::UnitY()};
+  const Eigen::AngleAxis<GLfloat> rotationZ{angle, Eigen::Vector3f::UnitZ()};
+  const Eigen::Transform<GLfloat, 3, Eigen::Affine> mv{translation};
+  const Eigen::Matrix<GLfloat, 4, 4> p = Eigen::Matrix<GLfloat, 4, 4>::Identity();
+  constexpr GLuint mvpLoc = 0;
+  constexpr GLuint mvLoc = 1;
+  const Eigen::Matrix4f mvp = mv * p;
+  glProgramUniformMatrix4fv(renderProgram_, mvpLoc, 1, GL_TRUE, mvp.data());
+  glProgramUniformMatrix4fv(renderProgram_, mvLoc, 1, GL_TRUE, mv.data());
+
+  glDrawArrays(GL_POINTS, 0, 8);
+}
+
+void ansimproj::Renderer::resize(std::uint32_t width, std::uint32_t height) {
+  glViewport(0, 0, width, height);
 }
