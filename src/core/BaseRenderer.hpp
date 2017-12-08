@@ -3,6 +3,7 @@
 #include <glbinding/gl/gl.h>
 #include <vector>
 
+#include "core/Camera.hpp"
 #include "core/Utils.hpp"
 
 namespace ansimproj {
@@ -21,7 +22,7 @@ namespace ansimproj {
         const void *userParam);
 
     public:
-      virtual void render() const = 0;
+      virtual void render(const Camera &camera) const = 0;
 
     protected:
       ::gl::GLuint createVertFragShader(

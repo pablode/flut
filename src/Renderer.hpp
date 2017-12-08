@@ -11,7 +11,7 @@ namespace ansimproj {
 
     ~Renderer();
 
-    void render() const override;
+    void render(const core::Camera &camera) const override;
 
     void resize(std::uint32_t width, std::uint32_t height);
 

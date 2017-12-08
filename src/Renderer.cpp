@@ -75,25 +75,19 @@ void ansimproj::Renderer::deleteVAO(GLuint handle) {
   glDeleteVertexArrays(1, &handle);
 }
 
-void ansimproj::Renderer::render() const {
+void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glBindVertexArray(vao_);
   glUseProgram(renderProgram_);
 
-  constexpr float angle = (45.0f * 180.f) / static_cast<float>(M_PI);
-  const Eigen::Translation<GLfloat, 3> translation{-0.5f, -0.5f, 5.0f};
-  const Eigen::AngleAxis<GLfloat> rotationX{angle, Eigen::Vector3f::UnitX()};
-  const Eigen::AngleAxis<GLfloat> rotationY{angle, Eigen::Vector3f::UnitY()};
-  const Eigen::AngleAxis<GLfloat> rotationZ{angle, Eigen::Vector3f::UnitZ()};
-  const Eigen::Transform<GLfloat, 3, Eigen::Affine> mv{translation};
-  const Eigen::Matrix<GLfloat, 4, 4> p = Eigen::Matrix<GLfloat, 4, 4>::Identity();
+  const auto &view = camera.view();
+  const auto &projection = camera.projection();
   constexpr GLuint mvpLoc = 0;
   constexpr GLuint mvLoc = 1;
-  const Eigen::Matrix4f mvp = mv * p;
-  glProgramUniformMatrix4fv(renderProgram_, mvpLoc, 1, GL_TRUE, mvp.data());
-  glProgramUniformMatrix4fv(renderProgram_, mvLoc, 1, GL_TRUE, mv.data());
-
+  const Eigen::Matrix4f mvp = projection * view;
+  glProgramUniformMatrix4fv(renderProgram_, mvpLoc, 1, GL_FALSE, mvp.data());
+  glProgramUniformMatrix4fv(renderProgram_, mvLoc, 1, GL_FALSE, view.data());
   glDrawArrays(GL_POINTS, 0, 8);
 }
 
