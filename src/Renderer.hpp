@@ -27,6 +27,7 @@ namespace ansimproj {
     ::gl::GLuint renderProgram_;
     ::gl::GLuint computeProgram_;
     ::gl::GLuint testBuffer_;
+    ::gl::GLuint test3dTex_;
     ::gl::GLuint vao_;
   };
 }

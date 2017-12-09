@@ -48,6 +48,10 @@ ansimproj::Renderer::Renderer()
   vao_ = createVAO(testBuffer_);
   std::cout << "VAO created: " << vao_ << std::endl;
 
+  std::vector<float> data2;
+  data2.resize(10 * 10 * 10 * 4);
+  test3dTex_ = create3DTexture(10, 10, 10, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, data2);
+
   glPointSize(5.0f);
 }
 
@@ -56,6 +60,7 @@ ansimproj::Renderer::~Renderer() {
   deleteShader(computeProgram_);
   deleteBuffer(testBuffer_);
   deleteVAO(vao_);
+  deleteTexture(test3dTex_);
 }
 
 GLuint ansimproj::Renderer::createVAO(const GLuint &vbo) const {

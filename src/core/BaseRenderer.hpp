@@ -30,11 +30,17 @@ namespace ansimproj {
 
       ::gl::GLuint createComputeShader(const std::vector<char> &shaderSource) const;
 
-      ::gl::GLuint createBuffer(const std::vector<float> data, bool dynamic) const;
+      ::gl::GLuint createBuffer(const std::vector<float> &data, bool dynamic) const;
+
+      ::gl::GLuint create3DTexture(std::uint32_t width, std::uint32_t height, std::uint32_t depth,
+        ::gl::GLenum internalFormat, ::gl::GLenum format, gl::GLenum type,
+        const std::vector<float> &data) const;
 
       void deleteShader(const ::gl::GLuint &handle) const;
 
       void deleteBuffer(const ::gl::GLuint &handle) const;
+
+      void deleteTexture(const ::gl::GLuint &handle) const;
 
     private:
       ::gl::GLint versionMajor_;
