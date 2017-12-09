@@ -3,8 +3,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <iostream>
-#define _USE_MATH_DEFINES
-#include <math.h>
 
 using namespace gl;
 
@@ -16,11 +14,10 @@ ansimproj::Renderer::Renderer()
   renderProgram_ = createVertFragShader(vert, frag);
   std::cout << "Vert/Frag Shader compiled: " << renderProgram_ << std::endl;
 
-  // clang-format off
   std::vector<float> data;
   const std::uint64_t dataSize = PARTICLE_COUNT * 6;
   data.reserve(dataSize);
-  const std::uint64_t AXIS_COUNT = static_cast<std::uint64_t >(std::cbrt(PARTICLE_COUNT));
+  const std::uint64_t AXIS_COUNT = static_cast<std::uint64_t>(std::cbrt(PARTICLE_COUNT));
   assert((std::cbrt(PARTICLE_COUNT) - AXIS_COUNT) < 0.00001);
   for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
     for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
@@ -40,7 +37,6 @@ ansimproj::Renderer::Renderer()
       }
     }
   }
-  // clang-format on
 
   testBuffer_ = createBuffer(data, true);
   std::cout << "Uploaded buffer: " << testBuffer_ << std::endl;
@@ -93,7 +89,7 @@ void ansimproj::Renderer::render(const ansimproj::core::Camera &camera) const {
   glBindVertexArray(vao_);
 
   // Use compute shader to modify test data
-  constexpr bool useCompute = true;
+  constexpr bool useCompute = false;
   if (useCompute) {
     const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
     constexpr auto workGroupSize = 10;

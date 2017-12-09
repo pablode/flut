@@ -4,8 +4,6 @@ set(ANSIMPROJ_SRCS
   core/BaseRenderer.hpp
   core/Camera.cpp
   core/Camera.hpp
-  core/Image.cpp
-  core/Image.hpp
   core/Utils.hpp
   core/Window.cpp
   core/Window.hpp

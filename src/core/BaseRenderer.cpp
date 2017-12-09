@@ -225,7 +225,7 @@ GLuint ansimproj::core::BaseRenderer::createComputeShader(
 }
 
 GLuint ansimproj::core::BaseRenderer::createBuffer(
-  const std::vector<float> data, bool dynamic) const {
+  const std::vector<float> &data, bool dynamic) const {
   GLuint handle;
   glCreateBuffers(1, &handle);
   if (!handle) {
