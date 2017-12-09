@@ -1,0 +1,19 @@
+#version 430 core
+
+/// Pipeline stage 4.
+/// This shader calculates the new position from the
+/// old position using the new velocity texture and
+/// an explicit Euler integration.
+///   Input: Position (1), Velocity (2)
+///   Output: Position (2)
+
+layout (local_size_x = 10, local_size_y = 10) in;
+
+// Remember that there is no rgb* because of padding issues.
+// We might be able to use the alpha channel somehow...
+layout (location = 0, binding = 0, rgba32f) readonly uniform image3D position1;
+layout (location = 1, binding = 1, rgba32f) readonly uniform image3D velocity2;
+
+void main() {
+  // TODO
+}
