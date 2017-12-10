@@ -241,6 +241,25 @@ void ansimproj::core::BaseRenderer::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }
 
+GLuint ansimproj::core::BaseRenderer::create1DTexture(std::uint32_t width, GLenum internalFormat,
+  GLenum format, GLenum type, const std::vector<float> &data) const {
+  GLuint handle;
+  glCreateTextures(GL_TEXTURE_1D, 1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to 1D texture.");
+  }
+  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTextureParameteri(handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTextureParameteri(handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  constexpr GLuint levels = 1;
+  glTextureStorage1D(handle, levels, internalFormat, width);
+  constexpr GLuint level = 0;
+  constexpr GLuint offsetX = 0;
+  glTextureSubImage1D(handle, level, offsetX, width, format, type, data.data());
+  return handle;
+}
+
 GLuint ansimproj::core::BaseRenderer::create3DTexture(std::uint32_t width, std::uint32_t height,
   std::uint32_t depth, GLenum internalFormat, GLenum format, GLenum type,
   const std::vector<float> &data) const {

@@ -32,6 +32,9 @@ namespace ansimproj {
 
       ::gl::GLuint createBuffer(const std::vector<float> &data, bool dynamic) const;
 
+      ::gl::GLuint create1DTexture(std::uint32_t width, ::gl::GLenum internalFormat,
+        ::gl::GLenum format, ::gl::GLenum type, const std::vector<float> &data) const;
+
       ::gl::GLuint create3DTexture(std::uint32_t width, std::uint32_t height, std::uint32_t depth,
         ::gl::GLenum internalFormat, ::gl::GLenum format, gl::GLenum type,
         const std::vector<float> &data) const;
