@@ -11,9 +11,28 @@ layout (local_size_x = 10, local_size_y = 10) in;
 
 // Remember that there is no rgb* because of padding issues.
 // We might be able to use the alpha channel somehow...
-layout (location = 0, binding = 0, rgba32f) readonly uniform image3D position1;
-layout (location = 1, binding = 1, rgba32f) readonly uniform image3D velocity2;
+layout (location = 0, binding = 0, rgba32f) readonly uniform image1D position1;
+layout (location = 1, binding = 1, rgba32f) readonly uniform image1D velocity2;
+layout (location = 2, binding = 2, rgba32f) writeonly uniform image1D position2;
+
+void integrate(int particle, float dt) {
+  vec4 oldPos = imageLoad(position1, particle);
+  vec4 newVelo = imageLoad(velocity2, particle);
+  vec4 newPos = oldPos + newVelo * dt;
+  imageStore(position2, particle, newPos);
+}
+
+void euler(int particle, float y, float num, float step) {
+  for (float x = 0; x <= num; x += step) {
+      integrate(particle, x);
+  }
+}
 
 void main() {
-  // TODO
+  int particlesPerGroup = imageSize(position1) / int(gl_NumWorkGroups.x);
+  int startParticle = int(gl_WorkGroupID.x) * particlesPerGroup;
+  int endParticle = startParticle + particlesPerGroup;
+  for (int p = startParticle; p < endParticle; ++p) {
+    euler(p, 0.0, 10.0, 0.1);
+  }
 }
