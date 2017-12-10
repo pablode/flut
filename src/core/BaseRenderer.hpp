@@ -22,7 +22,7 @@ namespace ansimproj {
         const void *userParam);
 
     public:
-      virtual void render(const Camera &camera) const = 0;
+      virtual void render(const Camera &camera, float dt) const = 0;
 
     protected:
       ::gl::GLuint createVertFragShader(

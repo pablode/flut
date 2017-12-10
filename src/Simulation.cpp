@@ -9,14 +9,10 @@ using namespace gl;
 ansimproj::Simulation::Simulation()
   : BaseRenderer() {
 
-  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
-  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
-  renderProgram_ = createVertFragShader(vert, frag);
-  std::cout << "Vert/Frag Shader compiled: " << renderProgram_ << std::endl;
-
-  std::vector<float> data;
+  // Position 1 & 2 SSBO (pos+col)
+  std::vector<float> positionData;
   const std::uint64_t dataSize = PARTICLE_COUNT * 6;
-  data.reserve(dataSize);
+  positionData.reserve(dataSize);
   const std::uint64_t AXIS_COUNT = static_cast<std::uint64_t>(std::cbrt(PARTICLE_COUNT));
   assert((std::cbrt(PARTICLE_COUNT) - AXIS_COUNT) < 0.00001);
   for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
@@ -28,55 +24,79 @@ ansimproj::Simulation::Simulation()
         const float colX = static_cast<float>(x) / AXIS_COUNT;
         const float colY = static_cast<float>(y) / AXIS_COUNT;
         const float colZ = static_cast<float>(z) / AXIS_COUNT;
-        data.push_back(valX);
-        data.push_back(valY);
-        data.push_back(valZ);
-        data.push_back(colX);
-        data.push_back(colY);
-        data.push_back(colZ);
+        positionData.push_back(valX);
+        positionData.push_back(valY);
+        positionData.push_back(valZ);
+        positionData.push_back(colX);
+        positionData.push_back(colY);
+        positionData.push_back(colZ);
       }
     }
   }
+  position1_ = createBuffer(positionData, true);
+  position2_ = createBuffer(positionData, true);
 
-  testBuffer_ = createBuffer(data, true);
-  std::cout << "Uploaded buffer: " << testBuffer_ << std::endl;
+  // Velocity SSBO
+  std::vector<float> velocityData;
+  velocityData.reserve(PARTICLE_COUNT * 3);
+  for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
+    for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
+      for (std::uint64_t z = 0; z < AXIS_COUNT; ++z) {
+        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
+        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
+        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
+        velocityData.push_back(0.01f * valX);
+        velocityData.push_back(0.01f * valY);
+        velocityData.push_back(0.01f * valZ);
+      }
+    }
+  }
+  velocity2_ = createBuffer(velocityData, true);
+  std::cout << "Uploaded buffers: " << position1_ << ", " << position2_ << ", " << velocity2_
+            << std::endl;
 
+  // Position Update Compute Shader
   const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
-  computeProgram_ = createComputeShader(comp);
-  std::cout << "Compute Shader compiled: " << computeProgram_ << std::endl;
+  positionUpdateProgram_ = createComputeShader(comp);
+  std::cout << "Position Update Shader compiled: " << positionUpdateProgram_ << std::endl;
 
-  vao_ = createVAO(testBuffer_);
+  // Render shader & VAO
+  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
+  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
+  renderProgram_ = createVertFragShader(vert, frag);
+  std::cout << "Render Shader compiled: " << renderProgram_ << std::endl;
+  vao_ = createVAO(position1_);
   std::cout << "VAO created: " << vao_ << std::endl;
-
-  std::vector<float> data2;
-  data2.resize(10 * 10 * 10 * 4);
-  test3dTex_ = create3DTexture(10, 10, 10, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, data2);
 
   glPointSize(5.0f);
 }
 
 ansimproj::Simulation::~Simulation() {
   deleteShader(renderProgram_);
-  deleteShader(computeProgram_);
-  deleteBuffer(testBuffer_);
+  deleteShader(positionUpdateProgram_);
+  deleteBuffer(position1_);
+  deleteBuffer(position2_);
+  deleteBuffer(velocity2_);
   deleteVAO(vao_);
-  deleteTexture(test3dTex_);
 }
 
-void ansimproj::Simulation::render(const ansimproj::core::Camera &camera) const {
+std::int32_t testSwap = 0; // FIXME: just for demonstration purposes.
+void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(vao_);
 
   // Use compute shader to modify test data
-  constexpr bool useCompute = false;
+  constexpr bool useCompute = true;
   if (useCompute) {
-    const Eigen::Vector3f color{1.0f, 0.0f, 0.0};
     constexpr auto workGroupSize = 10;
-    glUseProgram(computeProgram_);
-    glProgramUniform3f(computeProgram_, 0, color.x(), color.y(), color.z());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, testBuffer_);
+    glUseProgram(positionUpdateProgram_);
+    glProgramUniform1f(positionUpdateProgram_, 0, dt);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
     glDispatchCompute(PARTICLE_COUNT / workGroupSize, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    testSwap++;
   }
 
   // Simple vert/frag rendering program

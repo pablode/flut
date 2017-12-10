@@ -2,37 +2,35 @@
 
 /// Pipeline stage 4.
 /// This shader calculates the new position from the
-/// old position using the new velocity texture and
-/// an explicit Euler integration.
+/// old position using the new velocity and an explicit
+/// Euler integration.
 ///   Input: Position (1), Velocity (2)
 ///   Output: Position (2)
 
+layout (location = 0) uniform float dt;
+
 layout (local_size_x = 10, local_size_y = 10) in;
 
-// Remember that there is no rgb* because of padding issues.
-// We might be able to use the alpha channel somehow...
-layout (location = 0, binding = 0, rgba32f) readonly uniform image1D position1;
-layout (location = 1, binding = 1, rgba32f) readonly uniform image1D velocity2;
-layout (location = 2, binding = 2, rgba32f) writeonly uniform image1D position2;
+layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
+layout (std430, binding = 1) buffer velocityBuf2 { float velocity2[]; };
+layout (std430, binding = 2) buffer positionBuf2 { float position2[]; };
 
 void integrate(int particle, float dt) {
-  vec4 oldPos = imageLoad(position1, particle);
-  vec4 newVelo = imageLoad(velocity2, particle);
-  vec4 newPos = oldPos + newVelo * dt;
-  imageStore(position2, particle, newPos);
-}
-
-void euler(int particle, float y, float num, float step) {
-  for (float x = 0; x <= num; x += step) {
-      integrate(particle, x);
-  }
+  uvec3 posIndex = uvec3(particle * 6 + 0, particle * 6 + 1, particle * 6 + 2);
+  uvec3 veloIndex = uvec3(particle * 3 + 0, particle * 3 + 1, particle * 3 + 2);
+  vec3 oldPos = vec3(position1[posIndex.x], position1[posIndex.y], position1[posIndex.z]);
+  vec3 newVelo = vec3(velocity2[veloIndex.x], velocity2[veloIndex.y], velocity2[veloIndex.z]);
+  vec3 newPos = oldPos + newVelo * dt;
+  position2[posIndex.x] = newPos.x;
+  position2[posIndex.y] = newPos.y;
+  position2[posIndex.z] = newPos.z;
 }
 
 void main() {
-  int particlesPerGroup = imageSize(position1) / int(gl_NumWorkGroups.x);
+  int particlesPerGroup = (position1.length() / 6) / int(gl_NumWorkGroups.x);
   int startParticle = int(gl_WorkGroupID.x) * particlesPerGroup;
   int endParticle = startParticle + particlesPerGroup;
   for (int p = startParticle; p < endParticle; ++p) {
-    euler(p, 0.0, 10.0, 0.1);
+    integrate(p, dt);
   }
 }

@@ -14,7 +14,7 @@ namespace ansimproj {
 
     ~Simulation();
 
-    void render(const core::Camera &camera) const override;
+    void render(const core::Camera &camera, float dt) const override;
 
     void resize(std::uint32_t width, std::uint32_t height);
 
@@ -25,9 +25,10 @@ namespace ansimproj {
 
   private:
     ::gl::GLuint renderProgram_;
-    ::gl::GLuint computeProgram_;
-    ::gl::GLuint testBuffer_;
-    ::gl::GLuint test3dTex_;
+    ::gl::GLuint positionUpdateProgram_;
+    ::gl::GLuint position1_;
+    ::gl::GLuint velocity2_;
+    ::gl::GLuint position2_;
     ::gl::GLuint vao_;
   };
 }

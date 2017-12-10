@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     std::chrono::duration<double> timeSpan(clock::now() - lastTime);
     double deltaTime = timeSpan.count();
 
-    simulation.render(camera);
+    simulation.render(camera, deltaTime);
     camera.update(deltaTime);
     window.swap();
   }
