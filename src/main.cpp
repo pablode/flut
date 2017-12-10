@@ -1,4 +1,4 @@
-#include "Renderer.hpp"
+#include "Simulation.hpp"
 #include "core/Camera.hpp"
 #include "core/Window.hpp"
 
@@ -10,10 +10,10 @@
 int main(int argc, char *argv[]) {
   ansimproj::core::Window window{"ansimproj", 800, 600};
   ansimproj::core::Camera camera{window};
-  ansimproj::Renderer renderer{};
+  ansimproj::Simulation simulation{};
 
-  window.resize([&](std::uint32_t width, std::uint32_t height) { renderer.resize(width, height); });
-  renderer.resize(window.width(), window.height());
+  window.resize([&](std::uint32_t width, std::uint32_t height) { simulation.resize(width, height); });
+  simulation.resize(window.width(), window.height());
 
   using clock = std::chrono::high_resolution_clock;
   auto lastTime = clock::now();
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     std::chrono::duration<double> timeSpan(clock::now() - lastTime);
     double deltaTime = timeSpan.count();
 
-    renderer.render(camera);
+    simulation.render(camera);
     camera.update(deltaTime);
     window.swap();
   }

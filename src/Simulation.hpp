@@ -4,15 +4,15 @@
 
 namespace ansimproj {
 
-  class Renderer : public core::BaseRenderer {
+  class Simulation : public core::BaseRenderer {
 
   private:
     constexpr static std::uint64_t PARTICLE_COUNT = 1000000;
 
   public:
-    Renderer();
+    Simulation();
 
-    ~Renderer();
+    ~Simulation();
 
     void render(const core::Camera &camera) const override;
 
