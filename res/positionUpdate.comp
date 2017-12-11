@@ -9,7 +9,7 @@
 
 layout (location = 0) uniform float dt;
 
-layout (local_size_x = 10, local_size_y = 10) in;
+layout (local_size_x = 100) in;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer velocityBuf2 { float velocity2[]; };

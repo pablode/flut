@@ -12,7 +12,7 @@ ansimproj::Simulation::Simulation()
   // Buffer with <uint particleId, uint voxelId>
   // representing the Uniform Grid mappings.
   std::vector<GLuint> gridPairsData;
-  gridPairsData.reserve(PARTICLE_COUNT * 2);
+  gridPairsData.resize(PARTICLE_COUNT * 2);
   gridPairs_ = createBuffer(gridPairsData, true);
 
   // Position 1 & 2 SSBO (pos+col)
@@ -110,7 +110,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1ui(gridInsertProgram_, 3, PARTICLE_COUNT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, position1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridPairs_);
-  glDispatchCompute(numWorkGroups, 1, 1);
+  glDispatchCompute(10000, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // Position Update Shader test
@@ -119,7 +119,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
-  glDispatchCompute(numWorkGroups, 1, 1);
+  glDispatchCompute(10000, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   testSwap++;
 
