@@ -27,6 +27,7 @@ namespace ansimproj {
     ::gl::GLuint renderProgram_;
     ::gl::GLuint positionUpdateProgram_;
     ::gl::GLuint gridInsertProgram_;
+    ::gl::GLuint gridSortProgram_;
     ::gl::GLuint position1_;
     ::gl::GLuint velocity2_;
     ::gl::GLuint position2_;
