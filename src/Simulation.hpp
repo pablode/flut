@@ -29,6 +29,7 @@ namespace ansimproj {
     ::gl::GLuint position1_;
     ::gl::GLuint velocity2_;
     ::gl::GLuint position2_;
+    ::gl::GLuint gridPairs_;
     ::gl::GLuint vao_;
   };
 }

@@ -9,6 +9,12 @@ using namespace gl;
 ansimproj::Simulation::Simulation()
   : BaseRenderer() {
 
+  // Buffer with <uint particleId, uint voxelId>
+  // representing the Uniform Grid mappings.
+  std::vector<GLuint> gridPairsData;
+  gridPairsData.reserve(PARTICLE_COUNT * 2);
+  gridPairs_ = createBuffer(gridPairsData, true);
+
   // Position 1 & 2 SSBO (pos+col)
   std::vector<float> positionData;
   const std::uint64_t dataSize = PARTICLE_COUNT * 6;
@@ -77,6 +83,7 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(position1_);
   deleteBuffer(position2_);
   deleteBuffer(velocity2_);
+  deleteBuffer(gridPairs_);
   deleteVAO(vao_);
 }
 

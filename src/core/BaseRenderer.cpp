@@ -237,6 +237,19 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
   return handle;
 }
 
+GLuint ansimproj::core::BaseRenderer::createBuffer(
+  const std::vector<GLuint> &data, bool dynamic) const {
+  GLuint handle;
+  glCreateBuffers(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create buffer.");
+  }
+  const auto size = data.size();
+  glNamedBufferData(
+    handle, size * sizeof(GLuint), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  return handle;
+}
+
 void ansimproj::core::BaseRenderer::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }
