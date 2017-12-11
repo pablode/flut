@@ -61,9 +61,15 @@ ansimproj::Simulation::Simulation()
   std::cout << "Uploaded buffers: " << position1_ << ", " << position2_ << ", " << velocity2_
             << std::endl;
 
+  // Uniform Grid Insert Shader
+  const auto &comp1 = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
+  gridInsertProgram_ = createComputeShader(comp1);
+  std::cout << "Grid Insert Shader compiled: " << gridInsertProgram_ << std::endl;
+
+
   // Position Update Compute Shader
-  const auto &comp = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
-  positionUpdateProgram_ = createComputeShader(comp);
+  const auto &comp2 = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
+  positionUpdateProgram_ = createComputeShader(comp2);
   std::cout << "Position Update Shader compiled: " << positionUpdateProgram_ << std::endl;
 
   // Render shader & VAO
@@ -80,6 +86,7 @@ ansimproj::Simulation::Simulation()
 ansimproj::Simulation::~Simulation() {
   deleteShader(renderProgram_);
   deleteShader(positionUpdateProgram_);
+  deleteShader(gridInsertProgram_);
   deleteBuffer(position1_);
   deleteBuffer(position2_);
   deleteBuffer(velocity2_);
@@ -92,19 +99,29 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(vao_);
 
-  // Use compute shader to modify test data
-  constexpr bool useCompute = true;
-  if (useCompute) {
-    constexpr auto workGroupSize = 10;
-    glUseProgram(positionUpdateProgram_);
-    glProgramUniform1f(positionUpdateProgram_, 0, dt);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
-    glDispatchCompute(PARTICLE_COUNT / workGroupSize, 1, 1);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    testSwap++;
-  }
+  //constexpr auto workGroupSize = 100;
+  constexpr GLuint numWorkGroups = static_cast<GLuint>(std::ceil(std::sqrt(PARTICLE_COUNT)));// / workGroupSize;
+
+  // Grid Insert Shader test
+  glUseProgram(gridInsertProgram_);
+  glProgramUniform3f(gridInsertProgram_, 0, 1.0f, 1.0f, 1.0f);
+  glProgramUniform3f(gridInsertProgram_, 1, -0.5f, -0.5f, -0.5f);
+  glProgramUniform3ui(gridInsertProgram_, 2, 10, 10, 10);
+  glProgramUniform1ui(gridInsertProgram_, 3, PARTICLE_COUNT);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, position1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridPairs_);
+  glDispatchCompute(numWorkGroups, 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+  // Position Update Shader test
+  glUseProgram(positionUpdateProgram_);
+  glProgramUniform1f(positionUpdateProgram_, 0, dt);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
+  glDispatchCompute(numWorkGroups, 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  testSwap++;
 
   // Simple vert/frag rendering program
   glUseProgram(renderProgram_);

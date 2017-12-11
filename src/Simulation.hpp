@@ -7,7 +7,7 @@ namespace ansimproj {
   class Simulation : public core::BaseRenderer {
 
   private:
-    constexpr static std::uint64_t PARTICLE_COUNT = 1000000;
+    constexpr static std::uint64_t PARTICLE_COUNT = 100 * 100 * 100;
 
   public:
     Simulation();
@@ -26,6 +26,7 @@ namespace ansimproj {
   private:
     ::gl::GLuint renderProgram_;
     ::gl::GLuint positionUpdateProgram_;
+    ::gl::GLuint gridInsertProgram_;
     ::gl::GLuint position1_;
     ::gl::GLuint velocity2_;
     ::gl::GLuint position2_;
