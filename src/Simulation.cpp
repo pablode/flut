@@ -51,9 +51,9 @@ ansimproj::Simulation::Simulation()
         const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
         const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
         const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
-        velocityData.push_back(0.01f * valX);
-        velocityData.push_back(0.01f * valY);
-        velocityData.push_back(0.01f * valZ);
+        velocityData.push_back(0.1f * valX);
+        velocityData.push_back(0.1f * valY);
+        velocityData.push_back(0.1f * valZ);
       }
     }
   }

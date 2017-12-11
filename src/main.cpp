@@ -22,9 +22,11 @@ int main(int argc, char *argv[]) {
 
     std::chrono::duration<double> timeSpan(clock::now() - lastTime);
     double deltaTime = timeSpan.count();
+    lastTime = clock::now();
 
     simulation.render(camera, deltaTime);
     camera.update(deltaTime);
+    std::cout << deltaTime << std::endl;
     window.swap();
   }
   return EXIT_SUCCESS;
