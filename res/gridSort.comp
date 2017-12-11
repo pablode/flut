@@ -11,7 +11,7 @@ layout (location = 1) uniform uint k;
 
 layout (std430, binding = 0) buffer mappingBuf { uint mappings[]; };
 
-layout (local_size_x = 512) in;
+layout (local_size_x = 100) in;
 
 void swap_pairs(uint pos1, uint pos2) {
   uint partiId = mappings[pos1 + 0];
