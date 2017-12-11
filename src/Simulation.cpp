@@ -24,9 +24,9 @@ ansimproj::Simulation::Simulation()
   for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
     for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
       for (std::uint64_t z = 0; z < AXIS_COUNT; ++z) {
-        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT / 2);
-        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT / 2);
-        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT / 2);
+        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
+        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
+        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
         const float colX = static_cast<float>(x) / AXIS_COUNT;
         const float colY = static_cast<float>(y) / AXIS_COUNT;
         const float colZ = static_cast<float>(z) / AXIS_COUNT;
@@ -84,7 +84,7 @@ ansimproj::Simulation::Simulation()
   vao_ = createVAO(position1_);
   std::cout << "VAO created: " << vao_ << std::endl;
 
-  glPointSize(5.0f);
+  glPointSize(7.5f);
 }
 
 ansimproj::Simulation::~Simulation() {
@@ -104,6 +104,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(vao_);
 
+  constexpr auto localSize = 100;
+  constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
+
   // Generate Particle/Voxel mappings
   glUseProgram(gridInsertProgram_);
   glProgramUniform3f(gridInsertProgram_, 0, 1.0f, 1.0f, 1.0f);
@@ -112,7 +115,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1ui(gridInsertProgram_, 3, PARTICLE_COUNT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, position1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridPairs_);
-  glDispatchCompute(10000, 1, 1);
+  glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // Sort Particle/Voxel mappings
@@ -123,7 +126,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     for (std::uint32_t j = k >> 1; j > 0; j = j >> 1) {
       glProgramUniform1ui(gridSortProgram_, 0, j);
       glProgramUniform1ui(gridSortProgram_, 1, k);
-      glDispatchCompute(10000, 1, 1);
+      glDispatchCompute(numWorkGroups, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
   }
@@ -134,7 +137,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
-  glDispatchCompute(10000, 1, 1);
+  glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   testSwap++;
 

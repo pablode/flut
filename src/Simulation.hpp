@@ -7,7 +7,7 @@ namespace ansimproj {
   class Simulation : public core::BaseRenderer {
 
   private:
-    constexpr static std::uint64_t PARTICLE_COUNT = 100 * 100 * 100;
+    constexpr static std::uint64_t PARTICLE_COUNT = 50 * 50 * 50;
 
   public:
     Simulation();
