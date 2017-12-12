@@ -17,27 +17,17 @@ ansimproj::Simulation::Simulation()
 
   // Position 1 & 2 SSBO (pos+col)
   std::vector<float> positionData;
-  const std::uint64_t dataSize = PARTICLE_COUNT * 6;
-  positionData.reserve(dataSize);
-  const std::uint64_t AXIS_COUNT = static_cast<std::uint64_t>(std::cbrt(PARTICLE_COUNT));
-  assert((std::cbrt(PARTICLE_COUNT) - AXIS_COUNT) < 0.00001);
-  for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
-    for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
-      for (std::uint64_t z = 0; z < AXIS_COUNT; ++z) {
-        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
-        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
-        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
-        const float colX = static_cast<float>(x) / AXIS_COUNT;
-        const float colY = static_cast<float>(y) / AXIS_COUNT;
-        const float colZ = static_cast<float>(z) / AXIS_COUNT;
-        positionData.push_back(valX);
-        positionData.push_back(valY);
-        positionData.push_back(valZ);
-        positionData.push_back(colX);
-        positionData.push_back(colY);
-        positionData.push_back(colZ);
-      }
-    }
+  positionData.reserve(PARTICLE_COUNT * 6);
+  for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
+    const float x = (rand() % 10000) / 10000.0f;
+    const float y = (rand() % 10000) / 10000.0f;
+    const float z = (rand() % 10000) / 10000.0f;
+    positionData.push_back(-0.5f + x);
+    positionData.push_back(-0.5f + y);
+    positionData.push_back(-0.5f + z);
+    positionData.push_back(x);
+    positionData.push_back(y);
+    positionData.push_back(z);
   }
   position1_ = createBuffer(positionData, true);
   position2_ = createBuffer(positionData, true);
@@ -45,17 +35,11 @@ ansimproj::Simulation::Simulation()
   // Velocity SSBO
   std::vector<float> velocityData;
   velocityData.reserve(PARTICLE_COUNT * 3);
-  for (std::uint64_t x = 0; x < AXIS_COUNT; ++x) {
-    for (std::uint64_t y = 0; y < AXIS_COUNT; ++y) {
-      for (std::uint64_t z = 0; z < AXIS_COUNT; ++z) {
-        const float valX = -0.5f + (static_cast<float>(x) / AXIS_COUNT);
-        const float valY = -0.5f + (static_cast<float>(y) / AXIS_COUNT);
-        const float valZ = -0.5f + (static_cast<float>(z) / AXIS_COUNT);
-        velocityData.push_back(0.1f * valX);
-        velocityData.push_back(0.1f * valY);
-        velocityData.push_back(0.1f * valZ);
-      }
-    }
+  for (std::uint64_t x = 0; x < PARTICLE_COUNT * 3; x += 3) {
+    const float s = 0.1f * ((rand() % 30000) - 15000) / 30000.0f;
+    velocityData.push_back(s);
+    velocityData.push_back(s);
+    velocityData.push_back(s);
   }
   velocity2_ = createBuffer(velocityData, true);
   std::cout << "Uploaded buffers: " << position1_ << ", " << position2_ << ", " << velocity2_
@@ -104,7 +88,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(vao_);
 
-  constexpr auto localSize = 100;
+  constexpr auto localSize = 128;
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
 
   // Generate Particle/Voxel mappings

@@ -7,7 +7,9 @@ namespace ansimproj {
   class Simulation : public core::BaseRenderer {
 
   private:
-    constexpr static std::uint64_t PARTICLE_COUNT = 50 * 50 * 50;
+    constexpr static std::uint32_t PARTICLE_COUNT = 131072;
+    static_assert(!(PARTICLE_COUNT & (PARTICLE_COUNT - 1)),
+      "PARTICLE_COUNT must be 2^N because of bitonic mergesort.");
 
   public:
     Simulation();
