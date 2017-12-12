@@ -24,7 +24,7 @@ ansimproj::core::Camera::Camera(Window &window)
 
 ansimproj::core::Camera::~Camera() {}
 
-void ansimproj::core::Camera::update(double deltaTime) {
+void ansimproj::core::Camera::update(float deltaTime) {
   const auto &mouseX = window_.mouseX();
   const auto &mouseY = window_.mouseY();
   if (window_.mouseDown()) {

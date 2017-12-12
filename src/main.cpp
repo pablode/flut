@@ -20,8 +20,8 @@ int main(int argc, char *argv[]) {
   while (!window.shouldClose()) {
     window.pollEvents();
 
-    std::chrono::duration<double> timeSpan(clock::now() - lastTime);
-    double deltaTime = timeSpan.count();
+    std::chrono::duration<float> timeSpan(clock::now() - lastTime);
+    float deltaTime = timeSpan.count();
     lastTime = clock::now();
 
     simulation.render(camera, deltaTime);

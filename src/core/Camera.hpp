@@ -16,7 +16,7 @@ namespace ansimproj {
 
       ~Camera();
 
-      void update(double deltaTime);
+      void update(float deltaTime);
 
       Eigen::Matrix4f view() const;
 
