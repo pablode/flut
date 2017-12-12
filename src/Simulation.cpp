@@ -15,7 +15,7 @@ ansimproj::Simulation::Simulation()
   gridPairsData.resize(PARTICLE_COUNT * 2);
   gridPairs_ = createBuffer(gridPairsData, true);
 
-  // Position 1 & 2 SSBO (pos+col)
+  // Position 1 & 2 Buffers (pos+col)
   std::vector<float> positionData;
   positionData.reserve(PARTICLE_COUNT * 6);
   for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
@@ -32,28 +32,36 @@ ansimproj::Simulation::Simulation()
   position1_ = createBuffer(positionData, true);
   position2_ = createBuffer(positionData, true);
 
-  // Velocity SSBO
+  // Velocity Buffers
   std::vector<float> velocityData;
   velocityData.reserve(PARTICLE_COUNT * 3);
-  for (std::uint64_t x = 0; x < PARTICLE_COUNT * 3; x += 3) {
-    const float s = 0.1f * ((rand() % 30000) - 15000) / 30000.0f;
-    velocityData.push_back(s);
-    velocityData.push_back(s);
-    velocityData.push_back(s);
+  for (std::uint64_t x = 0; x < PARTICLE_COUNT * 3; ++x) {
+    velocityData.push_back(0.0f);
   }
   velocity2_ = createBuffer(velocityData, true);
+
+  // Grid Lookup Buffer
+  std::vector<GLuint> temp;
+  temp.resize(10 * 10 * 10 * 2);
+  gridIndices_ = createBuffer(temp, true);
+
   std::cout << "Uploaded buffers: " << position1_ << ", " << position2_ << ", " << velocity2_
-            << std::endl;
+            << ", " << gridIndices_ << std::endl;
 
   // Uniform Grid Insert Shader
-  const auto &comp1 = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
-  gridInsertProgram_ = createComputeShader(comp1);
+  auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
+  gridInsertProgram_ = createComputeShader(shaderSource);
   std::cout << "Grid Insert Shader compiled: " << gridInsertProgram_ << std::endl;
 
   // Uniform Grid Sort Shader
-  const auto &comp2 = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
-  gridSortProgram_ = createComputeShader(comp2);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
+  gridSortProgram_ = createComputeShader(shaderSource);
   std::cout << "Grid Sort Shader compiled: " << gridSortProgram_ << std::endl;
+
+  // Uniform Grid Indexing Shader
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
+  gridIndexingProgram_ = createComputeShader(shaderSource);
+  std::cout << "Grid Indexing Shader compiled: " << gridSortProgram_ << std::endl;
 
   // Position Update Compute Shader
   const auto &comp3 = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
@@ -77,10 +85,12 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(positionUpdateProgram_);
   deleteShader(gridInsertProgram_);
   deleteShader(gridSortProgram_);
+  deleteShader(gridIndexingProgram_);
   deleteBuffer(position1_);
   deleteBuffer(position2_);
   deleteBuffer(velocity2_);
   deleteBuffer(gridPairs_);
+  deleteBuffer(gridIndices_);
   deleteVAO(vao_);
 }
 
@@ -91,7 +101,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   constexpr auto localSize = 128;
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
 
-  // Generate Particle/Voxel mappings
+  // 1.1 Generate Particle/Voxel mappings
   glUseProgram(gridInsertProgram_);
   glProgramUniform3f(gridInsertProgram_, 0, 1.0f, 1.0f, 1.0f);
   glProgramUniform3f(gridInsertProgram_, 1, -0.5f, -0.5f, -0.5f);
@@ -102,7 +112,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-  // Sort Particle/Voxel mappings
+  // 1.2 Sort Particle/Voxel mappings
   // TODO: bitonic mergesort can only handle 2^N (power of two)!
   glUseProgram(gridSortProgram_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gridPairs_);
@@ -116,7 +126,20 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     }
   }
 
-  // Position Update Shader test
+  // 1.3 Find Voxel indices and size
+  constexpr auto searchDepth = static_cast<std::uint32_t>(std::log2(PARTICLE_COUNT)) + 1;
+  glUseProgram(gridIndexingProgram_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridIndices_);
+  glProgramUniform1ui(gridIndexingProgram_, 0, searchDepth);
+  glDispatchCompute(1, 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+  // TODO: Step 2 & 3
+
+
+  // 4. Position Update Shader test
   glUseProgram(positionUpdateProgram_);
   glProgramUniform1f(positionUpdateProgram_, 0, dt);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 0 : 2, position1_);
@@ -126,7 +149,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   swapTextures_ = !swapTextures_;
 
-  // Simple vert/frag rendering program
+  // 5. Simple vert/frag rendering program
   glUseProgram(renderProgram_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();

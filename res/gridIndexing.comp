@@ -1,0 +1,58 @@
+#version 430 core
+
+/// Pipeline stage 1 (3).
+/// We perform binary search in a parallel manner to determine
+/// the index of each Voxel and the number of particles it contains.
+/// Each thread is associated with one VoxelId. If a certain Id was
+/// not found, the size is set to 0. The value pairs are then written
+/// into a lookup-buffer.
+///   Input: Particle/Voxel pairs (sorted)
+///   Output: Voxel Indices/Element Count pairs
+
+layout (std430, binding = 0) buffer mappingBuf { uint mappings[]; };
+layout (std430, binding = 1) buffer indicesBuf { uint indices[]; };
+
+layout (location = 0) uniform uint depth; // log2(N+1)
+
+layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in;
+
+void found(uint curPos, uint voxelId) {
+  uint lower = curPos;
+  uint upper = curPos;
+  while (mappings[(lower-1) * 2 + 1] == voxelId) {
+    lower--;
+  }
+  while (mappings[(upper+1) * 2 + 1] == voxelId) {
+    upper++;
+  }
+  indices[voxelId * 2 + 0] = lower;
+  indices[voxelId * 2 + 1] = upper - lower + 1;
+}
+
+uint search(uint curPos, uint targetId, uint stride) {
+  uint voxId = mappings[curPos * 2 + 1];
+  uint dir = (targetId <= voxId) ? -1 : 1;
+  return dir * stride + curPos;
+}
+
+void main() {
+  uint voxelId = gl_LocalInvocationIndex;
+  uint len = mappings.length() / 2;
+  if (voxelId >= indices.length() / 2)
+    return;
+
+  uint curPos = len / 2;
+  uint stride = curPos;
+  for(uint i = 0; i < depth; ++i) {
+    stride /= 2;
+    curPos = search(curPos, voxelId, stride);
+    if (mappings[curPos * 2 + 1] == voxelId) {
+      found(curPos, voxelId);
+      return;
+    }
+  }
+
+  // Not found.
+  indices[voxelId * 2 + 0] = 0;
+  indices[voxelId * 2 + 1] = 0;
+}

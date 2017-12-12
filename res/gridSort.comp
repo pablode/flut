@@ -4,6 +4,8 @@
 /// Sort Particle/Voxel mappings using the bitonic mergesort
 /// algorithm. The pairs are reordered in-place. We need a full
 /// order, since the next pipeline step utilizes a binary search.
+///   Input: Particle/Voxel pairs (unsorted)
+///   Output: Particle/Voxel pairs (sorted)
 
 layout (location = 0) uniform uint size;
 layout (location = 1) uniform uint stride;
