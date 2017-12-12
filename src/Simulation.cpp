@@ -103,13 +103,14 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // Sort Particle/Voxel mappings
-  constexpr std::uint32_t numIterations = PARTICLE_COUNT;
+  // TODO: bitonic mergesort can only handle 2^N (power of two)!
   glUseProgram(gridSortProgram_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gridPairs_);
-  for (std::uint32_t k = 2; k <= numIterations; k <<= 1) {
-    for (std::uint32_t j = k >> 1; j > 0; j = j >> 1) {
-      glProgramUniform1ui(gridSortProgram_, 0, j);
-      glProgramUniform1ui(gridSortProgram_, 1, k);
+  const auto N = PARTICLE_COUNT;
+  for (std::uint32_t size = 2; size <= N; size *= 2) {
+    for (std::uint32_t stride = size / 2; stride > 0; stride /= 2) {
+      glProgramUniform1ui(gridSortProgram_, 0, size);
+      glProgramUniform1ui(gridSortProgram_, 1, stride);
       glDispatchCompute(numWorkGroups, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }

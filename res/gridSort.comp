@@ -2,12 +2,11 @@
 
 /// Pipeline stage 1 (2).
 /// Sort Particle/Voxel mappings using the bitonic mergesort
-/// algorithm. The pairs are reordered in-place. Remember that
-/// we don't actually need a full order, but Particles belonging
-/// to Voxels grouped together.
+/// algorithm. The pairs are reordered in-place. We need a full
+/// order, since the next pipeline step utilizes a binary search.
 
-layout (location = 0) uniform uint j;
-layout (location = 1) uniform uint k;
+layout (location = 0) uniform uint size;
+layout (location = 1) uniform uint stride;
 
 layout (std430, binding = 0) buffer mappingBuf { uint mappings[]; };
 
@@ -24,12 +23,11 @@ void swap_pairs(uint pos1, uint pos2) {
 
 void bitonic_sort_step(uint i, uint j, uint k) {
   uint ixj = i^j;
-  uint len = mappings.length();
-
-  if (i * 2 + 1 >= len || ixj * 2 + 1 >= len)
+  uint len = mappings.length() / 2;
+  if (i >= len || ixj >= len)
     return;
 
-  if ((ixj) > i) {
+  if (ixj > i) {
     if ((i & k) == 0) {
       if (mappings[i * 2 + 1] > mappings[ixj * 2 + 1]) {
         swap_pairs(i * 2, ixj * 2);
@@ -43,6 +41,6 @@ void bitonic_sort_step(uint i, uint j, uint k) {
 }
 
 void main() {
-  uint i = gl_GlobalInvocationID.x;
-  bitonic_sort_step(i, j, k);
+  uint index = gl_GlobalInvocationID.x;
+  bitonic_sort_step(index, stride, size);
 }
