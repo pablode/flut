@@ -84,6 +84,7 @@ ansimproj::Simulation::Simulation()
   vao_ = createVAO(position1_);
   std::cout << "VAO created: " << vao_ << std::endl;
 
+  swapTextures_ = false;
   glPointSize(7.5f);
 }
 
@@ -99,8 +100,7 @@ ansimproj::Simulation::~Simulation() {
   deleteVAO(vao_);
 }
 
-std::int32_t testSwap = 0; // FIXME: just for demonstration purposes.
-void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) const {
+void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(vao_);
 
@@ -134,12 +134,12 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // Position Update Shader test
   glUseProgram(positionUpdateProgram_);
   glProgramUniform1f(positionUpdateProgram_, 0, dt);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 0 : 2, position1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 0 : 2, position1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, (testSwap % 2 == 0) ? 2 : 0, position2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 2 : 0, position2_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-  testSwap++;
+  swapTextures_ = !swapTextures_;
 
   // Simple vert/frag rendering program
   glUseProgram(renderProgram_);

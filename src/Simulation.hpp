@@ -14,7 +14,7 @@ namespace ansimproj {
 
     ~Simulation();
 
-    void render(const core::Camera &camera, float dt) const override;
+    void render(const core::Camera &camera, float dt) override;
 
     void resize(std::uint32_t width, std::uint32_t height);
 
@@ -33,5 +33,6 @@ namespace ansimproj {
     ::gl::GLuint position2_;
     ::gl::GLuint gridPairs_;
     ::gl::GLuint vao_;
+    bool swapTextures_;
   };
 }
