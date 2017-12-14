@@ -14,7 +14,7 @@ ansimproj::Simulation::Simulation()
   // Buffers
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
-  gridPairs_ = createBuffer(gridPairsData, true);
+  bufGridPairs_ = createBuffer(gridPairsData, true);
 
   std::vector<float> posColData;
   posColData.reserve(PARTICLE_COUNT * 6);
@@ -29,19 +29,19 @@ ansimproj::Simulation::Simulation()
     posColData.push_back(y);
     posColData.push_back(z);
   }
-  position1_ = createBuffer(posColData, true);
-  position2_ = createBuffer(posColData, true);
+  bufPosition1_ = createBuffer(posColData, true);
+  bufPosition2_ = createBuffer(posColData, true);
 
   std::vector<float> zeroFloatData;
   zeroFloatData.resize(PARTICLE_COUNT * 3);
-  velocity1_ = createBuffer(zeroFloatData, true);
-  velocity2_ = createBuffer(zeroFloatData, true);
-  density1_ = createBuffer(zeroFloatData, true);
-  density2_ = createBuffer(zeroFloatData, true);
+  bufVelocity1_ = createBuffer(zeroFloatData, true);
+  bufVelocity2_ = createBuffer(zeroFloatData, true);
+  bufDensity1_ = createBuffer(zeroFloatData, true);
+  bufDensity2_ = createBuffer(zeroFloatData, true);
 
   std::vector<GLuint> gridIndicesData;
   gridIndicesData.resize(10 * 10 * 10 * 2);
-  gridIndices_ = createBuffer(gridIndicesData, true);
+  bufGridIndices_ = createBuffer(gridIndicesData, true);
 
   std::vector<float> wallWeightData;
   wallWeightData.reserve(1024);
@@ -53,46 +53,46 @@ ansimproj::Simulation::Simulation()
       (315 * std::pow(std::pow(re, 2) - std::pow(r, 2), 3)) / (64 * M_PI * std::pow(re, 9));
     wallWeightData.push_back(static_cast<float>(weight));
   }
-  wallweight_ = createBuffer(wallWeightData, true);
+  bufWallweight_ = createBuffer(wallWeightData, true);
 
   std::vector<float> distData;
   distData.resize(10 * 10 * 10);
-  distance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, zeroFloatData);
+  texDistance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, zeroFloatData);
 
   // Shaders
   auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
-  gridInsertProgram_ = createComputeShader(shaderSource);
+  programGridInsert_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
-  gridSortProgram_ = createComputeShader(shaderSource);
+  programGridSort_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
-  gridIndexingProgram_ = createComputeShader(shaderSource);
+  programGridIndexing_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
-  positionUpdateProgram_ = createComputeShader(shaderSource);
-  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
-  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
-  renderProgram_ = createVertFragShader(vert, frag);
+  programPositionUpdate_ = createComputeShader(shaderSource);
+  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
+  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
+  programRender_ = createVertFragShader(vert, frag);
 
   // Other
-  vao_ = createVAO(position1_);
+  vao_ = createVAO(bufPosition1_);
   glPointSize(7.5f);
 }
 
 ansimproj::Simulation::~Simulation() {
-  deleteShader(renderProgram_);
-  deleteShader(positionUpdateProgram_);
-  deleteShader(gridInsertProgram_);
-  deleteShader(gridSortProgram_);
-  deleteShader(gridIndexingProgram_);
-  deleteBuffer(gridPairs_);
-  deleteBuffer(gridIndices_);
-  deleteBuffer(position1_);
-  deleteBuffer(position2_);
-  deleteBuffer(velocity1_);
-  deleteBuffer(velocity2_);
-  deleteBuffer(density1_);
-  deleteBuffer(density2_);
-  deleteBuffer(wallweight_);
-  deleteTexture(distance_);
+  deleteShader(programGridInsert_);
+  deleteShader(programGridSort_);
+  deleteShader(programGridIndexing_);
+  deleteShader(programPositionUpdate_);
+  deleteShader(programRender_);
+  deleteBuffer(bufGridPairs_);
+  deleteBuffer(bufGridIndices_);
+  deleteBuffer(bufPosition1_);
+  deleteBuffer(bufPosition2_);
+  deleteBuffer(bufVelocity1_);
+  deleteBuffer(bufVelocity2_);
+  deleteBuffer(bufDensity1_);
+  deleteBuffer(bufDensity2_);
+  deleteBuffer(bufWallweight_);
+  deleteTexture(texDistance_);
   deleteVAO(vao_);
 }
 
@@ -101,25 +101,25 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
 
   // 1.1 Generate Particle/Voxel mappings
-  glUseProgram(gridInsertProgram_);
-  glProgramUniform3f(gridInsertProgram_, 0, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(gridInsertProgram_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(gridInsertProgram_, 2, 10, 10, 10);
-  glProgramUniform1ui(gridInsertProgram_, 3, PARTICLE_COUNT);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, position1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridPairs_);
+  glUseProgram(programGridInsert_);
+  glProgramUniform3f(programGridInsert_, 0, 1.0f, 1.0f, 1.0f);
+  glProgramUniform3f(programGridInsert_, 1, -0.5f, -0.5f, -0.5f);
+  glProgramUniform3ui(programGridInsert_, 2, 10, 10, 10);
+  glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // 1.2 Sort Particle/Voxel mappings
   // TODO: bitonic mergesort can only handle 2^N (power of two)!
-  glUseProgram(gridSortProgram_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gridPairs_);
+  glUseProgram(programGridSort_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   const auto N = PARTICLE_COUNT;
   for (std::uint32_t size = 2; size <= N; size *= 2) {
     for (std::uint32_t stride = size / 2; stride > 0; stride /= 2) {
-      glProgramUniform1ui(gridSortProgram_, 0, size);
-      glProgramUniform1ui(gridSortProgram_, 1, stride);
+      glProgramUniform1ui(programGridSort_, 0, size);
+      glProgramUniform1ui(programGridSort_, 1, stride);
       glDispatchCompute(numWorkGroups, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
@@ -127,10 +127,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 1.3 Find Voxel indices and size
   constexpr auto searchDepth = static_cast<std::uint32_t>(std::log2(PARTICLE_COUNT)) + 1;
-  glUseProgram(gridIndexingProgram_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gridPairs_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, gridIndices_);
-  glProgramUniform1ui(gridIndexingProgram_, 0, searchDepth);
+  glUseProgram(programGridIndexing_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridIndices_);
+  glProgramUniform1ui(programGridIndexing_, 0, searchDepth);
   glDispatchCompute(1, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -139,23 +139,23 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
 
   // 4. Position Update
-  glUseProgram(positionUpdateProgram_);
-  glProgramUniform1f(positionUpdateProgram_, 0, dt);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 0 : 2, position1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, velocity2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 2 : 0, position2_);
+  glUseProgram(programPositionUpdate_);
+  glProgramUniform1f(programPositionUpdate_, 0, dt);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 0 : 2, bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufVelocity2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 2 : 0, bufPosition2_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   swapTextures_ = !swapTextures_;
 
   // 5. Rendering
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(renderProgram_);
+  glUseProgram(programRender_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
   const Eigen::Matrix4f mvp = projection * view;
-  glProgramUniformMatrix4fv(renderProgram_, 0, 1, GL_FALSE, mvp.data());
-  glProgramUniformMatrix4fv(renderProgram_, 1, 1, GL_FALSE, view.data());
+  glProgramUniformMatrix4fv(programRender_, 0, 1, GL_FALSE, mvp.data());
+  glProgramUniformMatrix4fv(programRender_, 1, 1, GL_FALSE, view.data());
   glBindVertexArray(vao_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 }

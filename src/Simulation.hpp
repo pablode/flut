@@ -26,21 +26,21 @@ namespace ansimproj {
     void deleteVAO(::gl::GLuint handle);
 
   private:
-    ::gl::GLuint renderProgram_;
-    ::gl::GLuint positionUpdateProgram_;
-    ::gl::GLuint gridInsertProgram_;
-    ::gl::GLuint gridSortProgram_;
-    ::gl::GLuint gridIndexingProgram_;
-    ::gl::GLuint gridPairs_;
-    ::gl::GLuint gridIndices_;
-    ::gl::GLuint position1_;
-    ::gl::GLuint position2_;
-    ::gl::GLuint velocity1_;
-    ::gl::GLuint velocity2_;
-    ::gl::GLuint density1_;
-    ::gl::GLuint density2_;
-    ::gl::GLuint distance_;
-    ::gl::GLuint wallweight_;
+    ::gl::GLuint programRender_;
+    ::gl::GLuint programPositionUpdate_;
+    ::gl::GLuint programGridInsert_;
+    ::gl::GLuint programGridSort_;
+    ::gl::GLuint programGridIndexing_;
+    ::gl::GLuint bufGridPairs_;
+    ::gl::GLuint bufGridIndices_;
+    ::gl::GLuint bufPosition1_;
+    ::gl::GLuint bufPosition2_;
+    ::gl::GLuint bufVelocity1_;
+    ::gl::GLuint bufVelocity2_;
+    ::gl::GLuint bufDensity1_;
+    ::gl::GLuint bufDensity2_;
+    ::gl::GLuint bufWallweight_;
+    ::gl::GLuint texDistance_;
 
     ::gl::GLuint vao_;
     bool swapTextures_;
