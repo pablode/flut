@@ -75,6 +75,8 @@ ansimproj::Simulation::Simulation()
   programGridSort_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
   programGridIndexing_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/densityComputation.comp");
+  programDensityComputation_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
   programPositionUpdate_ = createComputeShader(shaderSource);
   const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
@@ -90,6 +92,7 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programGridInsert_);
   deleteShader(programGridSort_);
   deleteShader(programGridIndexing_);
+  deleteShader(programDensityComputation_);
   deleteShader(programPositionUpdate_);
   deleteShader(programRender_);
   deleteBuffer(bufGridPairs_);
@@ -108,6 +111,7 @@ ansimproj::Simulation::~Simulation() {
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
+  swapTextures_ = !swapTextures_;
 
   // 1.1 Generate Particle/Voxel mappings
   glUseProgram(programGridInsert_);
@@ -121,7 +125,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // 1.2 Sort Particle/Voxel mappings
-  // TODO: bitonic mergesort can only handle 2^N (power of two)!
+  // TODO: bitonic mergesort can only handle 2^N!
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   const auto N = PARTICLE_COUNT;
@@ -143,9 +147,23 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glDispatchCompute(1, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
+  // 2. Density Computation
+  // TODO: implement shader
+  glUseProgram(programDensityComputation_);
+  glProgramUniform3f(programDensityComputation_, 0, 1.0f, 1.0f, 1.0f);
+  glProgramUniform3f(programDensityComputation_, 1, -0.5f, -0.5f, -0.5f);
+  glProgramUniform3ui(programDensityComputation_, 2, 10, 10, 10);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, swapTextures_ ? bufDensity1_ : bufDensity2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufWallweight_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufDensity2_ : bufDensity1_);
+  glBindImageTexture(0, texDistance_, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32F);
+  glDispatchCompute(numWorkGroups, 1, 1);
+  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-  // TODO: Step 2 & 3
-
+  // TODO: Step 3
 
   // 4. Position Update
   glUseProgram(programPositionUpdate_);
@@ -155,7 +173,6 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 2 : 0, bufPosition2_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-  swapTextures_ = !swapTextures_;
 
   // 5. Rendering
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

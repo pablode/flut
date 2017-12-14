@@ -26,11 +26,12 @@ namespace ansimproj {
     void deleteVAO(::gl::GLuint handle);
 
   private:
-    ::gl::GLuint programRender_;
-    ::gl::GLuint programPositionUpdate_;
     ::gl::GLuint programGridInsert_;
     ::gl::GLuint programGridSort_;
     ::gl::GLuint programGridIndexing_;
+    ::gl::GLuint programDensityComputation_;
+    ::gl::GLuint programPositionUpdate_;
+    ::gl::GLuint programRender_;
     ::gl::GLuint bufGridPairs_;
     ::gl::GLuint bufGridIndices_;
     ::gl::GLuint bufPosition1_;
