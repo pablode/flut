@@ -281,8 +281,8 @@ GLuint ansimproj::core::BaseRenderer::create3DTexture(std::uint32_t width, std::
   if (!handle) {
     throw std::runtime_error("Unable to 3D texture.");
   }
-  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTextureParameteri(handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   glTextureParameteri(handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
   glTextureParameteri(handle, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);

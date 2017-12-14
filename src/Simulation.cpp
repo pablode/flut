@@ -56,8 +56,17 @@ ansimproj::Simulation::Simulation()
   bufWallweight_ = createBuffer(wallWeightData, true);
 
   std::vector<float> distData;
-  distData.resize(10 * 10 * 10);
-  texDistance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, zeroFloatData);
+  distData.reserve(10 * 10 * 10);
+  for (auto x = 0; x < 10; ++x) {
+    for (auto y = 0; y < 10; ++y) {
+      for (auto z = 0; z < 10; ++z) {
+        const auto i = std::min(x, std::min(y, z));
+        const float d = std::abs(std::abs(5 - i) - 5) / 5.0f;
+        distData.push_back(d);
+      }
+    }
+  }
+  texDistance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, distData);
 
   // Shaders
   auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
