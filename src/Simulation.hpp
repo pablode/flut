@@ -31,12 +31,17 @@ namespace ansimproj {
     ::gl::GLuint gridInsertProgram_;
     ::gl::GLuint gridSortProgram_;
     ::gl::GLuint gridIndexingProgram_;
-    ::gl::GLuint position1_;
-    ::gl::GLuint velocity1_;
-    ::gl::GLuint velocity2_;
-    ::gl::GLuint position2_;
     ::gl::GLuint gridPairs_;
     ::gl::GLuint gridIndices_;
+    ::gl::GLuint position1_;
+    ::gl::GLuint position2_;
+    ::gl::GLuint velocity1_;
+    ::gl::GLuint velocity2_;
+    ::gl::GLuint density1_;
+    ::gl::GLuint density2_;
+    ::gl::GLuint distance_;
+    ::gl::GLuint wallweight_;
+
     ::gl::GLuint vao_;
     bool swapTextures_;
   };

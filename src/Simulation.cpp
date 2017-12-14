@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <iostream>
+#include <limits>
 
 using namespace gl;
 
@@ -31,14 +32,32 @@ ansimproj::Simulation::Simulation()
   position1_ = createBuffer(posColData, true);
   position2_ = createBuffer(posColData, true);
 
-  std::vector<float> velocityData;
-  velocityData.resize(PARTICLE_COUNT * 3);
-  velocity1_ = createBuffer(velocityData, true);
-  velocity2_ = createBuffer(velocityData, true);
+  std::vector<float> zeroFloatData;
+  zeroFloatData.resize(PARTICLE_COUNT * 3);
+  velocity1_ = createBuffer(zeroFloatData, true);
+  velocity2_ = createBuffer(zeroFloatData, true);
+  density1_ = createBuffer(zeroFloatData, true);
+  density2_ = createBuffer(zeroFloatData, true);
 
   std::vector<GLuint> gridIndicesData;
   gridIndicesData.resize(10 * 10 * 10 * 2);
   gridIndices_ = createBuffer(gridIndicesData, true);
+
+  std::vector<float> wallWeightData;
+  wallWeightData.reserve(1024);
+  wallWeightData.push_back(std::numeric_limits<float>::lowest());
+  const float re = 0.05;            // effective range
+  for (auto i = 1; i < 1024; ++i) { // 1024 samples
+    const float r = 1.0f / i;       // range [0, 1]
+    const double weight =
+      (315 * std::pow(std::pow(re, 2) - std::pow(r, 2), 3)) / (64 * M_PI * std::pow(re, 9));
+    wallWeightData.push_back(static_cast<float>(weight));
+  }
+  wallweight_ = createBuffer(wallWeightData, true);
+
+  std::vector<float> distData;
+  distData.resize(10 * 10 * 10);
+  distance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, zeroFloatData);
 
   // Shaders
   auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
@@ -64,12 +83,16 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(gridInsertProgram_);
   deleteShader(gridSortProgram_);
   deleteShader(gridIndexingProgram_);
+  deleteBuffer(gridPairs_);
+  deleteBuffer(gridIndices_);
   deleteBuffer(position1_);
   deleteBuffer(position2_);
   deleteBuffer(velocity1_);
   deleteBuffer(velocity2_);
-  deleteBuffer(gridPairs_);
-  deleteBuffer(gridIndices_);
+  deleteBuffer(density1_);
+  deleteBuffer(density2_);
+  deleteBuffer(wallweight_);
+  deleteTexture(distance_);
   deleteVAO(vao_);
 }
 
