@@ -7,76 +7,54 @@
 using namespace gl;
 
 ansimproj::Simulation::Simulation()
-  : BaseRenderer() {
+  : BaseRenderer()
+  , swapTextures_{false} {
 
-  // Buffer with <uint particleId, uint voxelId>
-  // representing the Uniform Grid mappings.
+  // Buffers
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
   gridPairs_ = createBuffer(gridPairsData, true);
 
-  // Position 1 & 2 Buffers (pos+col)
-  std::vector<float> positionData;
-  positionData.reserve(PARTICLE_COUNT * 6);
+  std::vector<float> posColData;
+  posColData.reserve(PARTICLE_COUNT * 6);
   for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
-    const float x = (rand() % 10000) / 10000.0f;
-    const float y = (rand() % 10000) / 10000.0f;
-    const float z = (rand() % 10000) / 10000.0f;
-    positionData.push_back(-0.5f + x);
-    positionData.push_back(-0.5f + y);
-    positionData.push_back(-0.5f + z);
-    positionData.push_back(x);
-    positionData.push_back(y);
-    positionData.push_back(z);
+    const float x = (std::rand() % 10000) / 10000.0f;
+    const float y = (std::rand() % 10000) / 10000.0f;
+    const float z = (std::rand() % 10000) / 10000.0f;
+    posColData.push_back(-0.5f + x);
+    posColData.push_back(-0.5f + y);
+    posColData.push_back(-0.5f + z);
+    posColData.push_back(x);
+    posColData.push_back(y);
+    posColData.push_back(z);
   }
-  position1_ = createBuffer(positionData, true);
-  position2_ = createBuffer(positionData, true);
+  position1_ = createBuffer(posColData, true);
+  position2_ = createBuffer(posColData, true);
 
-  // Velocity Buffers
   std::vector<float> velocityData;
-  velocityData.reserve(PARTICLE_COUNT * 3);
-  for (std::uint64_t x = 0; x < PARTICLE_COUNT * 3; ++x) {
-    velocityData.push_back(0.0f);
-  }
+  velocityData.resize(PARTICLE_COUNT * 3);
+  velocity1_ = createBuffer(velocityData, true);
   velocity2_ = createBuffer(velocityData, true);
 
-  // Grid Lookup Buffer
-  std::vector<GLuint> temp;
-  temp.resize(10 * 10 * 10 * 2);
-  gridIndices_ = createBuffer(temp, true);
+  std::vector<GLuint> gridIndicesData;
+  gridIndicesData.resize(10 * 10 * 10 * 2);
+  gridIndices_ = createBuffer(gridIndicesData, true);
 
-  std::cout << "Uploaded buffers: " << position1_ << ", " << position2_ << ", " << velocity2_
-            << ", " << gridIndices_ << std::endl;
-
-  // Uniform Grid Insert Shader
+  // Shaders
   auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
   gridInsertProgram_ = createComputeShader(shaderSource);
-  std::cout << "Grid Insert Shader compiled: " << gridInsertProgram_ << std::endl;
-
-  // Uniform Grid Sort Shader
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
   gridSortProgram_ = createComputeShader(shaderSource);
-  std::cout << "Grid Sort Shader compiled: " << gridSortProgram_ << std::endl;
-
-  // Uniform Grid Indexing Shader
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
   gridIndexingProgram_ = createComputeShader(shaderSource);
-  std::cout << "Grid Indexing Shader compiled: " << gridSortProgram_ << std::endl;
-
-  // Position Update Compute Shader
-  const auto &comp3 = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
-  positionUpdateProgram_ = createComputeShader(comp3);
-  std::cout << "Position Update Shader compiled: " << positionUpdateProgram_ << std::endl;
-
-  // Render shader & VAO
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
+  positionUpdateProgram_ = createComputeShader(shaderSource);
   const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.vert");
   const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simplePoint.frag");
   renderProgram_ = createVertFragShader(vert, frag);
-  std::cout << "Render Shader compiled: " << renderProgram_ << std::endl;
-  vao_ = createVAO(position1_);
-  std::cout << "VAO created: " << vao_ << std::endl;
 
-  swapTextures_ = false;
+  // Other
+  vao_ = createVAO(position1_);
   glPointSize(7.5f);
 }
 
@@ -88,6 +66,7 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(gridIndexingProgram_);
   deleteBuffer(position1_);
   deleteBuffer(position2_);
+  deleteBuffer(velocity1_);
   deleteBuffer(velocity2_);
   deleteBuffer(gridPairs_);
   deleteBuffer(gridIndices_);
@@ -95,9 +74,6 @@ ansimproj::Simulation::~Simulation() {
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glBindVertexArray(vao_);
-
   constexpr auto localSize = 128;
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
 
@@ -139,7 +115,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // TODO: Step 2 & 3
 
 
-  // 4. Position Update Shader test
+  // 4. Position Update
   glUseProgram(positionUpdateProgram_);
   glProgramUniform1f(positionUpdateProgram_, 0, dt);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, swapTextures_ ? 0 : 2, position1_);
@@ -149,15 +125,15 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   swapTextures_ = !swapTextures_;
 
-  // 5. Simple vert/frag rendering program
+  // 5. Rendering
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(renderProgram_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
-  constexpr GLuint mvpLoc = 0;
-  constexpr GLuint mvLoc = 1;
   const Eigen::Matrix4f mvp = projection * view;
-  glProgramUniformMatrix4fv(renderProgram_, mvpLoc, 1, GL_FALSE, mvp.data());
-  glProgramUniformMatrix4fv(renderProgram_, mvLoc, 1, GL_FALSE, view.data());
+  glProgramUniformMatrix4fv(renderProgram_, 0, 1, GL_FALSE, mvp.data());
+  glProgramUniformMatrix4fv(renderProgram_, 1, 1, GL_FALSE, view.data());
+  glBindVertexArray(vao_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 }
 

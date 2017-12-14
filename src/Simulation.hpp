@@ -32,6 +32,7 @@ namespace ansimproj {
     ::gl::GLuint gridSortProgram_;
     ::gl::GLuint gridIndexingProgram_;
     ::gl::GLuint position1_;
+    ::gl::GLuint velocity1_;
     ::gl::GLuint velocity2_;
     ::gl::GLuint position2_;
     ::gl::GLuint gridPairs_;
