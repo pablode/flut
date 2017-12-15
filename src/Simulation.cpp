@@ -139,7 +139,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   }
 
   // 1.3 Find Voxel indices and size
-  constexpr auto searchDepth = static_cast<std::uint32_t>(std::log2(PARTICLE_COUNT)) + 1;
+  const auto searchDepth = static_cast<std::uint32_t>(std::log2(PARTICLE_COUNT)) + 1;
   glUseProgram(programGridIndexing_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridIndices_);
