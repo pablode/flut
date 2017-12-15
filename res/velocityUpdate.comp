@@ -1,4 +1,5 @@
 #version 430 core
+#define M_PI 3.14159265358979323846
 
 /// Pipeline stage 3.
 /// Calculates the new velocity using pressure and viscosity
@@ -6,13 +7,12 @@
 ///   Input: Density (2), Uniform Grid, Position (1), Velocity (1), Distance Func
 ///   Output: Velocity (2)
 
-const float EPS = 0.001;
-
 layout (local_size_x = 128) in;
 
-layout (location = 0) uniform vec3 gridLength;
-layout (location = 1) uniform vec3 gridOrigin;
-layout (location = 2) uniform uvec3 cellsPerAxis;
+layout (location = 0) uniform float dt;
+layout (location = 1) uniform vec3 gridLength;
+layout (location = 2) uniform vec3 gridOrigin;
+layout (location = 3) uniform uvec3 cellsPerAxis;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
@@ -23,6 +23,9 @@ layout (r32f, binding = 0) uniform readonly image3D distanceBuf;
 
 layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
 
+const float EPS = 0.001;
+
+///
 uint cellId(float length, float pos) {
   return uint((cellsPerAxis * (1.0 - EPS) * (length - pos)) / length);
 }
@@ -35,6 +38,50 @@ uint voxelId(uint particleCount, float x, float y, float z) {
   return vox;
 }
 
+///
+float weightPress(float re, float r) {
+  return (45 * pow(re - abs(r), 3) * (r / abs(r))) / (M_PI * pow(re, 6));
+}
+
+float weightVis(float re, float r) {
+  return (re - abs(r)) / (M_PI * pow(re, 6));
+}
+
+float weight(float r, float s, float t) {
+  // TODO
+  // return imageLoad(distanceBuf, vec3(r, s, t));
+  return 1.0;
+}
+
+///
+float wallPressure() {
+  // TODO: use dist func
+  return 1.0;
+}
+
+float fluidPressure() {
+  // TODO
+  return 1.0;
+}
+
+float forcePressure() {
+  // TODO
+  return 1.0;
+}
+
+float forceViscosity() {
+  // TODO
+  return 1.0;
+}
+
+vec3 momentumConservation(float density, float pressure,
+  vec3 oldVelocity, float visCoeff, vec3 gravity) {
+  // Calculates the velocity.
+  vec3 dUdt = (1.0/density) * /*GRADIENT?*/ pressure + visCoeff * /*LAPLACE?*/ oldVelocity + gravity;
+  return dUdt;
+}
+
+///
 void main() {
   uint particleCount = mappings.length() / 2;
   int particlesPerGroup = (position1.length() / 6) / int(gl_NumWorkGroups.x);
@@ -45,11 +92,17 @@ void main() {
     float y = position1[p * 6 + 1];
     float z = position1[p * 6 + 2];
     uint vId = voxelId(particleCount, x, y, z);
+    vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
 
     //
     // TODO
     //
 
-    velocity2[p * 3 + 0] = -x * 0.1f * sin(vId + 1);
+    vec3 gravity = vec3(0.0, 9.81, 0.0);
+    vec3 momentumTest = momentumConservation(1.0, 0.5, oldVelocity, 0.2 * float(vId), gravity) * dt;
+
+    velocity2[p * 3 + 0] = momentumTest.x;
+    velocity2[p * 3 + 1] = momentumTest.y;
+    velocity2[p * 3 + 2] = momentumTest.z;
   }
 }

@@ -169,9 +169,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 3. Velocity Update
   // TODO: implement shader
   glUseProgram(programVelocityUpdate_);
-  glProgramUniform3f(programVelocityUpdate_, 0, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(programVelocityUpdate_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programVelocityUpdate_, 2, 10, 10, 10);
+  glProgramUniform1f(programVelocityUpdate_, 0, dt);
+  glProgramUniform3f(programVelocityUpdate_, 1, 1.0f, 1.0f, 1.0f);
+  glProgramUniform3f(programVelocityUpdate_, 2, -0.5f, -0.5f, -0.5f);
+  glProgramUniform3ui(programVelocityUpdate_, 3, 10, 10, 10);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
