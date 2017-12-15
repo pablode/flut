@@ -84,7 +84,7 @@ void ansimproj::core::Camera::recalcView() {
 
 void ansimproj::core::Camera::recalcProjection() {
   constexpr float FOV = 75;
-  constexpr float FAR_PLANE = 100.0f;
+  constexpr float FAR_PLANE = 10.0f;
   constexpr float NEAR_PLANE = 0.1f;
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);
