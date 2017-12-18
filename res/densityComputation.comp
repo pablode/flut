@@ -1,4 +1,5 @@
 #version 430 core
+#define M_PI 3.14159265358979323846
 
 /// Pipeline stage 2.
 /// Particle density is estimated by averaging the surrounding
@@ -36,10 +37,23 @@ uint voxelId(uint particleCount, float x, float y, float z) {
   return vox;
 }
 
+float weight(float re, float r) {
+  return (315 * pow(re * re - r * r, 3)) / (64 * M_PI * pow(re, 9));
+}
+
+const float mass = 0.00001;
+
 void main() {
   uint particleCount = mappings.length() / 2;
 
   //
   // TODO
   //
+
+  // 1.) iterate over 3x3 voxels
+  // 2.) get voxel id and particles in voxel
+  // 3.) iterate over particles
+  // 4.) difference between positions
+  // 5.) calc density using weight func
+  // 6.) write back to buffer
 }

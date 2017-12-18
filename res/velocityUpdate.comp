@@ -39,6 +39,15 @@ uint voxelId(uint particleCount, float x, float y, float z) {
 }
 
 ///
+vec3 bbNormal(vec3 pos) {
+  vec3 absPos = abs(pos);
+  float x = (absPos.x > absPos.y && absPos.x > absPos.z) ? 1.0 : 0.0;
+  float y = (absPos.y > absPos.x && absPos.y > absPos.z) ? 1.0 : 0.0;
+  float z = (absPos.z > absPos.x && absPos.z > absPos.y) ? 1.0 : 0.0;
+  return normalize(vec3(pos.x * x, pos.y * y, pos.z * z));
+}
+
+///
 float weightPress(float re, float r) {
   return (45 * pow(re - abs(r), 3) * (r / abs(r))) / (M_PI * pow(re, 6));
 }
@@ -47,34 +56,31 @@ float weightVis(float re, float r) {
   return (re - abs(r)) / (M_PI * pow(re, 6));
 }
 
-float weight(float r, float s, float t) {
+///
+vec3 wallForce(float mass, float d, vec3 pos, float dt) {
+  vec3 global = pos - gridOrigin - gridLength * 0.5;
+  global = global / gridLength;
+
+  float wallDist = 0.5 - max(abs(global.x), max(abs(global.y), abs(global.z)));
+  if (wallDist > d)
+    return vec3(0);
+
+  vec3 wallNormal = -1.0 * bbNormal(global);
+  return (mass * (d - wallDist) * wallNormal) / (dt * dt);
+}
+
+vec3 pressureForce() {
   // TODO
-  // return imageLoad(distanceBuf, vec3(r, s, t));
-  return 1.0;
+  return vec3(0.0);
+}
+
+vec3 viscosityForce() {
+  // TODO
+  return vec3(0.0);
 }
 
 ///
-float wallPressure() {
-  // TODO: use dist func
-  return 1.0;
-}
-
-float fluidPressure() {
-  // TODO
-  return 1.0;
-}
-
-float forcePressure() {
-  // TODO
-  return 1.0;
-}
-
-float forceViscosity() {
-  // TODO
-  return 1.0;
-}
-
-vec3 momentumConservation(float density, float pressure,
+vec3 momentumConservation(float density, vec3 pressure,
   vec3 oldVelocity, float visCoeff, vec3 gravity) {
   // Calculates the velocity.
   vec3 dUdt = (1.0/density) * /*GRADIENT?*/ pressure + visCoeff * /*LAPLACE?*/ oldVelocity + gravity;
@@ -97,12 +103,27 @@ void main() {
     //
     // TODO
     //
+    float mass = 0.001;
+    float d = 0.0001;
+    vec3 pos = vec3(x, y, z);
 
+    float density = 0.005;
+    float visCoeff = 1.0;//0.2 * float(vId);
     vec3 gravity = vec3(0.0, 9.81, 0.0);
-    vec3 momentumTest = momentumConservation(1.0, 0.5, oldVelocity, 0.2 * float(vId), gravity) * dt;
+
+    vec3 pressure = vec3(0.0);
+    pressure += wallForce(mass, d, pos, dt);
+    pressure += pressureForce();
+    pressure += viscosityForce();
+
+    vec3 momentumTest = momentumConservation(density, pressure, oldVelocity, visCoeff, gravity) * dt;
 
     velocity2[p * 3 + 0] = momentumTest.x;
     velocity2[p * 3 + 1] = momentumTest.y;
     velocity2[p * 3 + 2] = momentumTest.z;
+
+    //position1[p * 6 + 3] = momentumTest.x;
+    //position1[p * 6 + 4] = momentumTest.y;
+    //position1[p * 6 + 5] = momentumTest.z;
   }
 }

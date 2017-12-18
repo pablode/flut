@@ -32,9 +32,9 @@ uint voxelId(uint particleCount, uint particle) {
   uint zCell = cellId(gridLength.z, posZ - gridOrigin.z);
   uint vox = xCell + cellsPerAxis.x * (yCell + cellsPerAxis.y * zCell);
   // Debug Output
-  position1[particle * 6 + 3] = float(xCell) / float(cellsPerAxis);
-  position1[particle * 6 + 4] = float(yCell) / float(cellsPerAxis);
-  position1[particle * 6 + 5] = float(zCell) / float(cellsPerAxis);
+  //position1[particle * 6 + 3] = float(xCell) / float(cellsPerAxis);
+  //position1[particle * 6 + 4] = float(yCell) / float(cellsPerAxis);
+  //position1[particle * 6 + 5] = float(zCell) / float(cellsPerAxis);
   return vox;
 }
 
