@@ -19,20 +19,21 @@ layout (location = 2) uniform uvec3 cellsPerAxis;
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
 layout (std430, binding = 2) buffer indicesBuf { uint indices[]; };
-layout (std430, binding = 3) buffer densityBuf1 { float density1[]; };
-layout (std430, binding = 4) buffer wallweightBuf { float wallweight[]; };
-layout (r32f, binding = 0) uniform readonly image3D distanceBuf;
+layout (std430, binding = 3) buffer wallweightBuf { float wallweight[]; };
 
-layout (std430, binding = 5) buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
 
 uint cellId(float length, float pos) {
   return uint((cellsPerAxis * (1.0 - EPS) * (length - pos)) / length);
 }
 
-uint voxelId(uint particleCount, float x, float y, float z) {
-  uint xCell = cellId(gridLength.x, x - gridOrigin.x);
-  uint yCell = cellId(gridLength.y, y - gridOrigin.y);
-  uint zCell = cellId(gridLength.z, z - gridOrigin.z);
+uint voxelId(uint particleCount, vec3 pos) {
+  vec3 c = pos - gridOrigin;
+  if (c.x < 0 || c.x > gridLength.x || c.y < 0 || c.y > gridLength.y || c.z < 0 || c.z > gridLength.z)
+    return cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z;
+  uint xCell = cellId(gridLength.x, c.x);
+  uint yCell = cellId(gridLength.y, c.y);
+  uint zCell = cellId(gridLength.z, c.z);
   uint vox = xCell + cellsPerAxis.x * (yCell + cellsPerAxis.y * zCell);
   return vox;
 }
@@ -41,19 +42,49 @@ float weight(float re, float r) {
   return (315 * pow(re * re - r * r, 3)) / (64 * M_PI * pow(re, 9));
 }
 
-const float mass = 0.00001;
+const float mass = 0.5;
 
 void main() {
+  vec3 voxelSize = gridLength / cellsPerAxis;
   uint particleCount = mappings.length() / 2;
+  uint particlesPerGroup = particleCount / (gl_NumWorkGroups.x);
+  uint startParticle = (gl_WorkGroupID.x) * particlesPerGroup;
+  uint endParticle = startParticle + particlesPerGroup;
 
-  //
-  // TODO
-  //
+  for (uint p = startParticle; p < endParticle; ++p) {
+    vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
+    if (p >= particleCount)
+      continue;
 
-  // 1.) iterate over 3x3 voxels
-  // 2.) get voxel id and particles in voxel
-  // 3.) iterate over particles
-  // 4.) difference between positions
-  // 5.) calc density using weight func
-  // 6.) write back to buffer
+    float d = 0.0;
+    for (int x = -1; x <= 1; ++x) {
+      for (int y = -1; y <= 1; ++y) {
+        for (int z = -1; z <= 1; ++z) {
+          vec3 newPos = pos + voxelSize * vec3(x, y, z);
+          uint otherVoxelId = voxelId(particleCount, newPos);
+          if (otherVoxelId >= cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z)
+            continue;
+          uint otherParticleIndex = indices[otherVoxelId * 2 + 0];
+          uint otherParticleSize = indices[otherVoxelId * 2 + 1];
+          if (otherParticleSize == 0)
+            continue;
+
+          for (uint c = 0; c < otherParticleSize; ++c) {
+            uint otherParticleId = mappings[otherParticleIndex * 2 + c * 2];
+            vec3 otherParticlePos = vec3(position1[otherParticleId * 6 + 0], position1[otherParticleId * 6 + 1],
+              position1[otherParticleId * 6 + 2]);
+            float posDiff = distance(otherParticlePos, pos);
+
+            // TODO: which value?
+            float re = 0.2;
+            d += mass * weight(re, posDiff);
+          }
+        }
+      }
+    }
+
+    // TODO: wall boundary density contribution
+    density2[p] = d;
+  }
+
 }

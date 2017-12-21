@@ -36,8 +36,7 @@ ansimproj::Simulation::Simulation()
   zeroFloatData.resize(PARTICLE_COUNT * 3);
   bufVelocity1_ = createBuffer(zeroFloatData, true);
   bufVelocity2_ = createBuffer(zeroFloatData, true);
-  bufDensity1_ = createBuffer(zeroFloatData, true);
-  bufDensity2_ = createBuffer(zeroFloatData, true);
+  bufDensity_ = createBuffer(zeroFloatData, true);
 
   std::vector<GLuint> gridIndicesData;
   gridIndicesData.resize(GRID_VOXEL_COUNT * 2);
@@ -103,8 +102,7 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufPosition2_);
   deleteBuffer(bufVelocity1_);
   deleteBuffer(bufVelocity2_);
-  deleteBuffer(bufDensity1_);
-  deleteBuffer(bufDensity2_);
+  deleteBuffer(bufDensity_);
   deleteBuffer(bufWallweight_);
   deleteVAO(vao_);
 }
@@ -157,9 +155,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, swapTextures_ ? bufDensity1_ : bufDensity2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufWallweight_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufDensity2_ : bufDensity1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufWallweight_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufDensity_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -173,7 +170,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, swapTextures_ ? bufDensity2_ : bufDensity1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapTextures_ ? bufVelocity1_ : bufVelocity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
   glDispatchCompute(numWorkGroups, 1, 1);

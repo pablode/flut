@@ -43,8 +43,7 @@ namespace ansimproj {
     ::gl::GLuint bufPosition2_;
     ::gl::GLuint bufVelocity1_;
     ::gl::GLuint bufVelocity2_;
-    ::gl::GLuint bufDensity1_;
-    ::gl::GLuint bufDensity2_;
+    ::gl::GLuint bufDensity_;
     ::gl::GLuint bufWallweight_;
 
     ::gl::GLuint vao_;
