@@ -166,8 +166,8 @@ GLuint ansimproj::core::BaseRenderer::createVertFragShader(
   }
 
   glDetachShader(handle, vertHandle);
-  glDeleteShader(vertHandle);
   glDetachShader(handle, fragHandle);
+  glDeleteShader(vertHandle);
   glDeleteShader(fragHandle);
   return handle;
 }

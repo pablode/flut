@@ -40,7 +40,7 @@ ansimproj::Simulation::Simulation()
   bufDensity2_ = createBuffer(zeroFloatData, true);
 
   std::vector<GLuint> gridIndicesData;
-  gridIndicesData.resize(10 * 10 * 10 * 2);
+  gridIndicesData.resize(GRID_VOXEL_COUNT * 2);
   bufGridIndices_ = createBuffer(gridIndicesData, true);
 
   std::vector<float> wallWeightData;
@@ -56,17 +56,16 @@ ansimproj::Simulation::Simulation()
   bufWallweight_ = createBuffer(wallWeightData, true);
 
   std::vector<float> distData;
-  distData.reserve(10 * 10 * 10);
-  for (auto x = 0; x < 10; ++x) {
-    for (auto y = 0; y < 10; ++y) {
-      for (auto z = 0; z < 10; ++z) {
-        const auto i = std::min(x, std::min(y, z));
+  distData.reserve(GRID_VOXEL_COUNT);
+  for (std::uint32_t x = 0; x < GRID_RES_X; ++x) {
+    for (std::uint32_t y = 0; y < GRID_RES_Y; ++y) {
+      for (std::uint32_t z = 0; z < GRID_RES_Z; ++z) {
+        const std::int32_t i = std::min(x, std::min(y, z));
         const float d = std::abs(std::abs(5 - i) - 5) / 5.0f;
         distData.push_back(d);
       }
     }
   }
-  texDistance_ = create3DTexture(10, 10, 10, GL_R32F, GL_R, GL_FLOAT, distData);
 
   // Shaders
   auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
@@ -107,7 +106,6 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufDensity1_);
   deleteBuffer(bufDensity2_);
   deleteBuffer(bufWallweight_);
-  deleteTexture(texDistance_);
   deleteVAO(vao_);
 }
 
@@ -120,7 +118,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glUseProgram(programGridInsert_);
   glProgramUniform3f(programGridInsert_, 0, 1.0f, 1.0f, 1.0f);
   glProgramUniform3f(programGridInsert_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programGridInsert_, 2, 10, 10, 10);
+  glProgramUniform3ui(programGridInsert_, 2, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
   glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
@@ -155,14 +153,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glUseProgram(programDensityComputation_);
   glProgramUniform3f(programDensityComputation_, 0, 1.0f, 1.0f, 1.0f);
   glProgramUniform3f(programDensityComputation_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programDensityComputation_, 2, 10, 10, 10);
+  glProgramUniform3ui(programDensityComputation_, 2, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, swapTextures_ ? bufDensity1_ : bufDensity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufWallweight_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufDensity2_ : bufDensity1_);
-  glBindImageTexture(0, texDistance_, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32F);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -172,14 +169,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1f(programVelocityUpdate_, 0, dt);
   glProgramUniform3f(programVelocityUpdate_, 1, 1.0f, 1.0f, 1.0f);
   glProgramUniform3f(programVelocityUpdate_, 2, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programVelocityUpdate_, 3, 10, 10, 10);
+  glProgramUniform3ui(programVelocityUpdate_, 3, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, swapTextures_ ? bufDensity2_ : bufDensity1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapTextures_ ? bufVelocity1_ : bufVelocity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
-  glBindImageTexture(0, texDistance_, 0, GL_TRUE, 0, GL_READ_ONLY, GL_R32F);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 

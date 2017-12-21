@@ -7,7 +7,11 @@ namespace ansimproj {
   class Simulation : public core::BaseRenderer {
 
   private:
-    constexpr static std::uint32_t PARTICLE_COUNT = 131072;
+    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 13;//131072;
+    constexpr static std::uint32_t GRID_RES_X = 10;
+    constexpr static std::uint32_t GRID_RES_Y = 10;
+    constexpr static std::uint32_t GRID_RES_Z = 10;
+    constexpr static std::uint32_t GRID_VOXEL_COUNT = GRID_RES_X * GRID_RES_Y * GRID_RES_Z;
     static_assert(!(PARTICLE_COUNT & (PARTICLE_COUNT - 1)),
       "PARTICLE_COUNT must be 2^N because of bitonic mergesort.");
 
@@ -42,7 +46,6 @@ namespace ansimproj {
     ::gl::GLuint bufDensity1_;
     ::gl::GLuint bufDensity2_;
     ::gl::GLuint bufWallweight_;
-    ::gl::GLuint texDistance_;
 
     ::gl::GLuint vao_;
     bool swapTextures_;
