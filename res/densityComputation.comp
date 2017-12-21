@@ -38,11 +38,18 @@ uint voxelId(uint particleCount, vec3 pos) {
   return vox;
 }
 
+float wallDist(vec3 pos) {
+ vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
+ return 0.5 - max(abs(global.x), max(abs(global.y), abs(global.z)));
+}
+
 float weight(float re, float r) {
   return (315 * pow(re * re - r * r, 3)) / (64 * M_PI * pow(re, 9));
 }
 
+// TODO: which values?
 const float mass = 0.5;
+const float re = 0.1;
 
 void main() {
   vec3 voxelSize = gridLength / cellsPerAxis;
@@ -75,15 +82,18 @@ void main() {
               position1[otherParticleId * 6 + 2]);
             float posDiff = distance(otherParticlePos, pos);
 
-            // TODO: which value?
-            float re = 0.2;
             d += mass * weight(re, posDiff);
           }
         }
       }
     }
 
-    // TODO: wall boundary density contribution
+    float dist = wallDist(pos);
+    if (dist < re) {
+      // TODO: adjust weight function..
+      float e = (0.5 - dist) * 2.0 * mass * 10;
+      d += pow(e, 2);
+    }
     density2[p] = d;
   }
 

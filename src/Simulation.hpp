@@ -7,7 +7,7 @@ namespace ansimproj {
   class Simulation : public core::BaseRenderer {
 
   private:
-    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 13;//131072;
+    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 10;//131072;
     constexpr static std::uint32_t GRID_RES_X = 10;
     constexpr static std::uint32_t GRID_RES_Y = 10;
     constexpr static std::uint32_t GRID_RES_Z = 10;
