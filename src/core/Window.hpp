@@ -4,6 +4,8 @@
 #include <functional>
 #include <string>
 
+// Window implementation using SDL2 and imgui.
+
 namespace ansimproj {
   namespace core {
 

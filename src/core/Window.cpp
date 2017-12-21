@@ -1,5 +1,8 @@
 #include "Window.hpp"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl_glbinding.h"
+
 #include <stdexcept>
 
 ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int32_t height)
@@ -24,9 +27,12 @@ ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int3
   if (!context_) {
     throw std::runtime_error(SDL_GetError());
   }
+  ImGui_ImplSdlGLBinding_Init(window_);
+  ImGui_ImplSdlGLBinding_NewFrame(window_);
 }
 
 ansimproj::core::Window::~Window() {
+  ImGui_ImplSdlGLBinding_Shutdown();
   SDL_GL_DeleteContext(context_);
   SDL_DestroyWindow(window_);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -35,31 +41,33 @@ ansimproj::core::Window::~Window() {
 void ansimproj::core::Window::pollEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-    case SDL_QUIT:
-      shouldClose_ = true;
-      break;
-    case SDL_WINDOWEVENT: {
-      switch (event.window.event) {
-      case SDL_WINDOWEVENT_RESIZED:
-      case SDL_WINDOWEVENT_SIZE_CHANGED: {
-        const std::uint32_t width = static_cast<std::uint32_t>(event.window.data1);
-        const std::uint32_t height = static_cast<std::uint32_t>(event.window.data2);
-        if (resizeCallback_) {
-          resizeCallback_(width, height);
+    if (!ImGui_ImplSdlGLBinding_ProcessEvent(&event)) {
+      switch (event.type) {
+      case SDL_QUIT:
+        shouldClose_ = true;
+        break;
+      case SDL_WINDOWEVENT: {
+        switch (event.window.event) {
+        case SDL_WINDOWEVENT_RESIZED:
+        case SDL_WINDOWEVENT_SIZE_CHANGED: {
+          const std::uint32_t width = static_cast<std::uint32_t>(event.window.data1);
+          const std::uint32_t height = static_cast<std::uint32_t>(event.window.data2);
+          if (resizeCallback_) {
+            resizeCallback_(width, height);
+          }
+        } break;
+        default:
+          break;
         }
-      } break;
+        break;
+      }
+      case SDL_MOUSEBUTTONDOWN: {
+        // TODO
+        break;
+      }
       default:
         break;
       }
-      break;
-    }
-    case SDL_MOUSEBUTTONDOWN: {
-      // TODO
-      break;
-    }
-    default:
-      break;
     }
   }
 }
@@ -69,7 +77,9 @@ bool ansimproj::core::Window::shouldClose() {
 }
 
 void ansimproj::core::Window::swap() {
+  ImGui::Render();
   SDL_GL_SwapWindow(window_);
+  ImGui_ImplSdlGLBinding_NewFrame(window_);
 }
 
 std::uint32_t ansimproj::core::Window::width() const {

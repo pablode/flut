@@ -8,7 +8,6 @@
 using namespace gl;
 
 ansimproj::core::BaseRenderer::BaseRenderer() {
-  glbinding::Binding::initialize();
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
   const auto &extensions = glbinding::ContextInfo::extensions();
