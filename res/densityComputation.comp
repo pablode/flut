@@ -49,7 +49,7 @@ float weight(float re, float r) {
 
 // TODO: which values?
 const float mass = 0.5;
-const float re = 0.1;
+const float re = 0.2;
 
 void main() {
   vec3 voxelSize = gridLength / cellsPerAxis;

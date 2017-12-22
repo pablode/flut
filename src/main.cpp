@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
     [&](std::uint32_t width, std::uint32_t height) { simulation.resize(width, height); });
   simulation.resize(window.width(), window.height());
 
+  auto &options = simulation.options();
   using clock = std::chrono::high_resolution_clock;
   auto lastTime = clock::now();
   while (!window.shouldClose()) {
@@ -42,17 +43,14 @@ int main(int argc, char *argv[]) {
     ImGui::SetNextWindowPos({50, 50});
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr,
       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
-    float deltaMod = 2.0f;
-    ImGui::SliderFloat("Delta-Time mod", &deltaMod, 0.0f, 10.0f, nullptr, 2.0f);
-    float gravity[3] = {0.0f, 9.81f, 0.0f};
-    ImGui::DragFloat3("Gravity", &gravity[0], 0.1f);
-    static ImGuiColorEditFlags colorFlags = 0;
+    ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 10.0f, nullptr, 2.0f);
+    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.1f);
     ImGui::Text("Particle Color:");
-    ImGui::RadioButton("Initial", &colorFlags, 0);
+    ImGui::RadioButton("Initial", &options.mode, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Density", &colorFlags, 1);
+    ImGui::RadioButton("Density", &options.mode, 1);
     ImGui::SameLine();
-    ImGui::RadioButton("Uniform Grid", &colorFlags, 2);
+    ImGui::RadioButton("Uniform Grid", &options.mode, 2);
     ImGui::SameLine();
     ImGui::End();
 

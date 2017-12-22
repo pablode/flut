@@ -167,6 +167,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3f(programVelocityUpdate_, 1, 1.0f, 1.0f, 1.0f);
   glProgramUniform3f(programVelocityUpdate_, 2, -0.5f, -0.5f, -0.5f);
   glProgramUniform3ui(programVelocityUpdate_, 3, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform3fv(programVelocityUpdate_, 4, 1, &options_.gravity[0]);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
@@ -178,7 +179,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 4. Position Update
   glUseProgram(programPositionUpdate_);
-  glProgramUniform1f(programPositionUpdate_, 0, dt);
+  glProgramUniform1f(programPositionUpdate_, 0, dt * options_.deltaTimeMod);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapTextures_ ? bufPosition2_ : bufPosition1_);
@@ -193,6 +194,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   const Eigen::Matrix4f mvp = projection * view;
   glProgramUniformMatrix4fv(programRender_, 0, 1, GL_FALSE, mvp.data());
   glProgramUniformMatrix4fv(programRender_, 1, 1, GL_FALSE, view.data());
+  glProgramUniform3f(programRender_, 2, 1.0f, 1.0f, 1.0f);
+  glProgramUniform3f(programRender_, 3, -0.5f, -0.5f, -0.5f);
+  glProgramUniform3ui(programRender_, 4, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform1ui(programRender_, 5, PARTICLE_COUNT);
+  glProgramUniform1i(programRender_, 6, options_.mode);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindVertexArray(vao_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 }
@@ -225,4 +233,8 @@ void ansimproj::Simulation::deleteVAO(GLuint handle) {
 
 void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   glViewport(0, 0, width, height);
+}
+
+ansimproj::Simulation::SimulationOptions& ansimproj::Simulation::options() {
+  return options_;
 }

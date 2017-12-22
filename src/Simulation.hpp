@@ -6,8 +6,16 @@ namespace ansimproj {
 
   class Simulation : public core::BaseRenderer {
 
+  public:
+    struct SimulationOptions {
+      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{0.1f}, mode{0} {}
+      float gravity[3];
+      float deltaTimeMod;
+      std::int32_t mode;
+    };
+
   private:
-    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 10;//131072;
+    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 11;//131072;
     constexpr static std::uint32_t GRID_RES_X = 10;
     constexpr static std::uint32_t GRID_RES_Y = 10;
     constexpr static std::uint32_t GRID_RES_Z = 10;
@@ -24,12 +32,15 @@ namespace ansimproj {
 
     void resize(std::uint32_t width, std::uint32_t height);
 
+    SimulationOptions& options();
+
   private:
     ::gl::GLuint createVAO(const ::gl::GLuint &vbo) const;
 
     void deleteVAO(::gl::GLuint handle);
 
   private:
+    SimulationOptions options_;
     ::gl::GLuint programGridInsert_;
     ::gl::GLuint programGridSort_;
     ::gl::GLuint programGridIndexing_;
@@ -45,7 +56,6 @@ namespace ansimproj {
     ::gl::GLuint bufVelocity2_;
     ::gl::GLuint bufDensity_;
     ::gl::GLuint bufWallweight_;
-
     ::gl::GLuint vao_;
     bool swapTextures_;
   };
