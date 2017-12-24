@@ -21,17 +21,17 @@ layout (location = 6) uniform int color;
 out vec3 fragPos;
 out vec3 fragColor;
 
-uint cellId(float length, float pos) {
-  return uint((cellsPerAxis * (1.0 - EPS) * (length - pos)) / length);
+uint cellId(uint cellCount, float length, float pos) {
+  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
 }
 
 vec3 voxelColor(uint particleCount, uint p) {
   float posX = position2[p * 6 + 0];
   float posY = position2[p * 6 + 1];
   float posZ = position2[p * 6 + 2];
-  uint xCell = cellId(gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(gridLength.z, posZ - gridOrigin.z);
+  uint xCell = cellId(cellsPerAxis.x, gridLength.x, posX - gridOrigin.x);
+  uint yCell = cellId(cellsPerAxis.y, gridLength.y, posY - gridOrigin.y);
+  uint zCell = cellId(cellsPerAxis.z, gridLength.z, posZ - gridOrigin.z);
   return vec3(xCell, yCell, zCell) / float(cellsPerAxis);
 }
 

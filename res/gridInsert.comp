@@ -19,17 +19,17 @@ layout (location = 3) uniform uint particleCount;
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
 
-uint cellId(float length, float pos) {
-  return uint((cellsPerAxis * (1.0 - EPS) * (length - pos)) / length);
+uint cellId(uint cellCount, float length, float pos) {
+  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
 }
 
 uint voxelId(uint particleCount, uint particle) {
   float posX = position1[particle * 6 + 0];
   float posY = position1[particle * 6 + 1];
   float posZ = position1[particle * 6 + 2];
-  uint xCell = cellId(gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(gridLength.z, posZ - gridOrigin.z);
+  uint xCell = cellId(cellsPerAxis.x, gridLength.x, posX - gridOrigin.x);
+  uint yCell = cellId(cellsPerAxis.y, gridLength.y, posY - gridOrigin.y);
+  uint zCell = cellId(cellsPerAxis.z, gridLength.z, posZ - gridOrigin.z);
   uint id = xCell + cellsPerAxis.x * (yCell + cellsPerAxis.y * zCell);
   return id;
 }
