@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     ImGui::SetNextWindowPos({50, 50});
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr,
       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
-    ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 10.0f, nullptr, 2.0f);
+    ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.1f);
     ImGui::Text("Particle Color:");
     ImGui::RadioButton("Initial", &options.mode, 0);
