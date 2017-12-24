@@ -21,9 +21,9 @@ void integrate(int particle, float dt) {
   vec3 oldPos = vec3(position1[posIndex.x], position1[posIndex.y], position1[posIndex.z]);
   vec3 newVelo = vec3(velocity2[veloIndex.x], velocity2[veloIndex.y], velocity2[veloIndex.z]);
   vec3 newPos = oldPos + newVelo * dt;
-  position2[posIndex.x] = newPos.x;
-  position2[posIndex.y] = newPos.y;
-  position2[posIndex.z] = newPos.z;
+  position2[posIndex.x] = max(-0.5, min(newPos.x, 0.5));
+  position2[posIndex.y] = max(-0.5, min(newPos.y, 0.5));
+  position2[posIndex.z] = max(-0.5, min(newPos.z, 0.5));
 }
 
 void main() {
