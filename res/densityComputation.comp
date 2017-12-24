@@ -43,8 +43,8 @@ uint voxelId(uint particleCount, vec3 pos) {
 }
 
 float wallDist(vec3 pos) {
- vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
- return 0.5 - max(abs(global.x), max(abs(global.y), abs(global.z)));
+  vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
+  return 0.5 - max(0.000001, max(abs(global.x), max(abs(global.y), abs(global.z))));
 }
 
 float weight(float re, float r) {
@@ -55,15 +55,15 @@ float weight(float re, float r) {
 void main() {
   vec3 voxelSize = gridLength / cellsPerAxis;
   uint particleCount = mappings.length() / 2;
-  uint particlesPerGroup = particleCount / (gl_NumWorkGroups.x);
-  uint startParticle = (gl_WorkGroupID.x) * particlesPerGroup;
+  uint particlesPerGroup = particleCount / gl_NumWorkGroups.x;
+  uint startParticle = gl_WorkGroupID.x * particlesPerGroup;
   uint endParticle = startParticle + particlesPerGroup;
 
   for (uint p = startParticle; p < endParticle; ++p) {
-    vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
     if (p >= particleCount)
-      continue;
+      return;
 
+    vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
     float d = 0.0;
     for (int x = -1; x <= 1; ++x) {
       for (int y = -1; y <= 1; ++y) {
@@ -72,16 +72,19 @@ void main() {
           uint otherVoxelId = voxelId(particleCount, newPos);
           if (otherVoxelId >= cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z)
             continue;
-          uint otherParticleIndex = indices[otherVoxelId * 2 + 0];
+          uint otherParticleVoxelId = indices[otherVoxelId * 2 + 0];
           uint otherParticleSize = indices[otherVoxelId * 2 + 1];
           if (otherParticleSize == 0)
             continue;
 
           for (uint c = 0; c < otherParticleSize; ++c) {
-            uint otherParticleId = mappings[otherParticleIndex * 2 + c * 2];
-            vec3 otherParticlePos = vec3(position1[otherParticleId * 6 + 0], position1[otherParticleId * 6 + 1],
-              position1[otherParticleId * 6 + 2]);
+            uint otherParticleId = mappings[otherParticleVoxelId * 2 + c * 2];
+            vec3 otherParticlePos = vec3(position1[otherParticleId * 6 + 0],
+              position1[otherParticleId * 6 + 1], position1[otherParticleId * 6 + 2]);
             float posDiff = distance(otherParticlePos, pos);
+
+            if (posDiff >= re)
+              continue;
 
             d += mass * weight(re, posDiff);
           }
@@ -92,10 +95,8 @@ void main() {
     float dist = wallDist(pos);
     if (dist < re) {
       // TODO: adjust weight function..
-      float e = (0.5 - dist) * 2.0 * mass * 10;
-      d += pow(e, 2);
+      d += 500;//10 * mass * weight(re, dist);
     }
     density2[p] = d;
   }
-
 }
