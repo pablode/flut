@@ -1,7 +1,7 @@
 #version 430 core
 
 const float EPS = 0.001;
-const float MAX_DENSITY = 7500.0;
+const float MAX_DENSITY = 50000.0;
 
 layout (location = 0) in vec3 vertPos;
 layout (location = 1) in vec3 vertColor;

@@ -22,9 +22,9 @@ ansimproj::Simulation::Simulation()
     const float x = (std::rand() % 10000) / 10000.0f;
     const float y = (std::rand() % 10000) / 10000.0f;
     const float z = (std::rand() % 10000) / 10000.0f;
-    posColData.push_back(-0.5f + x);
-    posColData.push_back(-0.5f + y);
-    posColData.push_back(-0.5f + z);
+    posColData.push_back((-0.5f + x) / 2.0f);
+    posColData.push_back((-0.5f + y) / 2.0f);
+    posColData.push_back((-0.5f + z) / 2.0f);
     posColData.push_back(x);
     posColData.push_back(y);
     posColData.push_back(z);
@@ -111,6 +111,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   constexpr auto localSize = 128;
   constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
   swapTextures_ = !swapTextures_;
+  dt = 0.01; // TODO?
 
   // 1.1 Generate Particle/Voxel mappings
   glUseProgram(programGridInsert_);
@@ -124,7 +125,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   // 1.2 Sort Particle/Voxel mappings
-  // TODO: bitonic mergesort can only handle 2^N!
+  // TODO: replace bitonic mergesort with counting sort
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   const auto N = PARTICLE_COUNT;
