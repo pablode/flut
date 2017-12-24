@@ -14,7 +14,7 @@ layout (std430, binding = 1) buffer indicesBuf { uint indices[]; };
 
 layout (location = 0) uniform uint depth; // log2(N+1)
 
-layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in;
+layout (local_size_x = 128) in;
 
 void found(uint curPos, uint voxelId) {
   uint lower = curPos;
@@ -26,17 +26,17 @@ void found(uint curPos, uint voxelId) {
     upper++;
   }
   indices[voxelId * 2 + 0] = lower;
-  indices[voxelId * 2 + 1] = upper - lower + 1;
+  indices[voxelId * 2 + 1] = (upper - lower) + 1;
 }
 
 uint search(uint curPos, uint targetId, uint stride) {
   uint voxId = mappings[curPos * 2 + 1];
-  uint dir = (targetId <= voxId) ? -1 : 1;
+  uint dir = (targetId < voxId) ? -1 : (targetId == voxId) ? 0 : 1;
   return dir * stride + curPos;
 }
 
 void main() {
-  uint voxelId = gl_LocalInvocationIndex;
+  uint voxelId = gl_GlobalInvocationID.x;
   uint len = mappings.length() / 2;
   if (voxelId >= indices.length() / 2)
     return;
