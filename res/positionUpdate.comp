@@ -15,7 +15,7 @@ layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer velocityBuf2 { float velocity2[]; };
 layout (std430, binding = 2) buffer positionBuf2 { float position2[]; };
 
-void integrate(int particle, float dt) {
+void integrate(uint particle, float dt) {
   uvec3 posIndex = uvec3(particle * 6 + 0, particle * 6 + 1, particle * 6 + 2);
   uvec3 veloIndex = uvec3(particle * 3 + 0, particle * 3 + 1, particle * 3 + 2);
   vec3 oldPos = vec3(position1[posIndex.x], position1[posIndex.y], position1[posIndex.z]);
@@ -27,10 +27,9 @@ void integrate(int particle, float dt) {
 }
 
 void main() {
-  int particlesPerGroup = (position1.length() / 6) / int(gl_NumWorkGroups.x);
-  int startParticle = int(gl_WorkGroupID.x) * particlesPerGroup;
-  int endParticle = startParticle + particlesPerGroup;
-  for (int p = startParticle; p < endParticle; ++p) {
-    integrate(p, dt);
-  }
+  uint particleCount = velocity2.length() / 3;
+  uint p = gl_GlobalInvocationID.x;
+  if (p >= particleCount)
+    return;
+  integrate(p, dt);
 }

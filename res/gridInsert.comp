@@ -35,12 +35,11 @@ uint voxelId(uint particleCount, uint particle) {
 }
 
 void main() {
-  uint particlesPerGroup = particleCount / gl_NumWorkGroups.x;
-  uint startParticle = gl_WorkGroupID.x * particlesPerGroup;
-  uint endParticle = startParticle + particlesPerGroup;
-  for (uint p = startParticle; p < endParticle; ++p) {
-    uint vox = voxelId(particleCount, p);
-    mappings[p * 2] = p;
-    mappings[p * 2 + 1] = vox;
-  }
+  uint p = gl_GlobalInvocationID.x;
+  if (p >= particleCount)
+    return;
+
+  uint vox = voxelId(particleCount, p);
+  mappings[p * 2] = p;
+  mappings[p * 2 + 1] = vox;
 }
