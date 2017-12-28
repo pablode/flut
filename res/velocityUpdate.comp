@@ -73,11 +73,12 @@ float pressure(float density) {
 }
 
 vec3 wallForce(float mass, vec3 pos, float dt) {
-  vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
-  float wallDist = min(0.5, max(0.000001, 0.5 - max(0.000001, max(abs(global.x), max(abs(global.y), abs(global.z))))));
+  vec3 centered = (pos - gridOrigin - gridLength / 2);
+  vec3 wallDist3d = gridLength / 2 - abs(centered);
+  float wallDist = min(wallDist3d.x, min(wallDist3d.y, wallDist3d.z));
   if (wallDist >= restDist)
     return vec3(0.0);
-  vec3 wallNormal = -1.0 * bbNormal(global);
+  vec3 wallNormal = -1.0 * bbNormal(centered);
   return (mass * (restDist - wallDist) * wallNormal) / (dt * dt);
 }
 

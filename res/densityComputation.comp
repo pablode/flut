@@ -41,8 +41,9 @@ uint voxelId(uint particleCount, vec3 pos) {
 }
 
 float wallDist(vec3 pos) {
-  vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
-  return 0.5 - max(abs(global.x), max(abs(global.y), abs(global.z)));
+  vec3 centered = (pos - gridOrigin - gridLength / 2);
+  vec3 wallDist3d = gridLength / 2 - abs(centered);
+  return min(wallDist3d.x, min(wallDist3d.y, wallDist3d.z));
 }
 
 float weight(float re, float r) {
