@@ -26,7 +26,7 @@ ansimproj::Simulation::Simulation()
     posColData.push_back((-0.5f + y) / 2.0f);
     posColData.push_back((-0.5f + z) / 2.0f);
     posColData.push_back(x);
-    posColData.push_back(y);
+    posColData.push_back(0.0f);
     posColData.push_back(z);
   }
   bufPosition1_ = createBuffer(posColData, true);
