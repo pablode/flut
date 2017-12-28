@@ -87,6 +87,7 @@ ansimproj::Simulation::Simulation()
 
   // Other
   vao_ = createVAO(bufPosition1_);
+  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
 ansimproj::Simulation::~Simulation() {
@@ -192,8 +193,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 5. Rendering
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = options_.shadingMode == 0 ? 7.5f : 20.0f;
-  glPointSize(pointRadius);
+  const float pointRadius = options_.shadingMode == 0 ? 35.0f : 100.0f;
   glUseProgram(programRender_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
@@ -205,8 +205,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3fv(programRender_, 4, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programRender_, 5, 1, GRID_RES.data());
   glProgramUniform1ui(programRender_, 6, PARTICLE_COUNT);
-  glProgramUniform1i(programRender_, 7, options_.colorMode);
-  glProgramUniform1i(programRender_, 8, options_.shadingMode);
+  glProgramUniform1f(programRender_, 7, pointRadius);
+  glProgramUniform1i(programRender_, 8, options_.colorMode);
+  glProgramUniform1i(programRender_, 9, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindVertexArray(vao_);

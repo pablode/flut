@@ -16,8 +16,9 @@ layout (location = 3) uniform vec3 gridLength;
 layout (location = 4) uniform vec3 gridOrigin;
 layout (location = 5) uniform uvec3 gridResolution;
 layout (location = 6) uniform uint particleCount;
-layout (location = 7) uniform int colorMode;
-layout (location = 8) uniform int shadingMode;
+layout (location = 7) uniform float pointRadius;
+layout (location = 8) uniform int colorMode;
+layout (location = 9) uniform int shadingMode;
 
 out vec3 fragPos;
 out vec3 fragColor;
@@ -53,5 +54,7 @@ void main() {
   }
 
   fragPos = (view * vec4(vertPos, 1.0)).xyz;
+  float dist = length(fragPos);
+  gl_PointSize = pointRadius / dist;
   gl_Position = modelViewProj * vec4(vertPos, 1.0);
 }
