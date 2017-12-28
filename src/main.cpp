@@ -27,7 +27,6 @@ int main(int argc, char *argv[]) {
     std::chrono::duration<float> timeSpan(clock::now() - lastTime);
     float deltaTime = timeSpan.count();
     lastTime = clock::now();
-    std::cout << deltaTime << std::endl;
 
     // IO
     window.pollEvents();

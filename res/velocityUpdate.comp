@@ -25,13 +25,13 @@ layout (r32f, binding = 0) uniform readonly image3D distanceBuf;
 layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
 
 const float EPS = 0.001;
-const float k = 25.0;//8.31451;
+const float k = 1.0;//8.31451;
 const float mass = 0.05;
 const float re = 0.05;
 const float visCoeff = 3.5;
-const float restDist = re;
+const float restDist = 0.05;
 const float restPressure = 0.0;
-const float restDensity = 1000.0;
+const float restDensity = 10000.0;
 
 ///
 uint cellId(uint cellCount, float length, float pos) {
@@ -159,8 +159,8 @@ void main() {
   acceleration += visCoeff * viscosity;
   acceleration += gravity;
 
-  vec3 momentum = oldVelocity + acceleration * dt;
-  velocity2[p * 3 + 0] = momentum.x;
-  velocity2[p * 3 + 1] = momentum.y;
-  velocity2[p * 3 + 2] = momentum.z;
+  vec3 newVelocity = oldVelocity + acceleration * dt;
+  velocity2[p * 3 + 0] = newVelocity.x;
+  velocity2[p * 3 + 1] = newVelocity.y;
+  velocity2[p * 3 + 2] = newVelocity.z;
 }

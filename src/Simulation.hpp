@@ -20,7 +20,7 @@ namespace ansimproj {
     const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_LEN = {1.0f, 1.0f, 1.0f};
     const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_ORIGIN = {-0.5f, -0.5f, -0.5f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
-    const std::uint32_t PARTICLE_COUNT = 2 << 9;
+    const std::uint32_t PARTICLE_COUNT = 2 << 10;
 
   public:
     Simulation();
