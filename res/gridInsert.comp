@@ -13,7 +13,7 @@ layout (local_size_x = 128) in;
 
 layout (location = 0) uniform vec3 gridLength;
 layout (location = 1) uniform vec3 gridOrigin;
-layout (location = 2) uniform uvec3 cellsPerAxis;
+layout (location = 2) uniform uvec3 gridResolution;
 layout (location = 3) uniform uint particleCount;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
@@ -27,10 +27,10 @@ uint voxelId(uint particleCount, uint particle) {
   float posX = position1[particle * 6 + 0];
   float posY = position1[particle * 6 + 1];
   float posZ = position1[particle * 6 + 2];
-  uint xCell = cellId(cellsPerAxis.x, gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(cellsPerAxis.y, gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(cellsPerAxis.z, gridLength.z, posZ - gridOrigin.z);
-  uint id = xCell + cellsPerAxis.x * (yCell + cellsPerAxis.y * zCell);
+  uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
+  uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
+  uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
+  uint id = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
   return id;
 }
 

@@ -8,20 +8,18 @@ namespace ansimproj {
 
   public:
     struct SimulationOptions {
-      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{0.2f}, mode{1} {}
+      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{0.2f}, mode{0} {}
       float gravity[3];
       float deltaTimeMod;
       std::int32_t mode;
     };
 
   private:
-    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 9;
-    constexpr static std::uint32_t GRID_RES_X = 32;
-    constexpr static std::uint32_t GRID_RES_Y = 32;
-    constexpr static std::uint32_t GRID_RES_Z = 32;
-    constexpr static std::uint32_t GRID_VOXEL_COUNT = GRID_RES_X * GRID_RES_Y * GRID_RES_Z;
-    static_assert(!(PARTICLE_COUNT & (PARTICLE_COUNT - 1)),
-      "PARTICLE_COUNT must be 2^N because of bitonic mergesort.");
+    const Eigen::Matrix<::gl::GLuint, 3, 1> GRID_RES = {32, 32, 32};
+    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_LEN = {1.0f, 1.0f, 1.0f};
+    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_ORIGIN = {-0.5f, -0.5f, -0.5f};
+    const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
+    const std::uint32_t PARTICLE_COUNT = 2 << 9;
 
   public:
     Simulation();

@@ -13,7 +13,7 @@ layout (location = 0) uniform mat4 modelViewProj;
 layout (location = 1) uniform mat4 modelView;
 layout (location = 2) uniform vec3 gridLength;
 layout (location = 3) uniform vec3 gridOrigin;
-layout (location = 4) uniform uvec3 cellsPerAxis;
+layout (location = 4) uniform uvec3 gridResolution;
 layout (location = 5) uniform uint particleCount;
 
 layout (location = 6) uniform int color;
@@ -29,10 +29,10 @@ vec3 voxelColor(uint particleCount, uint p) {
   float posX = position2[p * 6 + 0];
   float posY = position2[p * 6 + 1];
   float posZ = position2[p * 6 + 2];
-  uint xCell = cellId(cellsPerAxis.x, gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(cellsPerAxis.y, gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(cellsPerAxis.z, gridLength.z, posZ - gridOrigin.z);
-  return vec3(xCell, yCell, zCell) / float(cellsPerAxis);
+  uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
+  uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
+  uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
+  return vec3(xCell, yCell, zCell) / float(gridResolution);
 }
 
 void main() {

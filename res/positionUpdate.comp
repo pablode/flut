@@ -8,6 +8,8 @@
 ///   Output: Position (2)
 
 layout (location = 0) uniform float dt;
+layout (location = 1) uniform vec3 gridLength;
+layout (location = 2) uniform vec3 gridOrigin;
 
 layout (local_size_x = 128) in;
 
@@ -21,9 +23,10 @@ void integrate(uint particle, float dt) {
   vec3 oldPos = vec3(position1[posIndex.x], position1[posIndex.y], position1[posIndex.z]);
   vec3 newVelo = vec3(velocity2[veloIndex.x], velocity2[veloIndex.y], velocity2[veloIndex.z]);
   vec3 newPos = oldPos + newVelo * dt;
-  position2[posIndex.x] = max(-0.499999999, min(newPos.x, 0.499999999));
-  position2[posIndex.y] = max(-0.499999999, min(newPos.y, 0.499999999));
-  position2[posIndex.z] = max(-0.499999999, min(newPos.z, 0.499999999));
+  vec3 bounds = gridOrigin + gridLength;
+  position2[posIndex.x] = max(gridOrigin.x, min(newPos.x, bounds.x));
+  position2[posIndex.y] = max(gridOrigin.y, min(newPos.y, bounds.y));
+  position2[posIndex.z] = max(gridOrigin.z, min(newPos.z, bounds.z));
 }
 
 void main() {

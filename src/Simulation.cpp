@@ -43,13 +43,14 @@ ansimproj::Simulation::Simulation()
   bufGridIndices_ = createBuffer(gridIndicesData, true);
 
   // TODO: using a/this weight function is not correct
+  const std::uint32_t numSamples = 1024;
   std::vector<float> wallWeightData;
-  wallWeightData.reserve(1024);
+  wallWeightData.reserve(numSamples);
   wallWeightData.push_back(std::numeric_limits<float>::lowest());
-  const float D = 1000;
+  const float D = 100;
   const float D_r = std::sqrt(D);
-  for (auto i = 1; i < 1024; ++i) { // 1024 samples
-    const float r = 1.0f / i;       // range [0, 1]
+  for (std::uint32_t i = 1; i <= numSamples; ++i) {
+    const float r = 1.0f / i;
     const auto weight = std::pow(D_r, r * 2);
     wallWeightData.push_back(weight);
   }
@@ -57,9 +58,9 @@ ansimproj::Simulation::Simulation()
 
   std::vector<float> distData;
   distData.reserve(GRID_VOXEL_COUNT);
-  for (std::uint32_t x = 0; x < GRID_RES_X; ++x) {
-    for (std::uint32_t y = 0; y < GRID_RES_Y; ++y) {
-      for (std::uint32_t z = 0; z < GRID_RES_Z; ++z) {
+  for (std::uint32_t x = 0; x < GRID_RES(0); ++x) {
+    for (std::uint32_t y = 0; y < GRID_RES(1); ++y) {
+      for (std::uint32_t z = 0; z < GRID_RES(2); ++z) {
         const std::int32_t i = std::min(x, std::min(y, z));
         const float d = std::abs(std::abs(5 - i) - 5) / 5.0f;
         distData.push_back(d);
@@ -110,15 +111,15 @@ ansimproj::Simulation::~Simulation() {
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
-  constexpr auto numWorkGroups = PARTICLE_COUNT / localSize;
+  const auto numWorkGroups = PARTICLE_COUNT / localSize;
   swapTextures_ = !swapTextures_;
   dt = 0.01;
 
   // 1.1 Generate Particle/Voxel mappings
   glUseProgram(programGridInsert_);
-  glProgramUniform3f(programGridInsert_, 0, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(programGridInsert_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programGridInsert_, 2, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform3fv(programGridInsert_, 0, 1, GRID_LEN.data());
+  glProgramUniform3fv(programGridInsert_, 1, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programGridInsert_, 2, 1, GRID_RES.data());
   glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
@@ -152,9 +153,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 2. Density Computation
   glUseProgram(programDensityComputation_);
-  glProgramUniform3f(programDensityComputation_, 0, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(programDensityComputation_, 1, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programDensityComputation_, 2, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform3fv(programDensityComputation_, 0, 1, GRID_LEN.data());
+  glProgramUniform3fv(programDensityComputation_, 1, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programDensityComputation_, 2, 1, GRID_RES.data());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
@@ -166,9 +167,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 3. Velocity Update
   glUseProgram(programVelocityUpdate_);
   glProgramUniform1f(programVelocityUpdate_, 0, dt * options_.deltaTimeMod);
-  glProgramUniform3f(programVelocityUpdate_, 1, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(programVelocityUpdate_, 2, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programVelocityUpdate_, 3, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform3fv(programVelocityUpdate_, 1, 1, GRID_LEN.data());
+  glProgramUniform3fv(programVelocityUpdate_, 2, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programVelocityUpdate_, 3, 1, GRID_RES.data());
   glProgramUniform3fv(programVelocityUpdate_, 4, 1, &options_.gravity[0]);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
@@ -182,6 +183,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 4. Position Update
   glUseProgram(programPositionUpdate_);
   glProgramUniform1f(programPositionUpdate_, 0, dt * options_.deltaTimeMod);
+  glProgramUniform3fv(programPositionUpdate_, 1, 1, GRID_LEN.data());
+  glProgramUniform3fv(programPositionUpdate_, 2, 1, GRID_ORIGIN.data());
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapTextures_ ? bufPosition2_ : bufPosition1_);
@@ -196,9 +199,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   const Eigen::Matrix4f mvp = projection * view;
   glProgramUniformMatrix4fv(programRender_, 0, 1, GL_FALSE, mvp.data());
   glProgramUniformMatrix4fv(programRender_, 1, 1, GL_FALSE, view.data());
-  glProgramUniform3f(programRender_, 2, 1.0f, 1.0f, 1.0f);
-  glProgramUniform3f(programRender_, 3, -0.5f, -0.5f, -0.5f);
-  glProgramUniform3ui(programRender_, 4, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
+  glProgramUniform3fv(programRender_, 2, 1, GRID_LEN.data());
+  glProgramUniform3fv(programRender_, 3, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programRender_, 4, 1, GRID_RES.data());
   glProgramUniform1ui(programRender_, 5, PARTICLE_COUNT);
   glProgramUniform1i(programRender_, 6, options_.mode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition2_ : bufPosition1_);

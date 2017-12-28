@@ -12,7 +12,7 @@ layout (local_size_x = 128) in;
 
 layout (location = 0) uniform vec3 gridLength;
 layout (location = 1) uniform vec3 gridOrigin;
-layout (location = 2) uniform uvec3 cellsPerAxis;
+layout (location = 2) uniform uvec3 gridResolution;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
@@ -33,12 +33,10 @@ uint cellId(uint cellCount, float length, float pos) {
 
 uint voxelId(uint particleCount, vec3 pos) {
   vec3 c = pos - gridOrigin;
-  if (c.x < 0 || c.x > gridLength.x || c.y < 0 || c.y > gridLength.y || c.z < 0 || c.z > gridLength.z)
-    return cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z;
-  uint xCell = cellId(cellsPerAxis.x, gridLength.x, c.x);
-  uint yCell = cellId(cellsPerAxis.y, gridLength.y, c.y);
-  uint zCell = cellId(cellsPerAxis.z, gridLength.z, c.z);
-  uint vox = xCell + cellsPerAxis.x * (yCell + cellsPerAxis.y * zCell);
+  uint xCell = cellId(gridResolution.x, gridLength.x, c.x);
+  uint yCell = cellId(gridResolution.y, gridLength.y, c.y);
+  uint zCell = cellId(gridResolution.z, gridLength.z, c.z);
+  uint vox = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
   return vox;
 }
 
@@ -53,20 +51,21 @@ float weight(float re, float r) {
 
 ///
 void main() {
-  vec3 voxelSize = gridLength / cellsPerAxis;
+  vec3 voxelSize = gridLength / gridResolution;
   uint particleCount = mappings.length() / 2;
   uint p = gl_GlobalInvocationID.x;
   if (p >= particleCount)
     return;
 
-  vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
+  vec3 pos = vec3(position1[p * 6 + 0],
+    position1[p * 6 + 1], position1[p * 6 + 2]);
   float d = 0.0;
   for (int x = -1; x <= 1; ++x) {
     for (int y = -1; y <= 1; ++y) {
       for (int z = -1; z <= 1; ++z) {
         vec3 newPos = pos + voxelSize * vec3(x, y, z);
         uint otherVoxelId = voxelId(particleCount, newPos);
-        if (otherVoxelId >= cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z)
+        if (otherVoxelId >= gridResolution.x * gridResolution.y * gridResolution.z)
           continue;
         uint otherParticleVoxelId = indices[otherVoxelId * 2 + 0];
         uint otherParticleSize = indices[otherVoxelId * 2 + 1];
