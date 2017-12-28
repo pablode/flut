@@ -1,6 +1,5 @@
 #version 430 core
 #define M_PI 3.14159265358979323846
-#define k 1.0
 
 /// Pipeline stage 3.
 /// Calculates the new velocity using pressure and viscosity
@@ -26,10 +25,13 @@ layout (r32f, binding = 0) uniform readonly image3D distanceBuf;
 layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
 
 const float EPS = 0.001;
-const float mass = 1.0;
+const float k = 25.0;//8.31451;
+const float mass = 0.05;
 const float re = 0.05;
-const float visCoeff = 1.0;
-const float restDist = 0.001;
+const float visCoeff = 3.5;
+const float restDist = re;
+const float restPressure = 0.0;
+const float restDensity = 1000.0;
 
 ///
 uint cellId(uint cellCount, float length, float pos) {
@@ -66,23 +68,21 @@ float weightVis(float re, vec3 r) {
 }
 
 ///
-float pressure(float d_i) {
-  float p_0 = 0.0; // rest pressure
-  float d_0 = 10000.0; // rest density
-  return p_0 + k * (d_i - d_0);
+float pressure(float density) {
+  return restPressure + k * (density - restDensity);
 }
 
 vec3 wallForce(float mass, vec3 pos, float dt) {
   vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
-  float wallDist = 0.5 - max(0.000001, max(abs(global.x), max(abs(global.y), abs(global.z))));
-  if (wallDist > restDist)
+  float wallDist = min(0.5, max(0.000001, 0.5 - max(0.000001, max(abs(global.x), max(abs(global.y), abs(global.z))))));
+  if (wallDist >= restDist)
     return vec3(0.0);
   vec3 wallNormal = -1.0 * bbNormal(global);
   return (mass * (restDist - wallDist) * wallNormal) / (dt * dt);
 }
 
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
-  if (length(r) == 0.0)
+  if (length(r) <= 0.0)
     return vec3(0.0);
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
@@ -90,69 +90,75 @@ vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
   return -1.0 * (mass * (pi + pj) * wPress) / (2 * pjDen);
 }
 
-vec3 viscosityForce() {
-  // TODO
-  return vec3(0.0);
-}
-
-///
-vec3 momentumConservation(float density, vec3 pressure,
-  vec3 oldVelocity, float visCoeff, vec3 gravity) {
-  // Calculates the velocity.
-  vec3 dUdt = (1.0/density) * /*GRADIENT?*/ pressure + visCoeff * /*LAPLACE?*/ oldVelocity + gravity;
-  return dUdt;
+vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
+  if (length(r) <= 0.0)
+    return vec3(0.0);
+  float wVis = weightVis(re, r);
+  return (mass * (pjVelo - piVelo) * wVis) / (pjDen);
 }
 
 ///
 void main() {
   vec3 voxelSize = gridLength / cellsPerAxis;
   uint particleCount = mappings.length() / 2;
-  uint particlesPerGroup = particleCount / int(gl_NumWorkGroups.x);
-  uint startParticle = int(gl_WorkGroupID.x) * particlesPerGroup;
-  uint endParticle = startParticle + particlesPerGroup;
-  for (uint p = startParticle; p < endParticle; ++p) {
-    vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
-    vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
-    uint vId = voxelId(particleCount, pos);
-    float piDen = density2[p];
+  uint p = gl_GlobalInvocationID.x;
+  if (p >= particleCount)
+    return;
 
-    vec3 pressure = vec3(0.0);
-    for (int x = -1; x <= 1; ++x) {
-      for (int y = -1; y <= 1; ++y) {
-        for (int z = -1; z <= 1; ++z) {
-          vec3 newPos = pos + voxelSize * vec3(x, y, z);
-          uint otherVoxelId = voxelId(particleCount, newPos);
-          if (otherVoxelId >= cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z)
+  vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
+  vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
+  uint vId = voxelId(particleCount, pos);
+  float piDen = density2[p];
+  if (piDen <= 0.0)
+    return;
+  vec3 piVelo = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
+
+  vec3 pressure = vec3(0.0);
+  vec3 viscosity = vec3(0.0);
+  for (int x = -1; x <= 1; ++x) {
+    for (int y = -1; y <= 1; ++y) {
+      for (int z = -1; z <= 1; ++z) {
+        vec3 newPos = pos + voxelSize * vec3(x, y, z);
+        uint otherVoxelId = voxelId(particleCount, newPos);
+        if (otherVoxelId >= cellsPerAxis.x * cellsPerAxis.y * cellsPerAxis.z)
+          continue;
+        uint otherParticleIndex = indices[otherVoxelId * 2 + 0];
+        if (otherParticleIndex == p)
+          continue;
+        uint otherParticleSize = indices[otherVoxelId * 2 + 1];
+        if (otherParticleSize == 0)
+          continue;
+
+        for (uint c = 0; c < otherParticleSize; ++c) {
+          uint pjId = mappings[otherParticleIndex * 2 + c * 2];
+          vec3 pjPos = vec3(position1[pjId * 6 + 0], position1[pjId * 6 + 1],
+          position1[pjId * 6 + 2]);
+
+          vec3 r = pjPos - pos;
+          if (length(r) >= re)
             continue;
-          uint otherParticleIndex = indices[otherVoxelId * 2 + 0];
-          uint otherParticleSize = indices[otherVoxelId * 2 + 1];
-          if (otherParticleSize == 0)
-            continue;
 
-          for (uint c = 0; c < otherParticleSize; ++c) {
-            uint pjId = mappings[otherParticleIndex * 2 + c * 2];
-            vec3 pjPos = vec3(position1[pjId * 6 + 0], position1[pjId * 6 + 1],
-              position1[pjId * 6 + 2]);
+          float pjDen = density2[pjId];
+          if (pjDen <= 0.0)
+            return;
+          vec3 pjVelo = vec3(velocity1[pjId * 3 + 0], velocity1[pjId * 3 + 1],
+            velocity1[pjId * 3 + 2]);
 
-            vec3 r = pjPos - pos;
-            if (length(r) >= re)
-              continue;
-
-            float pjDen = density2[pjId];
-            // TODO
-            pressure += 10* pressureForce(mass, r, piDen, pjDen);
-            pressure += viscosityForce();
-          }
+          pressure += pressureForce(mass, r, piDen, pjDen);
+          viscosity += viscosityForce(mass, r, piVelo, pjVelo, pjDen);
         }
       }
     }
-
-    // TODO
-    //pressure += 100*wallForce(mass, pos, dt);
-
-    vec3 momentumTest = momentumConservation(piDen, pressure, oldVelocity, visCoeff, gravity) * dt;
-    velocity2[p * 3 + 0] = momentumTest.x;
-    velocity2[p * 3 + 1] = momentumTest.y;
-    velocity2[p * 3 + 2] = momentumTest.z;
   }
+
+  vec3 acceleration = vec3(0.0);
+  acceleration += -1.0 * (1.0 / visCoeff) * pressure;
+  acceleration += /*TODO*/10 * wallForce(mass, pos, dt);
+  acceleration += visCoeff * viscosity;
+  acceleration += gravity;
+
+  vec3 momentum = oldVelocity + acceleration * dt;
+  velocity2[p * 3 + 0] = momentum.x;
+  velocity2[p * 3 + 1] = momentum.y;
+  velocity2[p * 3 + 2] = momentum.z;
 }

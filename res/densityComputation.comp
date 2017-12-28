@@ -23,7 +23,7 @@ layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
 
 // TODO: which values?
 const float EPS = 0.001;
-const float mass = 1.0;
+const float mass = 0.05;
 const float re = 0.05;
 
 ///
@@ -44,7 +44,7 @@ uint voxelId(uint particleCount, vec3 pos) {
 
 float wallDist(vec3 pos) {
   vec3 global = (pos - gridOrigin - gridLength * 0.5) / gridLength;
-  return 0.5 - max(0.000001, max(abs(global.x), max(abs(global.y), abs(global.z))));
+  return 0.5 - max(abs(global.x), max(abs(global.y), abs(global.z)));
 }
 
 float weight(float re, float r) {
@@ -90,8 +90,8 @@ void main() {
 
   float dist = wallDist(pos);
   if (dist <= re) {
-    uint i = uint(1024 * (1.0 - (dist / re)));
+    uint i = uint(1024 * (dist / re));
     d += mass * wallweight[i];
   }
-  density2[p] = d;
+  density2[p] = max(0.0000001, d);
 }
