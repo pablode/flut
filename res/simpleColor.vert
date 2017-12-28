@@ -10,13 +10,14 @@ layout (std430, binding = 0) buffer positionBuf2 { float position2[]; };
 layout (std430, binding = 1) buffer densityBuf2 { float density2[]; };
 
 layout (location = 0) uniform mat4 modelViewProj;
-layout (location = 1) uniform mat4 modelView;
-layout (location = 2) uniform vec3 gridLength;
-layout (location = 3) uniform vec3 gridOrigin;
-layout (location = 4) uniform uvec3 gridResolution;
-layout (location = 5) uniform uint particleCount;
-
-layout (location = 6) uniform int color;
+layout (location = 1) uniform mat4 view;
+layout (location = 2) uniform mat4 projection;
+layout (location = 3) uniform vec3 gridLength;
+layout (location = 4) uniform vec3 gridOrigin;
+layout (location = 5) uniform uvec3 gridResolution;
+layout (location = 6) uniform uint particleCount;
+layout (location = 7) uniform int colorMode;
+layout (location = 8) uniform int shadingMode;
 
 out vec3 fragPos;
 out vec3 fragColor;
@@ -42,15 +43,15 @@ void main() {
   // 0: Initial
   // 1: Density
   // 2: Uniform Grid
-  if (color == 0) {
+  if (colorMode == 0) {
     fragColor = vec3(position2[p * 6 + 3], position2[p * 6 + 4], position2[p * 6 + 5]);
-  } else if (color == 1) {
+  } else if (colorMode == 1) {
     fragColor = vec3(density2[p] / MAX_DENSITY, density2[p] / MAX_DENSITY, 1.0);
     if (density2[p] <= 0.0000001 || isinf(density2[p]) || isnan(density2[p])) fragColor = vec3(1.0, 0.0, 0.0);
-  } else if (color == 2) {
+  } else if (colorMode == 2) {
     fragColor = voxelColor(particleCount, p);
   }
 
-  fragPos = (modelView * vec4(vertPos, 1.0)).xyz;
+  fragPos = (view * vec4(vertPos, 1.0)).xyz;
   gl_Position = modelViewProj * vec4(vertPos, 1.0);
 }

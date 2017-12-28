@@ -38,6 +38,9 @@ target_link_libraries(
   ${SDL2MAIN_LIBRARY}
   ${GLBINDING_LIBRARIES}
   imgui
+  SDL2
+  SDL2main
+  glbinding::glbinding
 )
 
 target_include_directories(
