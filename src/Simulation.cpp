@@ -119,7 +119,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3f(programGridInsert_, 1, -0.5f, -0.5f, -0.5f);
   glProgramUniform3ui(programGridInsert_, 2, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
   glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -202,7 +202,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3ui(programRender_, 4, GRID_RES_X, GRID_RES_Y, GRID_RES_Z);
   glProgramUniform1ui(programRender_, 5, PARTICLE_COUNT);
   glProgramUniform1i(programRender_, 6, options_.mode);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindVertexArray(vao_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
