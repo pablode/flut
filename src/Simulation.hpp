@@ -8,7 +8,7 @@ namespace ansimproj {
 
   public:
     struct SimulationOptions {
-      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{0.2f}, colorMode{2}, shadingMode{0} {}
+      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{1.0f}, colorMode{2}, shadingMode{1} {}
       float gravity[3];
       float deltaTimeMod;
       std::int32_t colorMode;

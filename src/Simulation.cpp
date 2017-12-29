@@ -113,7 +113,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   constexpr auto localSize = 128;
   const auto numWorkGroups = PARTICLE_COUNT / localSize;
   swapTextures_ = !swapTextures_;
-  dt = 0.01;
+  dt = 0.0005;
 
   // 1.1 Generate Particle/Voxel mappings
   glUseProgram(programGridInsert_);
@@ -244,6 +244,6 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   glViewport(0, 0, width, height);
 }
 
-ansimproj::Simulation::SimulationOptions& ansimproj::Simulation::options() {
+ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {
   return options_;
 }
