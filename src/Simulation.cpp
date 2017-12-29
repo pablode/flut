@@ -9,7 +9,9 @@ using namespace gl;
 
 ansimproj::Simulation::Simulation()
   : BaseRenderer()
-  , swapTextures_{false} {
+  , swapTextures_{false}
+  , swapQueries_{false}
+  , frame_{0} {
 
   // Buffers
   std::vector<GLuint> gridPairsData;
@@ -85,6 +87,8 @@ ansimproj::Simulation::Simulation()
 
   // Other
   vao_ = createVAO(bufPosition1_);
+  glGenQueries(6, &timerQueries_[0][0]);
+  glGenQueries(6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
@@ -109,10 +113,15 @@ ansimproj::Simulation::~Simulation() {
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
   const auto numWorkGroups = PARTICLE_COUNT / localSize;
+  auto& lastQuery = timerQueries_[swapQueries_ ? 0 : 1];
+  auto& query = timerQueries_[swapQueries_ ? 1 : 0];
   swapTextures_ = !swapTextures_;
+  swapQueries_ = !swapQueries_;
   dt = 0.0005;
+  ++frame_;
 
   // 1.1 Generate Particle/Voxel mappings
+  glBeginQuery(GL_TIME_ELAPSED, query[0]);
   glUseProgram(programGridInsert_);
   glProgramUniform3fv(programGridInsert_, 0, 1, GRID_LEN.data());
   glProgramUniform3fv(programGridInsert_, 1, 1, GRID_ORIGIN.data());
@@ -122,9 +131,11 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  glEndQuery(GL_TIME_ELAPSED);
 
   // 1.2 Sort Particle/Voxel mappings
   // TODO: replace bitonic mergesort with counting sort
+  glBeginQuery(GL_TIME_ELAPSED, query[1]);
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   const auto N = PARTICLE_COUNT;
@@ -136,19 +147,23 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     }
   }
+  glEndQuery(GL_TIME_ELAPSED);
 
   // 1.3 Find Voxel indices and size
   const auto searchDepth = static_cast<std::uint32_t>(std::log2(PARTICLE_COUNT)) + 1;
   const auto indexingWorkGroups =
     static_cast<std::uint32_t>(std::ceil(GRID_VOXEL_COUNT / static_cast<float>(localSize)));
+  glBeginQuery(GL_TIME_ELAPSED, query[2]);
   glUseProgram(programGridIndexing_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridIndices_);
   glProgramUniform1ui(programGridIndexing_, 0, searchDepth);
   glDispatchCompute(indexingWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  glEndQuery(GL_TIME_ELAPSED);
 
   // 2. Density Computation
+  glBeginQuery(GL_TIME_ELAPSED, query[3]);
   glUseProgram(programDensityComputation_);
   glProgramUniform3fv(programDensityComputation_, 0, 1, GRID_LEN.data());
   glProgramUniform3fv(programDensityComputation_, 1, 1, GRID_ORIGIN.data());
@@ -160,8 +175,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufDensity_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  glEndQuery(GL_TIME_ELAPSED);
 
   // 3. Force Update
+  glBeginQuery(GL_TIME_ELAPSED, query[4]);
   glUseProgram(programForceUpdate_);
   glProgramUniform1f(programForceUpdate_, 0, dt * options_.deltaTimeMod);
   glProgramUniform3fv(programForceUpdate_, 1, 1, GRID_LEN.data());
@@ -177,8 +194,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapTextures_ ? bufPosition2_ : bufPosition1_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+  glEndQuery(GL_TIME_ELAPSED);
 
   // 4. Rendering
+  glBeginQuery(GL_TIME_ELAPSED, query[5]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode == 0 ? 35.0f : 100.0f;
   glUseProgram(programRender_);
@@ -199,6 +218,24 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindVertexArray(vao_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+  glEndQuery(GL_TIME_ELAPSED);
+
+  // Fetch GPU Timer Queries
+  if (frame_ > 1) {
+    GLuint64 elapsedTime = 0;
+    glGetQueryObjectui64v(lastQuery[0], GL_QUERY_RESULT, &elapsedTime);
+    time_.gridInsertMs = elapsedTime / 1000000.0f;
+    glGetQueryObjectui64v(lastQuery[1], GL_QUERY_RESULT, &elapsedTime);
+    time_.gridSortMs = elapsedTime / 1000000.0f;
+    glGetQueryObjectui64v(lastQuery[2], GL_QUERY_RESULT, &elapsedTime);
+    time_.gridIndexingMs = elapsedTime / 1000000.0f;
+    glGetQueryObjectui64v(lastQuery[3], GL_QUERY_RESULT, &elapsedTime);
+    time_.densityComputationMs = elapsedTime / 1000000.0f;
+    glGetQueryObjectui64v(lastQuery[4], GL_QUERY_RESULT, &elapsedTime);
+    time_.forceUpdateMs = elapsedTime / 1000000.0f;
+    glGetQueryObjectui64v(lastQuery[5], GL_QUERY_RESULT, &elapsedTime);
+    time_.rendering = elapsedTime / 1000000.0f;
+  }
 }
 
 GLuint ansimproj::Simulation::createVAO(const GLuint &vbo) const {
@@ -233,4 +270,8 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
 
 ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {
   return options_;
+}
+
+const ansimproj::Simulation::SimulationTime &ansimproj::Simulation::time() const {
+  return time_;
 }

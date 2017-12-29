@@ -8,19 +8,39 @@ namespace ansimproj {
 
   public:
     struct SimulationOptions {
-      SimulationOptions() : gravity{0.0f, 9.81f, 0.0f}, deltaTimeMod{1.0f}, colorMode{2}, shadingMode{1} {}
+      SimulationOptions()
+        : gravity{0.0f, 9.81f, 0.0f}
+        , deltaTimeMod{1.0f}
+        , colorMode{2}
+        , shadingMode{1} {}
       float gravity[3];
       float deltaTimeMod;
       std::int32_t colorMode;
       std::int32_t shadingMode;
     };
 
-  private:
+    struct SimulationTime {
+      SimulationTime()
+        : gridInsertMs{0.0f}
+        , gridSortMs{0.0f}
+        , gridIndexingMs{0.0f}
+        , densityComputationMs{0.0f}
+        , forceUpdateMs{0.0f}
+        , rendering{0.0f} {}
+      float gridInsertMs;
+      float gridSortMs;
+      float gridIndexingMs;
+      float densityComputationMs;
+      float forceUpdateMs;
+      float rendering;
+    };
+
+  public:
+    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 12;
     const Eigen::Matrix<::gl::GLuint, 3, 1> GRID_RES = {32, 32, 32};
     const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_LEN = {1.0f, 1.0f, 1.0f};
     const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_ORIGIN = {-0.5f, -0.5f, -0.5f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
-    const std::uint32_t PARTICLE_COUNT = 2 << 10;
 
   public:
     Simulation();
@@ -33,13 +53,18 @@ namespace ansimproj {
 
     SimulationOptions& options();
 
+    const SimulationTime& time() const;
+
   private:
     ::gl::GLuint createVAO(const ::gl::GLuint &vbo) const;
 
     void deleteVAO(::gl::GLuint handle);
 
   private:
+    std::uint64_t frame_;
+    SimulationTime time_;
     SimulationOptions options_;
+    ::gl::GLuint timerQueries_[2][6];
     ::gl::GLuint programGridInsert_;
     ::gl::GLuint programGridSort_;
     ::gl::GLuint programGridIndexing_;
@@ -56,5 +81,6 @@ namespace ansimproj {
     ::gl::GLuint bufWallweight_;
     ::gl::GLuint vao_;
     bool swapTextures_;
+    bool swapQueries_;
   };
 }

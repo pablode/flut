@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
   simulation.resize(window.width(), window.height());
 
   auto &options = simulation.options();
+  auto &time = simulation.time();
   using clock = std::chrono::high_resolution_clock;
   auto lastTime = clock::now();
   while (!window.shouldClose()) {
@@ -43,6 +44,18 @@ int main(int argc, char *argv[]) {
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr,
       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
+    const float frameTime = time.gridInsertMs + time.gridSortMs + time.gridIndexingMs +
+      time.densityComputationMs + time.forceUpdateMs + time.rendering;
+    ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
+    ImGui::Text(
+      "Grid: %dx%dx%d", simulation.GRID_RES(0), simulation.GRID_RES(1), simulation.GRID_RES(2));
+    ImGui::Text("Frame: %.2fms (%.2fms)", frameTime, deltaTime * 1000.0f);
+
+    ImGui::Text("GrIns   GrSort  GrIdx   DensCom  ForceUp  Render");
+    ImGui::Text("%.2fms  %.2fms  %.2fms  %.2fms   %.2fms   %.2fms", time.gridInsertMs,
+      time.gridSortMs, time.gridIndexingMs, time.densityComputationMs, time.forceUpdateMs,
+      time.rendering);
+
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
 
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.1f);
@@ -60,8 +73,6 @@ int main(int argc, char *argv[]) {
     ImGui::RadioButton("Phong", &options.shadingMode, 1);
 
     ImGui::End();
-
-    // TODO: get property struct from simulation, modify, copy back
 
     window.swap();
   }
