@@ -79,8 +79,6 @@ ansimproj::Simulation::Simulation()
   programDensityComputation_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/velocityUpdate.comp");
   programVelocityUpdate_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/positionUpdate.comp");
-  programPositionUpdate_ = createComputeShader(shaderSource);
   const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
   const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
   programRender_ = createVertFragShader(vert, frag);
@@ -96,7 +94,6 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programGridIndexing_);
   deleteShader(programDensityComputation_);
   deleteShader(programVelocityUpdate_);
-  deleteShader(programPositionUpdate_);
   deleteShader(programRender_);
   deleteBuffer(bufGridPairs_);
   deleteBuffer(bufGridIndices_);
@@ -177,17 +174,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapTextures_ ? bufVelocity1_ : bufVelocity2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
-  glDispatchCompute(numWorkGroups, 1, 1);
-  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-  // 4. Position Update
-  glUseProgram(programPositionUpdate_);
-  glProgramUniform1f(programPositionUpdate_, 0, dt * options_.deltaTimeMod);
-  glProgramUniform3fv(programPositionUpdate_, 1, 1, GRID_LEN.data());
-  glProgramUniform3fv(programPositionUpdate_, 2, 1, GRID_ORIGIN.data());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapTextures_ ? bufPosition2_ : bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapTextures_ ? bufPosition2_ : bufPosition1_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 

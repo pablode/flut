@@ -45,7 +45,6 @@ namespace ansimproj {
     ::gl::GLuint programGridIndexing_;
     ::gl::GLuint programDensityComputation_;
     ::gl::GLuint programVelocityUpdate_;
-    ::gl::GLuint programPositionUpdate_;
     ::gl::GLuint programRender_;
     ::gl::GLuint bufGridPairs_;
     ::gl::GLuint bufGridIndices_;

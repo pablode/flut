@@ -23,6 +23,7 @@ layout (std430, binding = 4) buffer velocityBuf1 { float velocity1[]; };
 layout (r32f, binding = 0) uniform readonly image3D distanceBuf;
 
 layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
+layout (std430, binding = 6) buffer positionBuf2 { float position2[]; };
 
 const float EPS = 0.001;
 const float k = 20.0;
@@ -163,4 +164,10 @@ void main() {
   velocity2[p * 3 + 0] = newVelocity.x;
   velocity2[p * 3 + 1] = newVelocity.y;
   velocity2[p * 3 + 2] = newVelocity.z;
+
+  vec3 newPos = pos + newVelocity * dt;
+  vec3 bounds = gridOrigin + gridLength;
+  position2[p * 6 + 0] = max(gridOrigin.x, min(newPos.x, bounds.x));
+  position2[p * 6 + 1] = max(gridOrigin.y, min(newPos.y, bounds.y));
+  position2[p * 6 + 2] = max(gridOrigin.z, min(newPos.z, bounds.z));
 }
