@@ -77,8 +77,8 @@ ansimproj::Simulation::Simulation()
   programGridIndexing_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/densityComputation.comp");
   programDensityComputation_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/velocityUpdate.comp");
-  programVelocityUpdate_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/forceUpdate.comp");
+  programForceUpdate_ = createComputeShader(shaderSource);
   const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
   const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
   programRender_ = createVertFragShader(vert, frag);
@@ -93,7 +93,7 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programGridSort_);
   deleteShader(programGridIndexing_);
   deleteShader(programDensityComputation_);
-  deleteShader(programVelocityUpdate_);
+  deleteShader(programForceUpdate_);
   deleteShader(programRender_);
   deleteBuffer(bufGridPairs_);
   deleteBuffer(bufGridIndices_);
@@ -161,13 +161,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-  // 3. Velocity Update
-  glUseProgram(programVelocityUpdate_);
-  glProgramUniform1f(programVelocityUpdate_, 0, dt * options_.deltaTimeMod);
-  glProgramUniform3fv(programVelocityUpdate_, 1, 1, GRID_LEN.data());
-  glProgramUniform3fv(programVelocityUpdate_, 2, 1, GRID_ORIGIN.data());
-  glProgramUniform3uiv(programVelocityUpdate_, 3, 1, GRID_RES.data());
-  glProgramUniform3fv(programVelocityUpdate_, 4, 1, &options_.gravity[0]);
+  // 3. Force Update
+  glUseProgram(programForceUpdate_);
+  glProgramUniform1f(programForceUpdate_, 0, dt * options_.deltaTimeMod);
+  glProgramUniform3fv(programForceUpdate_, 1, 1, GRID_LEN.data());
+  glProgramUniform3fv(programForceUpdate_, 2, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programForceUpdate_, 3, 1, GRID_RES.data());
+  glProgramUniform3fv(programForceUpdate_, 4, 1, &options_.gravity[0]);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
@@ -178,7 +178,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-  // 5. Rendering
+  // 4. Rendering
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode == 0 ? 35.0f : 100.0f;
   glUseProgram(programRender_);

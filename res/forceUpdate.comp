@@ -2,8 +2,9 @@
 #define M_PI 3.14159265358979323846
 
 /// Pipeline stage 3.
-/// Calculates the new velocity using pressure and viscosity
-/// forces from other particles and the wall boundary.
+/// Calculates the new position and velocity using pressure and viscosity,
+/// gravity and wall boundary forces. To do that, a neighborhood search is performed.
+/// Results vary strongly based on the given physical parameters.
 ///   Input: Density (2), Uniform Grid, Position (1), Velocity (1), Distance Func
 ///   Output: Velocity (2)
 
