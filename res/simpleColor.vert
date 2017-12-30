@@ -7,7 +7,8 @@ layout (location = 0) in vec3 vertPos;
 layout (location = 1) in vec3 vertColor;
 
 layout (std430, binding = 0) buffer positionBuf2 { float position2[]; };
-layout (std430, binding = 1) buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 1) buffer densityBuf { float density[]; };
+layout (std430, binding = 2) buffer colorBuf { float color[]; };
 
 layout (location = 0) uniform mat4 modelViewProj;
 layout (location = 1) uniform mat4 view;
@@ -28,9 +29,9 @@ uint cellId(uint cellCount, float length, float pos) {
 }
 
 vec3 voxelColor(uint particleCount, uint p) {
-  float posX = position2[p * 6 + 0];
-  float posY = position2[p * 6 + 1];
-  float posZ = position2[p * 6 + 2];
+  float posX = position2[p * 3 + 0];
+  float posY = position2[p * 3 + 1];
+  float posZ = position2[p * 3 + 2];
   uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
   uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
   uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
@@ -45,10 +46,10 @@ void main() {
   // 1: Density
   // 2: Uniform Grid
   if (colorMode == 0) {
-    fragColor = vec3(position2[p * 6 + 3], position2[p * 6 + 4], position2[p * 6 + 5]);
+    fragColor = vec3(color[p * 3 + 0], color[p * 3 + 1], color[p * 3 + 2]);
   } else if (colorMode == 1) {
-    fragColor = vec3(density2[p] / MAX_DENSITY, density2[p] / MAX_DENSITY, 1.0);
-    if (density2[p] <= 0.0000001 || isinf(density2[p]) || isnan(density2[p])) fragColor = vec3(1.0, 0.0, 0.0);
+    fragColor = vec3(density[p] / MAX_DENSITY, density[p] / MAX_DENSITY, 1.0);
+    if (density[p] <= 0.0000001 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);
   } else if (colorMode == 2) {
     fragColor = voxelColor(particleCount, p);
   }

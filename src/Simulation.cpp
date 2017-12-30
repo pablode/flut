@@ -18,21 +18,24 @@ ansimproj::Simulation::Simulation()
   gridPairsData.resize(PARTICLE_COUNT * 2);
   bufGridPairs_ = createBuffer(gridPairsData, true);
 
-  std::vector<float> posColData;
-  posColData.reserve(PARTICLE_COUNT * 6);
+  std::vector<float> posData;
+  std::vector<float> colData;
+  posData.reserve(PARTICLE_COUNT * 3);
+  colData.reserve(PARTICLE_COUNT * 3);
   for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
     const float x = (std::rand() % 10000) / 10000.0f;
     const float y = (std::rand() % 10000) / 10000.0f;
     const float z = (std::rand() % 10000) / 10000.0f;
-    posColData.push_back((-0.5f + x) / 2.0f);
-    posColData.push_back((-0.5f + y) / 2.0f);
-    posColData.push_back((-0.5f + z) / 2.0f);
-    posColData.push_back(x);
-    posColData.push_back(0.0f);
-    posColData.push_back(z);
+    posData.push_back((-0.5f + x) / 2.0f);
+    posData.push_back((-0.5f + y) / 2.0f);
+    posData.push_back((-0.5f + z) / 2.0f);
+    colData.push_back(x);
+    colData.push_back(0.0f);
+    colData.push_back(z);
   }
-  bufPosition1_ = createBuffer(posColData, true);
-  bufPosition2_ = createBuffer(posColData, true);
+  bufPosition1_ = createBuffer(posData, true);
+  bufPosition2_ = createBuffer(posData, true);
+  bufColor_ = createBuffer(colData, false);
 
   std::vector<float> zeroFloatData;
   zeroFloatData.resize(PARTICLE_COUNT * 3);
@@ -99,6 +102,7 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programDensityComputation_);
   deleteShader(programForceUpdate_);
   deleteShader(programRender_);
+  deleteBuffer(bufColor_);
   deleteBuffer(bufGridPairs_);
   deleteBuffer(bufGridIndices_);
   deleteBuffer(bufPosition1_);
@@ -216,8 +220,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1i(programRender_, 9, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufColor_);
   glBindVertexArray(vao_);
-  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT); // TODO: vao bufPosition does not swap?!!
   glEndQuery(GL_TIME_ELAPSED);
 
   // Fetch GPU Timer Queries
@@ -245,18 +250,12 @@ GLuint ansimproj::Simulation::createVAO(const GLuint &vbo) const {
     throw std::runtime_error("Unable to create VAO.");
   }
   constexpr GLuint binding = 0;
-  glVertexArrayVertexBuffer(handle, binding, vbo, 0, 6 * sizeof(float));
-
+  glVertexArrayVertexBuffer(handle, binding, vbo, 0, 3 * sizeof(float));
   constexpr GLuint posAttrIndex = 0;
   constexpr GLuint posAttrOffet = 0;
   glEnableVertexArrayAttrib(handle, posAttrIndex);
   glVertexArrayAttribFormat(handle, posAttrIndex, 3, GL_FLOAT, GL_FALSE, posAttrOffet);
   glVertexArrayAttribBinding(handle, posAttrIndex, binding);
-  constexpr GLuint colAttrIndex = 1;
-  constexpr GLuint colAttrOffet = 3 * sizeof(float);
-  glEnableVertexArrayAttrib(handle, colAttrIndex);
-  glVertexArrayAttribFormat(handle, colAttrIndex, 3, GL_FLOAT, GL_FALSE, colAttrOffet);
-  glVertexArrayAttribBinding(handle, colAttrIndex, binding);
   return handle;
 }
 

@@ -108,7 +108,7 @@ void main() {
   if (p >= particleCount)
     return;
 
-  vec3 pos = vec3(position1[p * 6 + 0], position1[p * 6 + 1], position1[p * 6 + 2]);
+  vec3 pos = vec3(position1[p * 3 + 0], position1[p * 3 + 1], position1[p * 3 + 2]);
   vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
   uint vId = voxelId(particleCount, pos);
   float piDen = density2[p];
@@ -135,8 +135,8 @@ void main() {
 
         for (uint c = 0; c < otherParticleSize; ++c) {
           uint pjId = mappings[otherParticleIndex * 2 + c * 2];
-          vec3 pjPos = vec3(position1[pjId * 6 + 0], position1[pjId * 6 + 1],
-          position1[pjId * 6 + 2]);
+          vec3 pjPos = vec3(position1[pjId * 3 + 0], position1[pjId * 3 + 1],
+          position1[pjId * 3 + 2]);
 
           vec3 r = pjPos - pos;
           if (length(r) >= re)
@@ -168,7 +168,7 @@ void main() {
 
   vec3 newPos = pos + newVelocity * dt;
   vec3 bounds = gridOrigin + gridLength;
-  position2[p * 6 + 0] = max(gridOrigin.x, min(newPos.x, bounds.x));
-  position2[p * 6 + 1] = max(gridOrigin.y, min(newPos.y, bounds.y));
-  position2[p * 6 + 2] = max(gridOrigin.z, min(newPos.z, bounds.z));
+  position2[p * 3 + 0] = max(gridOrigin.x, min(newPos.x, bounds.x));
+  position2[p * 3 + 1] = max(gridOrigin.y, min(newPos.y, bounds.y));
+  position2[p * 3 + 2] = max(gridOrigin.z, min(newPos.z, bounds.z));
 }

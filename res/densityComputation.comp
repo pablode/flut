@@ -58,8 +58,8 @@ void main() {
   if (p >= particleCount)
     return;
 
-  vec3 pos = vec3(position1[p * 6 + 0],
-    position1[p * 6 + 1], position1[p * 6 + 2]);
+  vec3 pos = vec3(position1[p * 3 + 0],
+    position1[p * 3 + 1], position1[p * 3 + 2]);
   float d = 0.0;
   ivec3 numCells = ivec3(ceil(re / voxelSize));
   for (int x = -numCells.x; x <= numCells.x; ++x) {
@@ -76,8 +76,8 @@ void main() {
 
         for (uint c = 0; c < otherParticleSize; ++c) {
           uint otherParticleId = mappings[otherParticleVoxelId * 2 + c * 2];
-          vec3 otherParticlePos = vec3(position1[otherParticleId * 6 + 0],
-            position1[otherParticleId * 6 + 1], position1[otherParticleId * 6 + 2]);
+          vec3 otherParticlePos = vec3(position1[otherParticleId * 3 + 0],
+            position1[otherParticleId * 3 + 1], position1[otherParticleId * 3 + 2]);
           float posDiff = distance(otherParticlePos, pos);
 
           if (posDiff >= re)

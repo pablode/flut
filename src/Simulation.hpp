@@ -71,6 +71,7 @@ namespace ansimproj {
     ::gl::GLuint programDensityComputation_;
     ::gl::GLuint programForceUpdate_;
     ::gl::GLuint programRender_;
+    ::gl::GLuint bufColor_;
     ::gl::GLuint bufGridPairs_;
     ::gl::GLuint bufGridIndices_;
     ::gl::GLuint bufPosition1_;

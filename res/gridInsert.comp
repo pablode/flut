@@ -24,9 +24,9 @@ uint cellId(uint cellCount, float length, float pos) {
 }
 
 uint voxelId(uint particleCount, uint particle) {
-  float posX = position1[particle * 6 + 0];
-  float posY = position1[particle * 6 + 1];
-  float posZ = position1[particle * 6 + 2];
+  float posX = position1[particle * 3 + 0];
+  float posY = position1[particle * 3 + 1];
+  float posZ = position1[particle * 3 + 2];
   uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
   uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
   uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
