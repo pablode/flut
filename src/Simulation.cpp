@@ -9,8 +9,7 @@ using namespace gl;
 
 ansimproj::Simulation::Simulation()
   : BaseRenderer()
-  , swapTextures_{false}
-  , swapQueries_{false}
+  , swapFrame_{false}
   , frame_{0} {
 
   // Buffers
@@ -89,7 +88,8 @@ ansimproj::Simulation::Simulation()
   programRender_ = createVertFragShader(vert, frag);
 
   // Other
-  vao_ = createVAO(bufPosition1_);
+  vao1_ = createVAO(bufPosition1_);
+  vao2_ = createVAO(bufPosition2_);
   glGenQueries(6, &timerQueries_[0][0]);
   glGenQueries(6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -111,16 +111,16 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufVelocity2_);
   deleteBuffer(bufDensity_);
   deleteBuffer(bufWallweight_);
-  deleteVAO(vao_);
+  deleteVAO(vao1_);
+  deleteVAO(vao2_);
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
   const auto numWorkGroups = PARTICLE_COUNT / localSize;
-  auto& lastQuery = timerQueries_[swapQueries_ ? 0 : 1];
-  auto& query = timerQueries_[swapQueries_ ? 1 : 0];
-  swapTextures_ = !swapTextures_;
-  swapQueries_ = !swapQueries_;
+  auto& lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
+  auto& query = timerQueries_[swapFrame_ ? 1 : 0];
+  swapFrame_ = !swapFrame_;
   dt = 0.0005;
   ++frame_;
 
@@ -131,7 +131,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3fv(programGridInsert_, 1, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programGridInsert_, 2, 1, GRID_RES.data());
   glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -172,7 +172,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3fv(programDensityComputation_, 0, 1, GRID_LEN.data());
   glProgramUniform3fv(programDensityComputation_, 1, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programDensityComputation_, 2, 1, GRID_RES.data());
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufWallweight_);
@@ -189,13 +189,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3fv(programForceUpdate_, 2, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programForceUpdate_, 3, 1, GRID_RES.data());
   glProgramUniform3fv(programForceUpdate_, 4, 1, &options_.gravity[0]);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition1_ : bufPosition2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapTextures_ ? bufVelocity1_ : bufVelocity2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapTextures_ ? bufVelocity2_ : bufVelocity1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapTextures_ ? bufPosition2_ : bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapFrame_ ? bufVelocity1_ : bufVelocity2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);
@@ -218,11 +218,11 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1f(programRender_, 7, pointRadius);
   glProgramUniform1i(programRender_, 8, options_.colorMode);
   glProgramUniform1i(programRender_, 9, options_.shadingMode);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapTextures_ ? bufPosition2_ : bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufColor_);
-  glBindVertexArray(vao_);
-  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT); // TODO: vao bufPosition does not swap?!!
+  glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
+  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
   glEndQuery(GL_TIME_ELAPSED);
 
   // Fetch GPU Timer Queries

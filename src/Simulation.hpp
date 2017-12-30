@@ -80,8 +80,8 @@ namespace ansimproj {
     ::gl::GLuint bufVelocity2_;
     ::gl::GLuint bufDensity_;
     ::gl::GLuint bufWallweight_;
-    ::gl::GLuint vao_;
-    bool swapTextures_;
-    bool swapQueries_;
+    ::gl::GLuint vao1_;
+    ::gl::GLuint vao2_;
+    bool swapFrame_;
   };
 }
