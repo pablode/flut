@@ -88,8 +88,8 @@ ansimproj::Simulation::Simulation()
   programRender_ = createVertFragShader(vert, frag);
 
   // Other
-  vao1_ = createVAO(bufPosition1_);
-  vao2_ = createVAO(bufPosition2_);
+  vao1_ = createVAO(bufPosition1_, bufColor_);
+  vao2_ = createVAO(bufPosition2_, bufColor_);
   glGenQueries(6, &timerQueries_[0][0]);
   glGenQueries(6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -220,7 +220,6 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1i(programRender_, 9, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufColor_);
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
   glEndQuery(GL_TIME_ELAPSED);
@@ -243,19 +242,21 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   }
 }
 
-GLuint ansimproj::Simulation::createVAO(const GLuint &vbo) const {
+GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint& vboCol) const {
   GLuint handle;
   glCreateVertexArrays(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create VAO.");
   }
-  constexpr GLuint binding = 0;
-  glVertexArrayVertexBuffer(handle, binding, vbo, 0, 3 * sizeof(float));
-  constexpr GLuint posAttrIndex = 0;
-  constexpr GLuint posAttrOffet = 0;
-  glEnableVertexArrayAttrib(handle, posAttrIndex);
-  glVertexArrayAttribFormat(handle, posAttrIndex, 3, GL_FLOAT, GL_FALSE, posAttrOffet);
-  glVertexArrayAttribBinding(handle, posAttrIndex, binding);
+  glVertexArrayVertexBuffer(handle, 0, vboPos, 0, 3 * sizeof(float));
+  glEnableVertexArrayAttrib(handle, 0);
+  glVertexArrayAttribBinding(handle, 0, 0);
+  glVertexArrayAttribFormat(handle, 0, 3, GL_FLOAT, GL_FALSE, 0);
+
+  glVertexArrayVertexBuffer(handle, 1, vboCol, 0, 3 * sizeof(float));
+  glEnableVertexArrayAttrib(handle, 1);
+  glVertexArrayAttribBinding(handle, 1, 1);
+  glVertexArrayAttribFormat(handle, 1, 3, GL_FLOAT, GL_FALSE, 0);
   return handle;
 }
 

@@ -8,7 +8,6 @@ layout (location = 1) in vec3 vertColor;
 
 layout (std430, binding = 0) buffer positionBuf2 { float position2[]; };
 layout (std430, binding = 1) buffer densityBuf { float density[]; };
-layout (std430, binding = 2) buffer colorBuf { float color[]; };
 
 layout (location = 0) uniform mat4 modelViewProj;
 layout (location = 1) uniform mat4 view;
@@ -39,14 +38,13 @@ vec3 voxelColor(uint particleCount, uint p) {
 }
 
 void main() {
-  fragColor = vertColor;
-  int p = gl_VertexID;
 
   // 0: Initial
   // 1: Density
   // 2: Uniform Grid
+  int p = gl_VertexID;
   if (colorMode == 0) {
-    fragColor = vec3(color[p * 3 + 0], color[p * 3 + 1], color[p * 3 + 2]);
+    fragColor = vertColor;
   } else if (colorMode == 1) {
     fragColor = vec3(density[p] / MAX_DENSITY, density[p] / MAX_DENSITY, 1.0);
     if (density[p] <= 0.0000001 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);

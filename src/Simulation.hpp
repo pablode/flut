@@ -56,7 +56,7 @@ namespace ansimproj {
     const SimulationTime& time() const;
 
   private:
-    ::gl::GLuint createVAO(const ::gl::GLuint &vbo) const;
+    ::gl::GLuint createVAO(const ::gl::GLuint &vboPos, const ::gl::GLuint &vboCol) const;
 
     void deleteVAO(::gl::GLuint handle);
 
