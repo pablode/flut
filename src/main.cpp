@@ -6,13 +6,11 @@
 
 #include <chrono>
 #include <fstream>
-#include <glbinding/Binding.h>
 #include <iostream>
 #include <vector>
 
 int main(int argc, char *argv[]) {
-  glbinding::Binding::initialize();
-  ansimproj::core::Window window{"ansimproj", 1200, 800};
+  ansimproj::core::Window window{"ansimproj", 800, 600};
   ansimproj::core::Camera camera{window};
   ansimproj::Simulation simulation{};
 

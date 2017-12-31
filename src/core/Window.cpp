@@ -3,6 +3,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl_glbinding.h"
 
+#include <glbinding/Binding.h>
 #include <stdexcept>
 
 ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int32_t height)
@@ -27,6 +28,7 @@ ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int3
   if (!context_) {
     throw std::runtime_error(SDL_GetError());
   }
+  glbinding::Binding::initialize();
   ImGui_ImplSdlGLBinding_Init(window_);
   ImGui_ImplSdlGLBinding_NewFrame(window_);
 }
