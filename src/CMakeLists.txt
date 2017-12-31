@@ -33,20 +33,19 @@ target_compile_definitions(
 )
 
 target_link_libraries(
-  ansimproj
+  ansimproj PUBLIC
+  imgui
   ${SDL2_LIBRARY}
   ${SDL2MAIN_LIBRARY}
+  ${OPENGL_LIBRARIES}
   ${GLBINDING_LIBRARIES}
-  imgui
-  SDL2
-  SDL2main
-  glbinding::glbinding
 )
 
 target_include_directories(
   ansimproj PUBLIC
   imgui
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${GLBINDING_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${EIGEN_INCLUDE_DIR}

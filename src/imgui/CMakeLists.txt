@@ -15,12 +15,15 @@ set(IMGUI_SRCS
 add_library(imgui STATIC ${IMGUI_SRCS})
 
 target_link_libraries(
-  imgui
+  imgui PUBLIC
   ${SDL2_LIBRARY}
-  SDL2
+  ${OPENGL_LIBRARIES}
+  ${GLBINDING_LIBRARIES}
 )
 
 target_include_directories(
   imgui PUBLIC
+  ${GLBINDING_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
+  ${OPENGL_INCLUDE_DIR}
 )

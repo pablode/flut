@@ -10,8 +10,10 @@ using namespace gl;
 ansimproj::core::BaseRenderer::BaseRenderer() {
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
-  const auto &extensions = glbinding::ContextInfo::extensions();
 
+  // Commented out until glbinding issue is resolved.
+  /*
+  const auto extensions = glbinding::ContextInfo::extensions();
 #ifndef NDEBUG
   if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 3)) ||
     extensions.count(GLextension::GL_ARB_debug_output)) {
@@ -56,6 +58,7 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
     throw std::runtime_error(
       "OpenGL version 4.3 or ARB_explicit_uniform_location extension required.");
   }
+  */
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
