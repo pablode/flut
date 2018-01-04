@@ -33,6 +33,8 @@ uint cellId(uint cellCount, float length, float pos) {
 
 uint voxelId(uint particleCount, vec3 pos) {
   vec3 c = pos - gridOrigin;
+  if (c.x < 0.0 || c.x >= gridLength.x || c.y < 0.0 || c.y >= gridLength.y || c.z < 0.0 || c.z >= gridLength.z)
+    return gridResolution.x * gridResolution.y * gridResolution.z;
   uint xCell = cellId(gridResolution.x, gridLength.x, c.x);
   uint yCell = cellId(gridResolution.y, gridLength.y, c.y);
   uint zCell = cellId(gridResolution.z, gridLength.z, c.z);

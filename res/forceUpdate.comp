@@ -42,6 +42,8 @@ uint cellId(uint cellCount, float length, float pos) {
 
 uint voxelId(uint particleCount, vec3 pos) {
   vec3 c = pos - gridOrigin;
+  if (c.x < 0.0 || c.x > gridLength.x || c.y < 0.0 || c.y > gridLength.y || c.z < 0.0 || c.z > gridLength.z)
+    return gridResolution.x * gridResolution.y * gridResolution.z;
   uint xCell = cellId(gridResolution.x, gridLength.x, c.x);
   uint yCell = cellId(gridResolution.y, gridLength.y, c.y);
   uint zCell = cellId(gridResolution.z, gridLength.z, c.z);
@@ -85,7 +87,7 @@ vec3 wallForce(float mass, vec3 pos, float dt) {
 }
 
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
-  if (length(r) <= 0.0)
+  if (length(r) <= 0.0 || pjDen <= 0.000001)
     return vec3(0.0);
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
@@ -94,7 +96,7 @@ vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
 }
 
 vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
-  if (length(r) <= 0.0)
+  if (length(r) <= 0.0 || pjDen <= 0.000001)
     return vec3(0.0);
   float wVis = weightVis(re, r);
   return (mass * (pjVelo - piVelo) * wVis) / (pjDen);
@@ -136,7 +138,7 @@ void main() {
         for (uint c = 0; c < otherParticleSize; ++c) {
           uint pjId = mappings[otherParticleIndex * 2 + c * 2];
           vec3 pjPos = vec3(position1[pjId * 3 + 0], position1[pjId * 3 + 1],
-          position1[pjId * 3 + 2]);
+            position1[pjId * 3 + 2]);
 
           vec3 r = pjPos - pos;
           if (length(r) >= re)
