@@ -220,6 +220,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1i(programRender_, 9, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
   glEndQuery(GL_TIME_ELAPSED);

@@ -61,9 +61,10 @@ int main(int argc, char *argv[]) {
     ImGui::Text("Particle Color:");
     ImGui::RadioButton("Initial", &options.colorMode, 0);
     ImGui::SameLine();
-    ImGui::RadioButton("Density", &options.colorMode, 1);
+    ImGui::RadioButton("Velocity", &options.colorMode, 1);
+    ImGui::RadioButton("Density", &options.colorMode, 2);
     ImGui::SameLine();
-    ImGui::RadioButton("Uniform Grid", &options.colorMode, 2);
+    ImGui::RadioButton("Uniform Grid", &options.colorMode, 3);
 
     ImGui::Text("Particle Shading:");
     ImGui::RadioButton("None", &options.shadingMode, 0);
