@@ -49,8 +49,9 @@ void main() {
     fragColor = vertColor;
   } else if (colorMode == 1) {
     vec3 velo = vec3(velocity[p * 3 + 0], velocity[p * 3 + 1], velocity[p * 3 + 2]);
+    velo = abs(velo);
     float w = max(velo.x, max(velo.y, velo.z));
-    fragColor = (w <= 0.0001) ? vec3(0.0) : (velo / w);
+    fragColor = (w <= 0.0000001) ? vec3(0.0) : (velo / w);
   } else if (colorMode == 2) {
     fragColor = vec3(density[p] / MAX_DENSITY, density[p] / MAX_DENSITY, 1.0);
     if (density[p] <= 0.0000001 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);
