@@ -93,8 +93,9 @@ void main() {
 
   float dist = wallDist(pos);
   if (dist <= re) {
-    uint i = uint(1024 * (dist / re));
+    uint i = 1024 - uint(1024 * (dist / re));
     d += mass * wallweight[i];
   }
-  density2[p] = max(0.0000001, d);
+
+  density2[p] = d;
 }

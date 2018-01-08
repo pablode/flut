@@ -20,15 +20,18 @@ ansimproj::Simulation::Simulation()
   posData.reserve(PARTICLE_COUNT * 3);
   colData.reserve(PARTICLE_COUNT * 3);
   for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
-    const float x = (std::rand() % 10000) / 10000.0f;
-    const float y = (std::rand() % 10000) / 10000.0f;
-    const float z = (std::rand() % 10000) / 10000.0f;
-    posData.push_back((-0.5f + x) / 2.0f);
-    posData.push_back((-0.5f + y) / 2.0f);
-    posData.push_back((-0.5f + z) / 2.0f);
-    colData.push_back(x);
-    colData.push_back(0.0f);
-    colData.push_back(z);
+    const float xi = ((std::rand() % 10000) / 10000.0f);
+    const float yi = ((std::rand() % 10000) / 10000.0f);
+    const float zi = ((std::rand() % 10000) / 10000.0f);
+    const float x = xi * GRID_LEN(0);
+    const float y = yi * GRID_LEN(1);
+    const float z = zi * GRID_LEN(2);
+    posData.push_back((GRID_ORIGIN(0) + x) / 2.0f);
+    posData.push_back((GRID_ORIGIN(1) + y) / 2.0f);
+    posData.push_back((GRID_ORIGIN(2) + z) / 2.0f);
+    colData.push_back(1.0f - yi * 0.5f);
+    colData.push_back(1.0f - yi * 0.5f);
+    colData.push_back(1.0f);
   }
   bufPosition1_ = createBuffer(posData, true);
   bufPosition2_ = createBuffer(posData, true);
@@ -49,7 +52,7 @@ ansimproj::Simulation::Simulation()
   std::vector<float> wallWeightData;
   wallWeightData.reserve(numSamples);
   wallWeightData.push_back(std::numeric_limits<float>::lowest());
-  const float D = 100;
+  const float D = 1;
   const float D_r = std::sqrt(D);
   for (std::uint32_t i = 1; i <= numSamples; ++i) {
     const float r = 1.0f / i;
@@ -201,7 +204,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = options_.shadingMode == 0 ? 35.0f : 100.0f;
+  const float pointRadius = options_.shadingMode == 0 ? 50.0f : 100.0f;
   glUseProgram(programRender_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();

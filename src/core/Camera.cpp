@@ -10,7 +10,7 @@ ansimproj::core::Camera::Camera(Window &window)
   : window_(window) {
   width_ = window.width();
   height_ = window.height();
-  radius_ = 5.0f;
+  radius_ = 17.5f;
   theta_ = static_cast<float>(M_PI) / 2.0f;
   phi_ = 0.0f;
   up_ = {0.0f, 1.0f, 0.0f};
@@ -84,7 +84,7 @@ void ansimproj::core::Camera::recalcView() {
 
 void ansimproj::core::Camera::recalcProjection() {
   constexpr float FOV = 75;
-  constexpr float FAR_PLANE = 10.0f;
+  constexpr float FAR_PLANE = 50.0f;
   constexpr float NEAR_PLANE = 0.1f;
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);

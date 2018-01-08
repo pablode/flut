@@ -27,13 +27,13 @@ layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
 layout (std430, binding = 6) buffer positionBuf2 { float position2[]; };
 
 const float EPS = 0.001;
-const float k = 20.0;
+const float k = 100.0;
 const float mass = 0.05;
 const float re = 0.05;
-const float visCoeff = 10.0;
-const float restDist = 0.05;
+const float visCoeff = 2.5;
 const float restPressure = 0.0;
-const float restDensity = 10000.0;
+const float restDensity = 50000.0;
+const float wallDamping = 0.25;
 
 ///
 uint cellId(uint cellCount, float length, float pos) {
@@ -83,7 +83,7 @@ vec3 wallForce(float mass, vec3 pos, float dt) {
   if (wallDist >= re)
     return vec3(0.0);
   vec3 wallNormal = -1.0 * bbNormal(centered);
-  return (mass * (restDist - wallDist) * wallNormal) / (dt * dt);
+  return (mass * (re - wallDist) * wallNormal) / (dt * dt);
 }
 
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
@@ -158,19 +158,20 @@ void main() {
   }
 
   vec3 acceleration = vec3(0.0);
-  acceleration += -1.0 * (1.0 / visCoeff) * pressure;
-  acceleration += wallForce(mass, pos, dt);
+  acceleration += -1.0 * (1.0 / piDen) * pressure;
   acceleration += visCoeff * viscosity;
-  acceleration += gravity;
+  acceleration += wallForce(mass, pos, dt);
+  acceleration += gravity / mass; // (?)
 
-  vec3 newVelocity = oldVelocity + acceleration * dt;
-  velocity2[p * 3 + 0] = newVelocity.x;
-  velocity2[p * 3 + 1] = newVelocity.y;
-  velocity2[p * 3 + 2] = newVelocity.z;
+  vec3 newVelo = oldVelocity + acceleration * dt;
+  velocity2[p * 3 + 0] = newVelo.x;
+  velocity2[p * 3 + 1] = newVelo.y;
+  velocity2[p * 3 + 2] = newVelo.z;
 
-  vec3 newPos = pos + newVelocity * dt;
-  vec3 bounds = gridOrigin + gridLength;
-  position2[p * 3 + 0] = max(gridOrigin.x, min(newPos.x, bounds.x));
-  position2[p * 3 + 1] = max(gridOrigin.y, min(newPos.y, bounds.y));
-  position2[p * 3 + 2] = max(gridOrigin.z, min(newPos.z, bounds.z));
+  vec3 newPos = pos + newVelo * dt;
+  vec3 boundsL = gridOrigin;
+  vec3 boundsH = boundsL + gridLength;
+  position2[p * 3 + 0] = max(boundsL.x, min(newPos.x, boundsH.x));
+  position2[p * 3 + 1] = max(boundsL.y, min(newPos.y, boundsH.y));
+  position2[p * 3 + 2] = max(boundsL.z, min(newPos.z, boundsH.z));
 }
