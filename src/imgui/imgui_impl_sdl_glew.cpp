@@ -1,13 +1,13 @@
 //
-// ImGui SDL2 binding with glbinding.
+// ImGui SDL2 binding with GLEW.
 // Based on OpenGL3 features and C++11.
 //
 // In this binding, ImTextureID is used to store an OpenGL 'GLuint' texture identifier. Read the FAQ
 // about ImTextureID in imgui.cpp.
 // SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan
-// graphics context creation, etc. glbinding is a helper library to access OpenGL functions since
+// graphics context creation, etc. GLEW is a helper library to access OpenGL functions since
 // there is no standard header to access modern OpenGL functions easily. Alternatives are GL3W,
-// GLEW, Glad, etc.
+// glbinding, Glad, etc.
 //
 // You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example
 // of using this. If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(),
@@ -17,15 +17,14 @@
 //
 
 #include "imgui.h"
-#include "imgui_impl_sdl_glbinding.h"
+#include "imgui_impl_sdl_glew.h"
 
+#include <cstdint>
+#include <GL/glew.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
-#include <glbinding/gl/gl.h>
-// Be sure to call "glbinding::Binding::initialize()"
+// Be sure to call "glewInit()"
 // somewhere between context creation and invoking this implementation.
-
-using namespace gl;
 
 ///
 static double time_ = 0.0f;
@@ -38,7 +37,7 @@ static GLint attribLocationTex_ = 0, attribLocationProj_ = 0, attribLocationPos_
 static GLuint vboHandle_ = 0, vaoHandle_ = 0, elementsHandle_ = 0;
 
 ///
-void ImGui_ImplSdlGlBinding_RenderDrawLists(ImDrawData *drawData) {
+void ImGui_ImplSdlGlew_RenderDrawLists(ImDrawData *drawData) {
   // Avoid rendering when minimized, scale coordinates for retina displays
   ImGuiIO &io = ImGui::GetIO();
   int framebufWidth = static_cast<std::uint32_t>(io.DisplaySize.x * io.DisplayFramebufferScale.x);
@@ -169,11 +168,11 @@ void ImGui_ImplSdlGlBinding_RenderDrawLists(ImDrawData *drawData) {
     lastScissorBox[0], lastScissorBox[1], (GLsizei)lastScissorBox[2], (GLsizei)lastScissorBox[3]);
 }
 
-static const char *ImGui_ImplSdlGlBinding_GetClipboardText(void *) {
+static const char *ImGui_ImplSdlGlew_GetClipboardText(void *) {
   return SDL_GetClipboardText();
 }
 
-static void ImGui_ImplSdlGlBinding_SetClipboardText(void *, const char *text) {
+static void ImGui_ImplSdlGlew_SetClipboardText(void *, const char *text) {
   SDL_SetClipboardText(text);
 }
 
@@ -183,7 +182,7 @@ static void ImGui_ImplSdlGlBinding_SetClipboardText(void *, const char *text) {
 // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main
 //   application. Generally you may always pass all inputs to dear imgui, and hide them from your
 //   application based on those two flags.
-bool ImGui_ImplSdlGlBinding_ProcessEvent(SDL_Event *event) {
+bool ImGui_ImplSdlGlew_ProcessEvent(SDL_Event *event) {
   ImGuiIO &io = ImGui::GetIO();
   switch (event->type) {
   case SDL_MOUSEWHEEL: {
@@ -220,7 +219,7 @@ bool ImGui_ImplSdlGlBinding_ProcessEvent(SDL_Event *event) {
   }
 }
 
-void ImGui_ImplSdlGlBinding_CreateFontsTexture() {
+void ImGui_ImplSdlGlew_CreateFontsTexture() {
   // Build texture atlas
   ImGuiIO &io = ImGui::GetIO();
   unsigned char *pixels;
@@ -242,7 +241,7 @@ void ImGui_ImplSdlGlBinding_CreateFontsTexture() {
   glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(lastTexture));
 }
 
-bool ImGui_ImplSdlGlBinding_CreateDeviceObjects() {
+bool ImGui_ImplSdlGlew_CreateDeviceObjects() {
   // Backup GL state
   GLint lastTexture, lastArrayBuffer, lastVertexArray;
   glGetIntegerv(GL_TEXTURE_BINDING_2D, &lastTexture);
@@ -311,7 +310,7 @@ bool ImGui_ImplSdlGlBinding_CreateDeviceObjects() {
     sizeof(ImDrawVert), (GLvoid *)OFFSETOF(ImDrawVert, col));
 #undef OFFSETOF
 
-  ImGui_ImplSdlGlBinding_CreateFontsTexture();
+  ImGui_ImplSdlGlew_CreateFontsTexture();
 
   // Restore modified GL state
   glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(lastTexture));
@@ -320,7 +319,7 @@ bool ImGui_ImplSdlGlBinding_CreateDeviceObjects() {
   return true;
 }
 
-void ImGui_ImplSdlGlBinding_InvalidateDeviceObjects() {
+void ImGui_ImplSdlGlew_InvalidateDeviceObjects() {
   if (vaoHandle_)
     glDeleteVertexArrays(1, &vaoHandle_);
   if (vboHandle_)
@@ -352,7 +351,7 @@ void ImGui_ImplSdlGlBinding_InvalidateDeviceObjects() {
   }
 }
 
-bool ImGui_ImplSdlGlBinding_Init(SDL_Window *window) {
+bool ImGui_ImplSdlGlew_Init(SDL_Window *window) {
   ImGuiIO &io = ImGui::GetIO();
   io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;
   io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
@@ -374,9 +373,9 @@ bool ImGui_ImplSdlGlBinding_Init(SDL_Window *window) {
   io.KeyMap[ImGuiKey_Y] = SDLK_y;
   io.KeyMap[ImGuiKey_Z] = SDLK_z;
 
-  io.RenderDrawListsFn = ImGui_ImplSdlGlBinding_RenderDrawLists;
-  io.SetClipboardTextFn = ImGui_ImplSdlGlBinding_SetClipboardText;
-  io.GetClipboardTextFn = ImGui_ImplSdlGlBinding_GetClipboardText;
+  io.RenderDrawListsFn = ImGui_ImplSdlGlew_RenderDrawLists;
+  io.SetClipboardTextFn = ImGui_ImplSdlGlew_SetClipboardText;
+  io.GetClipboardTextFn = ImGui_ImplSdlGlew_GetClipboardText;
   io.ClipboardUserData = nullptr;
 
 #ifdef _WIN32
@@ -390,14 +389,14 @@ bool ImGui_ImplSdlGlBinding_Init(SDL_Window *window) {
   return true;
 }
 
-void ImGui_ImplSdlGlBinding_Shutdown() {
-  ImGui_ImplSdlGlBinding_InvalidateDeviceObjects();
+void ImGui_ImplSdlGlew_Shutdown() {
+  ImGui_ImplSdlGlew_InvalidateDeviceObjects();
   ImGui::Shutdown();
 }
 
-void ImGui_ImplSdlGlBinding_NewFrame(SDL_Window *window) {
+void ImGui_ImplSdlGlew_NewFrame(SDL_Window *window) {
   if (!fontTexture_)
-    ImGui_ImplSdlGlBinding_CreateDeviceObjects();
+    ImGui_ImplSdlGlew_CreateDeviceObjects();
 
   // Set up display size (to accommodate for window resizing)
   ImGuiIO &io = ImGui::GetIO();

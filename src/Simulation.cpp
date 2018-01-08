@@ -5,8 +5,6 @@
 #include <iostream>
 #include <limits>
 
-using namespace gl;
-
 ansimproj::Simulation::Simulation()
   : BaseRenderer()
   , swapFrame_{false}

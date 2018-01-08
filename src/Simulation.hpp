@@ -36,10 +36,10 @@ namespace ansimproj {
     };
 
   public:
-    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 12;
-    const Eigen::Matrix<::gl::GLuint, 3, 1> GRID_RES = {32, 32, 32};
-    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_LEN = {1.0f, 1.0f, 1.0f};
-    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_ORIGIN = {-0.5f, -0.5f, -0.5f};
+    constexpr static std::uint32_t PARTICLE_COUNT = 2 << 15;
+    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {64, 64, 64};
+    const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {10.0f, 6.0f, 2.0f};
+    const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-5.0f, -3.0f, -1.0f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
   public:
@@ -56,32 +56,32 @@ namespace ansimproj {
     const SimulationTime& time() const;
 
   private:
-    ::gl::GLuint createVAO(const ::gl::GLuint &vboPos, const ::gl::GLuint &vboCol) const;
+    GLuint createVAO(const GLuint &vboPos, const GLuint &vboCol) const;
 
-    void deleteVAO(::gl::GLuint handle);
+    void deleteVAO(GLuint handle);
 
   private:
     std::uint64_t frame_;
     SimulationTime time_;
     SimulationOptions options_;
-    ::gl::GLuint timerQueries_[2][6];
-    ::gl::GLuint programGridInsert_;
-    ::gl::GLuint programGridSort_;
-    ::gl::GLuint programGridIndexing_;
-    ::gl::GLuint programDensityComputation_;
-    ::gl::GLuint programForceUpdate_;
-    ::gl::GLuint programRender_;
-    ::gl::GLuint bufColor_;
-    ::gl::GLuint bufGridPairs_;
-    ::gl::GLuint bufGridIndices_;
-    ::gl::GLuint bufPosition1_;
-    ::gl::GLuint bufPosition2_;
-    ::gl::GLuint bufVelocity1_;
-    ::gl::GLuint bufVelocity2_;
-    ::gl::GLuint bufDensity_;
-    ::gl::GLuint bufWallweight_;
-    ::gl::GLuint vao1_;
-    ::gl::GLuint vao2_;
+    GLuint timerQueries_[2][6];
+    GLuint programGridInsert_;
+    GLuint programGridSort_;
+    GLuint programGridIndexing_;
+    GLuint programDensityComputation_;
+    GLuint programForceUpdate_;
+    GLuint programRender_;
+    GLuint bufColor_;
+    GLuint bufGridPairs_;
+    GLuint bufGridIndices_;
+    GLuint bufPosition1_;
+    GLuint bufPosition2_;
+    GLuint bufVelocity1_;
+    GLuint bufVelocity2_;
+    GLuint bufDensity_;
+    GLuint bufWallweight_;
+    GLuint vao1_;
+    GLuint vao2_;
     bool swapFrame_;
   };
 }

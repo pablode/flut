@@ -15,7 +15,7 @@ add_subdirectory(imgui)
 
 add_executable(ansimproj WIN32 ${ANSIMPROJ_SRCS})
 
-if (CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_GNUCXX)
   target_compile_options(ansimproj PRIVATE -Wall)
   target_compile_options(ansimproj PRIVATE -Wextra)
   target_compile_options(ansimproj PRIVATE -Werror)
@@ -38,15 +38,15 @@ target_link_libraries(
   ${SDL2_LIBRARY}
   ${SDL2MAIN_LIBRARY}
   ${OPENGL_LIBRARIES}
-  ${GLBINDING_LIBRARIES}
+  ${GLEW_LIBRARY}
 )
 
 target_include_directories(
   ansimproj PUBLIC
   imgui
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${GLBINDING_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
+  ${GLEW_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${EIGEN_INCLUDE_DIR}
 )

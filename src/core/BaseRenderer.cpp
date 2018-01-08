@@ -1,26 +1,16 @@
 #include "BaseRenderer.hpp"
 
-#include <glbinding/Binding.h>
-#include <glbinding/ContextInfo.h>
-#include <glbinding/gl/extension.h>
 #include <iostream>
-
-using namespace gl;
 
 ansimproj::core::BaseRenderer::BaseRenderer() {
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
-  // Commented out until glbinding issue is resolved.
-  /*
-  const auto extensions = glbinding::ContextInfo::extensions();
 #ifndef NDEBUG
-  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 3)) ||
-    extensions.count(GLextension::GL_ARB_debug_output)) {
-    ContextFlagMask flags;
-    glGetIntegerv(GL_CONTEXT_FLAGS, (GLint *)&flags);
-
-    if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE_BIT) {
+  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 3)) || GLEW_ARB_debug_output) {
+    GLint flags;
+    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
       glEnable(GL_DEBUG_OUTPUT);
       glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
       glDebugMessageCallback(&glDebugOutput, nullptr);
@@ -35,30 +25,28 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
               << std::endl;
   }
 #endif
-  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) ||
-    extensions.count(GLextension::GL_ARB_clip_control)) {
+  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) || GLEW_ARB_clip_control) {
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
   } else {
     throw std::runtime_error("OpenGL version 4.5 or ARB_clip_control extension required.");
   }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) ||
-        extensions.count(GLextension::GL_ARB_direct_state_access))) {
+        GLEW_ARB_direct_state_access)) {
     throw std::runtime_error("OpenGL version 4.5 or ARB_direct_state_access extension required.");
   }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 2)) ||
-        extensions.count(GLextension::GL_ARB_texture_storage))) {
+        GLEW_ARB_texture_storage)) {
     throw std::runtime_error("OpenGL version 4.2 or ARB_texture_storage extension required.");
   }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
-        extensions.count(GLextension::GL_ARB_compute_shader))) {
+        GLEW_ARB_compute_shader)) {
     throw std::runtime_error("OpenGL version 4.3 or ARB_compute_shader extension required.");
   }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
-        extensions.count(GLextension::GL_ARB_explicit_uniform_location))) {
+        GLEW_ARB_explicit_uniform_location)) {
     throw std::runtime_error(
       "OpenGL version 4.3 or ARB_explicit_uniform_location extension required.");
   }
-  */
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -120,7 +108,7 @@ GLuint ansimproj::core::BaseRenderer::createVertFragShader(
   glShaderSource(vertHandle, 1, &vertShaderPtr, &vertSize);
   glCompileShader(vertHandle);
   GLint logLength;
-  GLboolean result = GL_FALSE;
+  GLint result = GL_FALSE;
   glGetShaderiv(vertHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
@@ -192,7 +180,7 @@ GLuint ansimproj::core::BaseRenderer::createComputeShader(
   glShaderSource(sourceHandle, 1, &sourceShaderPtr, &sourceSize);
   glCompileShader(sourceHandle);
   GLint logLength;
-  GLboolean result = GL_FALSE;
+  GLint result = GL_FALSE;
   glGetShaderiv(sourceHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);

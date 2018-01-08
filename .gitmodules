@@ -1,6 +1,3 @@
-[submodule "3rdparty/glbinding"]
-	path = 3rdparty/glbinding
-	url = https://github.com/cginternals/glbinding
 [submodule "3rdparty/SDL"]
 	path = 3rdparty/SDL
 	url = https://github.com/SDL-mirror/SDL

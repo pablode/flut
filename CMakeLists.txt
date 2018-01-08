@@ -14,12 +14,12 @@ set(INCLUDE_DIR "${THIRDPARTY_DIR}/include")
 set(LIB_DIR "${THIRDPARTY_DIR}/lib")
 
 set(EIGEN_INCLUDE_DIR_HINTS "${INCLUDE_DIR}")
-set(GLBINDING_DIR_HINTS "${INCLUDE_DIR}" "${LIB_DIR}")
 set(SDL2_DIR_HINTS "${INCLUDE_DIR}/SDL" "${LIB_DIR}")
+set(GLEW_DIR_HINTS "${THIRDPARTY_DIR}")
 
 find_package(OpenGL REQUIRED)
 find_package(Eigen REQUIRED)
-find_package(glbinding REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(GLEW REQUIRED)
 
 add_subdirectory(src)
