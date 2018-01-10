@@ -19,10 +19,6 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
     std::cout << "Debug output not available (context flag not set)." << std::endl;
   }
 #endif
-  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) ||
-        GLEW_ARB_direct_state_access)) {
-    throw std::runtime_error("OpenGL version 4.5 or ARB_direct_state_access extension required.");
-  }
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -193,26 +189,28 @@ GLuint ansimproj::core::BaseRenderer::createComputeShader(
 GLuint ansimproj::core::BaseRenderer::createBuffer(
   const std::vector<float> &data, bool dynamic) const {
   GLuint handle;
-  glCreateBuffers(1, &handle);
+  glGenBuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
-  glNamedBufferData(
-    handle, size * sizeof(float), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(float), data.data(),
+    dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
   return handle;
 }
 
 GLuint ansimproj::core::BaseRenderer::createBuffer(
   const std::vector<GLuint> &data, bool dynamic) const {
   GLuint handle;
-  glCreateBuffers(1, &handle);
+  glGenBuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
-  glNamedBufferData(
-    handle, size * sizeof(GLuint), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(GLuint), data.data(),
+    dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
   return handle;
 }
 

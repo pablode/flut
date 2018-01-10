@@ -246,19 +246,19 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
 GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint& vboCol) const {
   GLuint handle;
-  glCreateVertexArrays(1, &handle);
+  glGenVertexArrays(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create VAO.");
   }
-  glVertexArrayVertexBuffer(handle, 0, vboPos, 0, 3 * sizeof(float));
-  glEnableVertexArrayAttrib(handle, 0);
-  glVertexArrayAttribBinding(handle, 0, 0);
-  glVertexArrayAttribFormat(handle, 0, 3, GL_FLOAT, GL_FALSE, 0);
+  glBindVertexArray(handle);
 
-  glVertexArrayVertexBuffer(handle, 1, vboCol, 0, 3 * sizeof(float));
-  glEnableVertexArrayAttrib(handle, 1);
-  glVertexArrayAttribBinding(handle, 1, 1);
-  glVertexArrayAttribFormat(handle, 1, 3, GL_FLOAT, GL_FALSE, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, vboPos);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vboCol);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
   return handle;
 }
 
