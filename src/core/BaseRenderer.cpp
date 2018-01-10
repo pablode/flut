@@ -25,11 +25,6 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
               << std::endl;
   }
 #endif
-  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) || GLEW_ARB_clip_control) {
-    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
-  } else {
-    throw std::runtime_error("OpenGL version 4.5 or ARB_clip_control extension required.");
-  }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) ||
         GLEW_ARB_direct_state_access)) {
     throw std::runtime_error("OpenGL version 4.5 or ARB_direct_state_access extension required.");
