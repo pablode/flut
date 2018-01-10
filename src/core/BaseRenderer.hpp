@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GL/glew.h>
+#include <cstdint>
 #include <vector>
 
 #include "core/Camera.hpp"
@@ -34,18 +35,9 @@ namespace ansimproj {
 
       GLuint createBuffer(const std::vector<GLuint> &data, bool dynamic) const;
 
-      GLuint create1DTexture(std::uint32_t width, GLenum internalFormat,
-        GLenum format, GLenum type, const std::vector<float> &data) const;
-
-      GLuint create3DTexture(std::uint32_t width, std::uint32_t height, std::uint32_t depth,
-        GLenum internalFormat, GLenum format, GLenum type,
-        const std::vector<float> &data) const;
-
       void deleteShader(const GLuint &handle) const;
 
       void deleteBuffer(const GLuint &handle) const;
-
-      void deleteTexture(const GLuint &handle) const;
 
     private:
       GLint versionMajor_;

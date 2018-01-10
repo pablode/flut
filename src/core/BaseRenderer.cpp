@@ -34,10 +34,6 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
         GLEW_ARB_direct_state_access)) {
     throw std::runtime_error("OpenGL version 4.5 or ARB_direct_state_access extension required.");
   }
-  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 2)) ||
-        GLEW_ARB_texture_storage)) {
-    throw std::runtime_error("OpenGL version 4.2 or ARB_texture_storage extension required.");
-  }
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
         GLEW_ARB_compute_shader)) {
     throw std::runtime_error("OpenGL version 4.3 or ARB_compute_shader extension required.");
@@ -242,51 +238,4 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
 
 void ansimproj::core::BaseRenderer::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
-}
-
-GLuint ansimproj::core::BaseRenderer::create1DTexture(std::uint32_t width, GLenum internalFormat,
-  GLenum format, GLenum type, const std::vector<float> &data) const {
-  GLuint handle;
-  glCreateTextures(GL_TEXTURE_1D, 1, &handle);
-  if (!handle) {
-    throw std::runtime_error("Unable to 1D texture.");
-  }
-  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTextureParameteri(handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTextureParameteri(handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  constexpr GLuint levels = 1;
-  glTextureStorage1D(handle, levels, internalFormat, width);
-  constexpr GLuint level = 0;
-  constexpr GLuint offsetX = 0;
-  glTextureSubImage1D(handle, level, offsetX, width, format, type, data.data());
-  return handle;
-}
-
-GLuint ansimproj::core::BaseRenderer::create3DTexture(std::uint32_t width, std::uint32_t height,
-  std::uint32_t depth, GLenum internalFormat, GLenum format, GLenum type,
-  const std::vector<float> &data) const {
-  GLuint handle;
-  glCreateTextures(GL_TEXTURE_3D, 1, &handle);
-  if (!handle) {
-    throw std::runtime_error("Unable to 3D texture.");
-  }
-  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTextureParameteri(handle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTextureParameteri(handle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-  glTextureParameteri(handle, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-  constexpr GLuint levels = 1;
-  glTextureStorage3D(handle, levels, internalFormat, width, height, depth);
-  constexpr GLuint level = 0;
-  constexpr GLuint offsetX = 0;
-  constexpr GLuint offsetY = 0;
-  constexpr GLuint offsetZ = 0;
-  glTextureSubImage3D(
-    handle, level, offsetX, offsetY, offsetZ, width, height, depth, format, type, data.data());
-  return handle;
-}
-
-void ansimproj::core::BaseRenderer::deleteTexture(const GLuint &handle) const {
-  glDeleteTextures(1, &handle);
 }
