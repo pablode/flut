@@ -7,36 +7,21 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
 #ifndef NDEBUG
-  if ((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 3)) || GLEW_ARB_debug_output) {
-    GLint flags;
-    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-    if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-      glEnable(GL_DEBUG_OUTPUT);
-      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-      glDebugMessageCallback(&glDebugOutput, nullptr);
-      glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-      std::cout << "Debug output enabled." << std::endl;
-    } else {
-      std::cout << "Debug output not available (context flag not set)." << std::endl;
-    }
+  GLint flags;
+  glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+  if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(&glDebugOutput, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    std::cout << "Debug output enabled." << std::endl;
   } else {
-    std::cout << "Debug output not available (OpenGL version < 4.3 and ARB_debug_output extension "
-                 "not given)."
-              << std::endl;
+    std::cout << "Debug output not available (context flag not set)." << std::endl;
   }
 #endif
   if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMinor_ >= 5)) ||
         GLEW_ARB_direct_state_access)) {
     throw std::runtime_error("OpenGL version 4.5 or ARB_direct_state_access extension required.");
-  }
-  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
-        GLEW_ARB_compute_shader)) {
-    throw std::runtime_error("OpenGL version 4.3 or ARB_compute_shader extension required.");
-  }
-  if (!((versionMajor_ > 4 || (versionMajor_ == 4 && versionMajor_ >= 3)) ||
-        GLEW_ARB_explicit_uniform_location)) {
-    throw std::runtime_error(
-      "OpenGL version 4.3 or ARB_explicit_uniform_location extension required.");
   }
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
