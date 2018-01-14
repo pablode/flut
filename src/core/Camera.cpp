@@ -18,6 +18,8 @@ ansimproj::core::Camera::Camera(Window &window)
   position_ = {0.0f, 0.0f, radius_};
   oldMouseX_ = window_.mouseX();
   oldMouseY_ = window_.mouseY();
+  projection_.setZero();
+  view_.setIdentity();
   recalcView();
   recalcProjection();
 }
@@ -76,24 +78,20 @@ void ansimproj::core::Camera::update(float dt) {
 
 void ansimproj::core::Camera::recalcView() {
   Eigen::Vector3f f = (center_ - position_).normalized();
-  Eigen::Vector3f u = up_.normalized();
-  Eigen::Vector3f s = f.cross(u).normalized();
-  u = s.cross(f);
-  Eigen::Matrix4f mat = Eigen::Matrix4f::Zero();
-  mat(0, 0) = s.x();
-  mat(0, 1) = s.y();
-  mat(0, 2) = s.z();
-  mat(0, 3) = -s.dot(position_);
-  mat(1, 0) = u.x();
-  mat(1, 1) = u.y();
-  mat(1, 2) = u.z();
-  mat(1, 3) = -u.dot(position_);
-  mat(2, 0) = -f.x();
-  mat(2, 1) = -f.y();
-  mat(2, 2) = -f.z();
-  mat(2, 3) = f.dot(position_);
-  mat.row(3) << 0, 0, 0, 1;
-  view_ = mat;
+  Eigen::Vector3f s = f.cross(up_).normalized();
+  Eigen::Vector3f u = s.cross(f).normalized();
+  view_(0, 0) = s.x();
+  view_(0, 1) = s.y();
+  view_(0, 2) = s.z();
+  view_(0, 3) = -s.dot(position_);
+  view_(1, 0) = u.x();
+  view_(1, 1) = u.y();
+  view_(1, 2) = u.z();
+  view_(1, 3) = -u.dot(position_);
+  view_(2, 0) = -f.x();
+  view_(2, 1) = -f.y();
+  view_(2, 2) = -f.z();
+  view_(2, 3) = f.dot(position_);
 }
 
 void ansimproj::core::Camera::recalcProjection() {
@@ -103,14 +101,12 @@ void ansimproj::core::Camera::recalcProjection() {
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);
   const float range = FAR_PLANE - NEAR_PLANE;
-  const float invtan = static_cast<float>(1.0f / tan(theta));
-  projection_.setIdentity();
+  const float invtan = static_cast<float>(1.0f / std::tan(theta));
   projection_(0, 0) = invtan / aspect;
   projection_(1, 1) = invtan;
   projection_(2, 2) = -(NEAR_PLANE + FAR_PLANE) / range;
-  projection_(3, 2) = -1;
-  projection_(2, 3) = -2 * NEAR_PLANE * FAR_PLANE / range;
-  projection_(3, 3) = 0;
+  projection_(3, 2) = -1.0f;
+  projection_(2, 3) = -(2.0f * NEAR_PLANE * FAR_PLANE) / range;
 }
 
 Eigen::Matrix4f ansimproj::core::Camera::view() const {
