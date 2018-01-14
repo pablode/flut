@@ -9,7 +9,7 @@ namespace ansimproj {
   public:
     struct SimulationOptions {
       SimulationOptions()
-        : gravity{0.0f, 9.81f, 0.0f}
+        : gravity{0.0f, -9.81f, 0.0f}
         , deltaTimeMod{1.0f}
         , colorMode{1}
         , shadingMode{1} {}

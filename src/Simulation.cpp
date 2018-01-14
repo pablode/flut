@@ -204,7 +204,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = options_.shadingMode == 0 ? 50.0f : 100.0f;
+  const float pointRadius = options_.shadingMode == 0 ? 25.0f : 50.0f;
   glUseProgram(programRender_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
