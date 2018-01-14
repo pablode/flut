@@ -95,13 +95,10 @@ void ansimproj::core::Camera::recalcView() {
 }
 
 void ansimproj::core::Camera::recalcProjection() {
-  constexpr float FOV = static_cast<const float>(60.0f * M_PI / 180.0f);
-  constexpr float FAR_PLANE = 50.0f;
-  constexpr float NEAR_PLANE = 0.1f;
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);
   const float range = FAR_PLANE - NEAR_PLANE;
-  const float invtan = static_cast<float>(1.0f / std::tan(theta));
+  const float invtan = 1.0f / std::tan(theta);
   projection_(0, 0) = invtan / aspect;
   projection_(1, 1) = invtan;
   projection_(2, 2) = -(NEAR_PLANE + FAR_PLANE) / range;
