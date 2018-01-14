@@ -24,9 +24,11 @@ ansimproj::core::Camera::Camera(Window &window)
 
 ansimproj::core::Camera::~Camera() {}
 
-void ansimproj::core::Camera::update(float deltaTime) {
+void ansimproj::core::Camera::update(float dt) {
   const auto &mouseX = window_.mouseX();
   const auto &mouseY = window_.mouseY();
+  bool recalcPos = false;
+
   if (window_.mouseDown()) {
     const float deltaX = (mouseX - oldMouseX_) * SENSITIVITY;
     const float deltaY = (mouseY - oldMouseY_) * SENSITIVITY;
@@ -43,13 +45,25 @@ void ansimproj::core::Camera::update(float deltaTime) {
     else if (phi_ > 2 * M_PI)
       phi_ -= 2 * M_PI;
 
+    recalcPos = true;
+  }
+
+  if (window_.keyUp()) {
+    radius_ = std::max(0.001f, radius_ - 5.0f * dt);
+    recalcPos = true;
+  } else if (window_.keyDown()) {
+    radius_ += 5.0f * dt;
+    recalcPos = true;
+  }
+
+  if (recalcPos) {
     const float x = center_[0] + radius_ * sin(theta_) * sin(phi_);
     const float y = center_[1] + radius_ * cos(theta_);
     const float z = center_[2] + radius_ * sin(theta_) * cos(phi_);
     position_ = {x, y, z};
-
     recalcView();
   }
+
   oldMouseX_ = mouseX;
   oldMouseY_ = mouseY;
 

@@ -33,6 +33,10 @@ namespace ansimproj {
 
       bool mouseDown() const;
 
+      bool keyUp() const;
+
+      bool keyDown() const;
+
       void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
 
     private:

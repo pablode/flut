@@ -1,4 +1,4 @@
-#include "Window.hpp"
+#include "core/Window.hpp"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl_glew.h"
@@ -113,6 +113,16 @@ std::int32_t ansimproj::core::Window::mouseY() const {
 
 bool ansimproj::core::Window::mouseDown() const {
   return static_cast<bool>(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT));
+}
+
+bool ansimproj::core::Window::keyUp() const {
+  const auto& states = SDL_GetKeyboardState(nullptr);
+  return static_cast<bool>(states[SDL_SCANCODE_W]);
+}
+
+bool ansimproj::core::Window::keyDown() const {
+  const auto& states = SDL_GetKeyboardState(nullptr);
+  return static_cast<bool>(states[SDL_SCANCODE_S]);
 }
 
 void ansimproj::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
