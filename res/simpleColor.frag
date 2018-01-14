@@ -2,8 +2,8 @@
 
 const float far = 10.0;
 const float near = 0.1;
-const vec3 lightPos = vec3(0.0, -1.0, 0.0);
-const vec3 lightDir = normalize(vec3(0.0) - lightPos);
+const vec3 lightPos = vec3(-0.577, -0.577, -0.577);
+const vec3 lightDir = normalize(-lightPos);
 const float shininess = 10.0;
 
 in vec3 fragPos;
@@ -37,22 +37,22 @@ void main() {
     if (r2 > 1.0)
       discard; // Outside of circle
     N.z = sqrt(1.0 - r2);
+    vec4 P = vec4(fragPos + N * 1.0, 1.0);
+
 
     // TODO: correct Depth
-    //vec4 pixelPos = vec4(fragPos + N * 0.5, 1.0);
-    //vec4 clipSpacePos = projection * pixelPos;
-    //float depth = clipSpacePos.z / clipSpacePos.w;
-    //gl_FragDepth = ((far - near) / 2.0) * pixelPos.z + (far + near) / 2.0;
+    //vec4 clipSpacePos = projection * P;
+    //float normDepth = clipSpacePos.z / clipSpacePos.w;
+    //gl_FragDepth = ((far - near) / 2.0) * normDepth + (far + near) / 2.0;
+
 
     // Diffuse
-    vec3 lightCamSpace = (view * vec4(lightPos, 1.0)).xyz;
-    lightCamSpace = normalize(lightCamSpace - fragPos);
-    float dcoeff = max(0.0, dot(N, lightCamSpace));
+    float dcoeff = max(0.0, dot(N, lightDir));
     vec3 diffColor = fragColor * dcoeff;
 
     // Specular
-    vec3 eye = normalize(-fragPos);
-    vec3 reflection = normalize(reflect(-lightCamSpace, N));
+    vec3 eye = normalize(-fragPos.xyz);
+    vec3 reflection = normalize(reflect(-lightDir, N));
     float scoeff = pow(max(dot(reflection, eye), 0.0f), shininess);
     vec3 specColor = vec3(1.0) * scoeff;
 
