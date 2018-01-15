@@ -1,7 +1,7 @@
 #version 430 core
 
-const float far = 10.0;
-const float near = 0.1;
+const float far = 25.0;
+const float near = 0.01;
 const vec3 lightPos = vec3(-0.577, -0.577, -0.577);
 const vec3 lightDir = normalize(-lightPos);
 const float shininess = 10.0;
