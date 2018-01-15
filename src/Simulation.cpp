@@ -151,7 +151,6 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   auto& lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
   auto& query = timerQueries_[swapFrame_ ? 1 : 0];
   swapFrame_ = !swapFrame_;
-  dt = 0.0005;
   ++frame_;
 
   // 1.1 Generate Particle/Voxel mappings
@@ -202,6 +201,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3fv(programDensityComputation_, 0, 1, GRID_LEN.data());
   glProgramUniform3fv(programDensityComputation_, 1, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programDensityComputation_, 2, 1, GRID_RES.data());
+  glProgramUniform1f(programDensityComputation_, 3, MASS);
+  glProgramUniform1f(programDensityComputation_, 4, RANGE);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
@@ -214,11 +215,17 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 3. Force Update
   glBeginQuery(GL_TIME_ELAPSED, query[4]);
   glUseProgram(programForceUpdate_);
-  glProgramUniform1f(programForceUpdate_, 0, dt * options_.deltaTimeMod);
+  glProgramUniform1f(programForceUpdate_, 0, DT * options_.deltaTimeMod);
   glProgramUniform3fv(programForceUpdate_, 1, 1, GRID_LEN.data());
   glProgramUniform3fv(programForceUpdate_, 2, 1, GRID_ORIGIN.data());
   glProgramUniform3uiv(programForceUpdate_, 3, 1, GRID_RES.data());
   glProgramUniform3fv(programForceUpdate_, 4, 1, &options_.gravity[0]);
+  glProgramUniform1f(programForceUpdate_, 5, K);
+  glProgramUniform1f(programForceUpdate_, 6, MASS);
+  glProgramUniform1f(programForceUpdate_, 7, RANGE);
+  glProgramUniform1f(programForceUpdate_, 8, VIS_COEFF);
+  glProgramUniform1f(programForceUpdate_, 9, REST_PRESSURE);
+  glProgramUniform1f(programForceUpdate_, 10, REST_DENSITY);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);

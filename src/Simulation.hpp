@@ -42,6 +42,15 @@ namespace ansimproj {
     const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-5.0f, -3.0f, -1.0f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
+  private:
+    constexpr static float DT = 0.0005f;
+    constexpr static float K = 100.0f;
+    constexpr static float MASS = 0.05f;
+    constexpr static float RANGE = 0.05f;
+    constexpr static float VIS_COEFF = 2.5f;
+    constexpr static float REST_PRESSURE = 0.0f;
+    constexpr static float REST_DENSITY = 50000.0f;
+
   public:
     Simulation();
 
