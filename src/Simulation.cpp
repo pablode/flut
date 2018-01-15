@@ -147,7 +147,7 @@ void ansimproj::Simulation::preset1() {
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
-  const auto numWorkGroups = PARTICLE_COUNT / localSize;
+  const auto numWorkGroups = std::ceil(PARTICLE_COUNT / localSize);
   auto& lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
   auto& query = timerQueries_[swapFrame_ ? 1 : 0];
   swapFrame_ = !swapFrame_;
