@@ -47,6 +47,8 @@ namespace ansimproj {
 
     ~Simulation();
 
+    void preset1();
+
     void render(const core::Camera &camera, float dt) override;
 
     void resize(std::uint32_t width, std::uint32_t height);
@@ -78,8 +80,8 @@ namespace ansimproj {
     GLuint bufPosition2_;
     GLuint bufVelocity1_;
     GLuint bufVelocity2_;
-    GLuint bufDensity_;
     GLuint bufWallweight_;
+    GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
     bool swapFrame_;

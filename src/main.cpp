@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     [&](std::uint32_t width, std::uint32_t height) { simulation.resize(width, height); });
   simulation.resize(window.width(), window.height());
 
+  bool buttonPressed = false;
   auto &options = simulation.options();
   auto &time = simulation.time();
   using clock = std::chrono::high_resolution_clock;
@@ -57,6 +58,11 @@ int main(int argc, char *argv[]) {
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
 
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.1f);
+
+    bool preset1 = ImGui::Button("Preset 1");
+    if (!buttonPressed && preset1)
+      simulation.preset1();
+    buttonPressed = preset1;
 
     ImGui::Text("Particle Color:");
     ImGui::RadioButton("Initial", &options.colorMode, 0);

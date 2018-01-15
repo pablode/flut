@@ -8,12 +8,96 @@
 ansimproj::Simulation::Simulation()
   : BaseRenderer()
   , swapFrame_{false}
-  , frame_{0} {
+  , frame_{0}
+  , bufColor_{0}
+  , bufGridPairs_{0}
+  , bufGridIndices_{0}
+  , bufPosition1_{0}
+  , bufVelocity1_{0}
+  , bufPosition2_{0}
+  , bufVelocity2_{0}
+  , bufWallweight_{0}
+  , bufDensity_{0}
+  , vao1_{0}
+  , vao2_{0} {
+
+  // Shaders
+  auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
+  programGridInsert_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
+  programGridSort_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
+  programGridIndexing_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/densityComputation.comp");
+  programDensityComputation_ = createComputeShader(shaderSource);
+  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/forceUpdate.comp");
+  programForceUpdate_ = createComputeShader(shaderSource);
+  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
+  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
+  programRender_ = createVertFragShader(vert, frag);
 
   // Buffers
+  preset1();
+
+  // Other
+  glGenQueries(6, &timerQueries_[0][0]);
+  glGenQueries(6, &timerQueries_[1][0]);
+  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+}
+
+ansimproj::Simulation::~Simulation() {
+  glDeleteQueries(6, &timerQueries_[0][0]);
+  glDeleteQueries(6, &timerQueries_[1][0]);
+  deleteShader(programGridInsert_);
+  deleteShader(programGridSort_);
+  deleteShader(programGridIndexing_);
+  deleteShader(programDensityComputation_);
+  deleteShader(programForceUpdate_);
+  deleteShader(programRender_);
+  deleteBuffer(bufColor_);
+  deleteBuffer(bufGridPairs_);
+  deleteBuffer(bufGridIndices_);
+  deleteBuffer(bufPosition1_);
+  deleteBuffer(bufPosition2_);
+  deleteBuffer(bufVelocity1_);
+  deleteBuffer(bufVelocity2_);
+  deleteBuffer(bufWallweight_);
+  deleteBuffer(bufDensity_);
+  deleteVAO(vao1_);
+  deleteVAO(vao2_);
+}
+
+void ansimproj::Simulation::preset1() {
+  if (bufGridPairs_)
+    deleteBuffer(bufGridPairs_);
+  if (bufGridIndices_)
+    deleteBuffer(bufGridIndices_);
+  if (bufColor_)
+    deleteBuffer(bufColor_);
+  if (bufPosition1_)
+    deleteBuffer(bufPosition1_);
+  if (bufPosition2_)
+    deleteBuffer(bufPosition2_);
+  if (bufVelocity1_)
+    deleteBuffer(bufVelocity1_);
+  if (bufVelocity2_)
+    deleteBuffer(bufVelocity2_);
+  if (bufWallweight_)
+    deleteBuffer(bufWallweight_);
+  if (bufDensity_)
+    deleteBuffer(bufDensity_);
+  if (vao1_)
+    deleteVAO(vao1_);
+  if (vao2_)
+    deleteVAO(vao2_);
+
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
   bufGridPairs_ = createBuffer(gridPairsData, true);
+
+  std::vector<GLuint> gridIndicesData;
+  gridIndicesData.resize(GRID_VOXEL_COUNT * 2);
+  bufGridIndices_ = createBuffer(gridIndicesData, true);
 
   std::vector<float> posData;
   std::vector<float> colData;
@@ -43,10 +127,6 @@ ansimproj::Simulation::Simulation()
   bufVelocity2_ = createBuffer(zeroFloatData, true);
   bufDensity_ = createBuffer(zeroFloatData, true);
 
-  std::vector<GLuint> gridIndicesData;
-  gridIndicesData.resize(GRID_VOXEL_COUNT * 2);
-  bufGridIndices_ = createBuffer(gridIndicesData, true);
-
   // TODO: using a/this weight function is not correct
   const std::uint32_t numSamples = 1024;
   std::vector<float> wallWeightData;
@@ -61,59 +141,8 @@ ansimproj::Simulation::Simulation()
   }
   bufWallweight_ = createBuffer(wallWeightData, true);
 
-  std::vector<float> distData;
-  distData.reserve(GRID_VOXEL_COUNT);
-  for (std::uint32_t x = 0; x < GRID_RES(0); ++x) {
-    for (std::uint32_t y = 0; y < GRID_RES(1); ++y) {
-      for (std::uint32_t z = 0; z < GRID_RES(2); ++z) {
-        const std::int32_t i = std::min(x, std::min(y, z));
-        const float d = std::abs(std::abs(5 - i) - 5) / 5.0f;
-        distData.push_back(d);
-      }
-    }
-  }
-
-  // Shaders
-  auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
-  programGridInsert_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
-  programGridSort_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
-  programGridIndexing_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/densityComputation.comp");
-  programDensityComputation_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/forceUpdate.comp");
-  programForceUpdate_ = createComputeShader(shaderSource);
-  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
-  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
-  programRender_ = createVertFragShader(vert, frag);
-
-  // Other
   vao1_ = createVAO(bufPosition1_, bufColor_);
   vao2_ = createVAO(bufPosition2_, bufColor_);
-  glGenQueries(6, &timerQueries_[0][0]);
-  glGenQueries(6, &timerQueries_[1][0]);
-  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-}
-
-ansimproj::Simulation::~Simulation() {
-  deleteShader(programGridInsert_);
-  deleteShader(programGridSort_);
-  deleteShader(programGridIndexing_);
-  deleteShader(programDensityComputation_);
-  deleteShader(programForceUpdate_);
-  deleteShader(programRender_);
-  deleteBuffer(bufColor_);
-  deleteBuffer(bufGridPairs_);
-  deleteBuffer(bufGridIndices_);
-  deleteBuffer(bufPosition1_);
-  deleteBuffer(bufPosition2_);
-  deleteBuffer(bufVelocity1_);
-  deleteBuffer(bufVelocity2_);
-  deleteBuffer(bufDensity_);
-  deleteBuffer(bufWallweight_);
-  deleteVAO(vao1_);
-  deleteVAO(vao2_);
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
