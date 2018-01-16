@@ -25,7 +25,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 elseif(MSVC)
   target_compile_options(ansimproj PRIVATE /MP)
   target_compile_options(ansimproj PRIVATE /Wall)
-  target_compile_options(ansimproj PRIVATE /arch:SSE2)
 endif()
 
 target_compile_definitions(
