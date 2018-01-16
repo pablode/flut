@@ -66,10 +66,6 @@ void ansimproj::core::Window::pollEvents() {
         }
         break;
       }
-      case SDL_MOUSEBUTTONDOWN: {
-        // TODO
-        break;
-      }
       default:
         break;
       }

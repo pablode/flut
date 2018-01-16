@@ -171,7 +171,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBeginQuery(GL_TIME_ELAPSED, query[1]);
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
-  const auto N = PARTICLE_COUNT;
+  constexpr auto N = PARTICLE_COUNT;
   for (std::uint32_t size = 2; size <= N; size *= 2) {
     for (std::uint32_t stride = size / 2; stride > 0; stride /= 2) {
       glProgramUniform1ui(programGridSort_, 0, size);
