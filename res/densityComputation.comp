@@ -16,8 +16,8 @@ layout (location = 0) uniform vec3 gridLength;
 layout (location = 1) uniform vec3 gridOrigin;
 layout (location = 2) uniform uvec3 gridResolution;
 
-layout (location = 3) uniform float mass = 0.05;
-layout (location = 4) uniform float re = 0.05;
+layout (location = 3) uniform float mass;
+layout (location = 4) uniform float re;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
