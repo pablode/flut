@@ -17,8 +17,9 @@ layout (location = 4) uniform vec3 gridOrigin;
 layout (location = 5) uniform uvec3 gridResolution;
 layout (location = 6) uniform uint particleCount;
 layout (location = 7) uniform float pointRadius;
-layout (location = 8) uniform int colorMode;
-layout (location = 9) uniform int shadingMode;
+layout (location = 8) uniform float pointScale;
+layout (location = 9) uniform int colorMode;
+layout (location = 10) uniform int shadingMode;
 
 void main() {
 

@@ -241,6 +241,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE : RANGE / 2.0f;
+  const float pointScale = 650.0f;
   glUseProgram(programRender_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
@@ -253,8 +254,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3uiv(programRender_, 5, 1, GRID_RES.data());
   glProgramUniform1ui(programRender_, 6, PARTICLE_COUNT);
   glProgramUniform1f(programRender_, 7, pointRadius);
-  glProgramUniform1i(programRender_, 8, options_.colorMode);
-  glProgramUniform1i(programRender_, 9, options_.shadingMode);
+  glProgramUniform1f(programRender_, 8, pointScale);
+  glProgramUniform1i(programRender_, 9, options_.colorMode);
+  glProgramUniform1i(programRender_, 10, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
