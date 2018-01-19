@@ -72,17 +72,20 @@ void main() {
         uint otherVoxelId = voxelId(particleCount, newPos);
         if (otherVoxelId >= gridResolution.x * gridResolution.y * gridResolution.z)
           continue;
-        uint otherParticleVoxelId = indices[otherVoxelId * 2 + 0];
-        uint otherParticleSize = indices[otherVoxelId * 2 + 1];
-        if (otherParticleSize == 0)
+        uint voxelParticleStart = indices[otherVoxelId * 2 + 0];
+        uint voxelParticleSize = indices[otherVoxelId * 2 + 1];
+        if (voxelParticleSize == 0)
           continue;
 
-        for (uint c = 0; c < otherParticleSize; ++c) {
-          uint otherParticleId = mappings[otherParticleVoxelId * 2 + c * 2];
+        // Beware that otherParticleId == p is possible and
+        // wanted because of density self-contribution.
+        // Therefore, the density can never be equal to zero.
+        for (uint c = 0; c < voxelParticleSize; ++c) {
+          uint otherParticleId = mappings[voxelParticleStart * 2 + c * 2];
           vec3 otherParticlePos = vec3(position1[otherParticleId * 3 + 0],
             position1[otherParticleId * 3 + 1], position1[otherParticleId * 3 + 2]);
-          float posDiff = distance(otherParticlePos, pos);
 
+          float posDiff = distance(otherParticlePos, pos);
           if (posDiff >= re)
             continue;
 
@@ -95,7 +98,7 @@ void main() {
   float dist = wallDist(pos);
   if (dist <= re) {
     uint i = 1024 - uint(1024 * (dist / re));
-    d += wallweight[i];
+    d += mass * wallweight[i];
   }
 
   density2[p] = d;

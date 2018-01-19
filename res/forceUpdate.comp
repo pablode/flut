@@ -87,17 +87,17 @@ vec3 wallForce(float mass, vec3 pos, float dt) {
 }
 
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
-  if (length(r) <= 0.0 || pjDen <= 0.000001)
-    return vec3(0.0);
+  if (length(r) <= 0.0)
+    r = vec3(0.00000001);
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
   vec3 wPress = weightPress(re, r);
-  return -1.0 * (mass * (pi + pj) * wPress) / (2 * pjDen);
+  return -1.0 * (mass * (pi + pj) * wPress) / (2.0 * pjDen);
 }
 
 vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
-  if (length(r) <= 0.0 || pjDen <= 0.000001)
-    return vec3(0.0);
+  if (length(r) <= 0.0)
+    r = vec3(0.00000001);
   float wVis = weightVis(re, r);
   return (mass * (pjVelo - piVelo) * wVis) / (pjDen);
 }
@@ -114,8 +114,6 @@ void main() {
   vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
   uint vId = voxelId(particleCount, pos);
   float piDen = density2[p];
-  if (piDen <= 0.0)
-    return;
   vec3 piVelo = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
 
   vec3 pressure = vec3(0.0);
@@ -128,15 +126,16 @@ void main() {
         uint otherVoxelId = voxelId(particleCount, newPos);
         if (otherVoxelId >= gridResolution.x * gridResolution.y * gridResolution.z)
           continue;
-        uint otherParticleIndex = indices[otherVoxelId * 2 + 0];
-        if (otherParticleIndex == p)
-          continue;
-        uint otherParticleSize = indices[otherVoxelId * 2 + 1];
-        if (otherParticleSize == 0)
+        uint voxelParticleStart = indices[otherVoxelId * 2 + 0];
+        uint voxelParticleSize = indices[otherVoxelId * 2 + 1];
+        if (voxelParticleSize == 0)
           continue;
 
-        for (uint c = 0; c < otherParticleSize; ++c) {
-          uint pjId = mappings[otherParticleIndex * 2 + c * 2];
+        for (uint c = 0; c < voxelParticleSize; ++c) {
+          uint pjId = mappings[voxelParticleStart * 2 + c * 2];
+          if (pjId == p)
+            continue;
+
           vec3 pjPos = vec3(position1[pjId * 3 + 0], position1[pjId * 3 + 1],
             position1[pjId * 3 + 2]);
 
@@ -145,32 +144,33 @@ void main() {
             continue;
 
           float pjDen = density2[pjId];
-          if (pjDen <= 0.0)
-            return;
           vec3 pjVelo = vec3(velocity1[pjId * 3 + 0], velocity1[pjId * 3 + 1],
             velocity1[pjId * 3 + 2]);
 
-          pressure += pressureForce(mass, r, piDen, pjDen);
+          pressure -= pressureForce(mass, r, piDen, pjDen);
           viscosity += viscosityForce(mass, r, piVelo, pjVelo, pjDen);
         }
       }
     }
   }
 
+  // TODO: correct equations
+  // TODO: decide on one boundary-handling technique
   vec3 force = vec3(0.0);
-  force += -1.0 * pressure;
+  force += (-1.0 / piDen) * pressure;
   force += visCoeff * viscosity;
+  force += wallForce(mass, pos, dt);
 
   vec3 acceleration = vec3(0.0);
   acceleration += gravity;
-  acceleration += force / piDen;
+  acceleration += force;
 
   vec3 newVelo = oldVelocity + acceleration * dt;
   vec3 newPos = pos + newVelo * dt;
   vec3 boundsL = gridOrigin;
   vec3 boundsH = boundsL + gridLength;
 
-  float wallDamping = 0.75;
+  float wallDamping = 0.5;
   vec3 wallNormal = -1.0 * bbNormal(pos);
   vec3 refl = reflect(newVelo * wallDamping, wallNormal);
   if (newPos.x >= boundsH.x) {

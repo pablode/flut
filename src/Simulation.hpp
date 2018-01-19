@@ -45,11 +45,11 @@ namespace ansimproj {
   private:
     constexpr static float DT = 0.005f;
     constexpr static float K = 1.0f;
-    constexpr static float MASS = 0.02f;
+    constexpr static float MASS = 0.05f;
     constexpr static float RANGE = 0.1f;
-    constexpr static float VIS_COEFF = 6.5f;
+    constexpr static float VIS_COEFF = 3.5f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static float REST_DENSITY = 10000.0f;
+    constexpr static float REST_DENSITY = 1000.0f;
 
   public:
     Simulation();
