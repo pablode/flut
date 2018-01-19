@@ -61,6 +61,6 @@ void main() {
 
   fragPos = (view * vec4(vertPos, 1.0)).xyz;
   float dist = length(fragPos);
-  gl_PointSize = pointRadius / dist;
+  gl_PointSize = pointRadius * (650.0 / dist); // TODO: uniform pointScale?
   gl_Position = modelViewProj * vec4(vertPos, 1.0);
 }

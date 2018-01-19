@@ -1,7 +1,5 @@
 #version 430 core
 
-const float far = 25.0;
-const float near = 0.01;
 const vec3 lightPos = vec3(-0.577, -0.577, -0.577);
 const vec3 lightDir = normalize(-lightPos);
 const float shininess = 10.0;
@@ -37,14 +35,13 @@ void main() {
     if (r2 > 1.0)
       discard; // Outside of circle
     N.z = sqrt(1.0 - r2);
-    vec4 P = vec4(fragPos + N * 1.0, 1.0);
 
-
-    // TODO: correct Depth
-    //vec4 clipSpacePos = projection * P;
-    //float normDepth = clipSpacePos.z / clipSpacePos.w;
-    //gl_FragDepth = ((far - near) / 2.0) * normDepth + (far + near) / 2.0;
-
+    // Depth
+    vec4 eyeSpacePos = vec4(fragPos + N * pointRadius, 1.0);
+    vec4 clipSpacePos = projection * eyeSpacePos;
+    float ndcDepth = clipSpacePos.z / clipSpacePos.w;
+    float windowDepth = 0.5 * ndcDepth + 0.5;
+    gl_FragDepth = windowDepth;
 
     // Diffuse
     float dcoeff = max(0.0, dot(N, lightDir));
