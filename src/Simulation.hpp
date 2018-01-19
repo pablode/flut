@@ -11,7 +11,7 @@ namespace ansimproj {
       SimulationOptions()
         : gravity{0.0f, -9.81f, 0.0f}
         , deltaTimeMod{1.0f}
-        , colorMode{1}
+        , colorMode{3}
         , shadingMode{1} {}
       float gravity[3];
       float deltaTimeMod;
@@ -43,13 +43,13 @@ namespace ansimproj {
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
   private:
-    constexpr static float DT = 0.0005f;
-    constexpr static float K = 100.0f;
-    constexpr static float MASS = 0.05f;
-    constexpr static float RANGE = 0.05f;
-    constexpr static float VIS_COEFF = 2.5f;
+    constexpr static float DT = 0.005f;
+    constexpr static float K = 1.0f;
+    constexpr static float MASS = 0.02f;
+    constexpr static float RANGE = 0.1f;
+    constexpr static float VIS_COEFF = 6.5f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static float REST_DENSITY = 50000.0f;
+    constexpr static float REST_DENSITY = 10000.0f;
 
   public:
     Simulation();

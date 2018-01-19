@@ -127,12 +127,12 @@ void ansimproj::Simulation::preset1() {
   bufVelocity2_ = createBuffer(zeroFloatData, true);
   bufDensity_ = createBuffer(zeroFloatData, true);
 
-  // TODO: using a/this weight function is not correct
+  // TODO: tweak this weight funtion!
   const std::uint32_t numSamples = 1024;
   std::vector<float> wallWeightData;
   wallWeightData.reserve(numSamples);
   wallWeightData.push_back(std::numeric_limits<float>::lowest());
-  const float D = 1;
+  const float D = REST_DENSITY;
   const float D_r = std::sqrt(D);
   for (std::uint32_t i = 1; i <= numSamples; ++i) {
     const float r = 1.0f / i;

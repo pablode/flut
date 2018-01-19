@@ -157,21 +157,51 @@ void main() {
     }
   }
 
+  vec3 force = vec3(0.0);
+  force += -1.0 * pressure;
+  force += visCoeff * viscosity;
+
   vec3 acceleration = vec3(0.0);
-  acceleration += -1.0 * (1.0 / piDen) * pressure;
-  acceleration += visCoeff * viscosity;
-  acceleration += wallForce(mass, pos, dt);
-  acceleration += gravity / mass; // (?)
+  acceleration += gravity;
+  acceleration += force / piDen;
 
   vec3 newVelo = oldVelocity + acceleration * dt;
+  vec3 newPos = pos + newVelo * dt;
+  vec3 boundsL = gridOrigin;
+  vec3 boundsH = boundsL + gridLength;
+
+  float wallDamping = 0.75;
+  vec3 wallNormal = -1.0 * bbNormal(pos);
+  vec3 refl = reflect(newVelo * wallDamping, wallNormal);
+  if (newPos.x >= boundsH.x) {
+    newVelo.x = refl.x;
+    newPos.x = boundsH.x;
+  } else if (newPos.x < boundsL.x) {
+    newVelo.x = refl.x;
+    newPos.x = boundsL.x;
+  }
+
+  if (newPos.y >= boundsH.y) {
+    newVelo.y = refl.y;
+    newPos.y = boundsH.y;
+  } else if (newPos.y < boundsL.y) {
+    newVelo.y = refl.y;
+    newPos.y = boundsL.y;
+  }
+
+  if (newPos.z >= boundsH.z) {
+    newVelo.z = refl.z;
+    newPos.z = boundsH.z;
+  } else if (newPos.z < boundsL.z) {
+    newVelo.z = refl.z;
+    newPos.z = boundsL.z;
+  }
+
   velocity2[p * 3 + 0] = newVelo.x;
   velocity2[p * 3 + 1] = newVelo.y;
   velocity2[p * 3 + 2] = newVelo.z;
 
-  vec3 newPos = pos + newVelo * dt;
-  vec3 boundsL = gridOrigin;
-  vec3 boundsH = boundsL + gridLength;
-  position2[p * 3 + 0] = max(boundsL.x, min(newPos.x, boundsH.x));
-  position2[p * 3 + 1] = max(boundsL.y, min(newPos.y, boundsH.y));
-  position2[p * 3 + 2] = max(boundsL.z, min(newPos.z, boundsH.z));
+  position2[p * 3 + 0] = newPos.x;
+  position2[p * 3 + 1] = newPos.y;
+  position2[p * 3 + 2] = newPos.z;
 }

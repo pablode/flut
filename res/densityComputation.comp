@@ -95,7 +95,7 @@ void main() {
   float dist = wallDist(pos);
   if (dist <= re) {
     uint i = 1024 - uint(1024 * (dist / re));
-    d += mass * wallweight[i];
+    d += wallweight[i];
   }
 
   density2[p] = d;
