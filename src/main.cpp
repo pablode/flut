@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
 
-    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.1f);
+    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
 
     bool preset1 = ImGui::Button("Preset 1");
     if (!buttonPressed && preset1)
