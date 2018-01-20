@@ -8,8 +8,6 @@
 ///   Input: Density (2), Uniform Grid, Position (1), Velocity (1)
 ///   Output: Velocity (2), Position (2)
 
-const float EPS = 0.001;
-
 layout (local_size_x = 128) in;
 
 layout (location = 0) uniform float dt;
@@ -26,29 +24,27 @@ layout (location = 9) uniform float restPressure;
 layout (location = 10) uniform float restDensity;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
-layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
-layout (std430, binding = 2) buffer indicesBuf { uint indices[]; };
-layout (std430, binding = 3) buffer densityBuf2 { float density2[]; };
-layout (std430, binding = 4) buffer velocityBuf1 { float velocity1[]; };
+layout (std430, binding = 1) buffer unsortedBuf { uint unsorted[]; };
+layout (std430, binding = 2) buffer sortedBuf { uint sorted[]; };
+layout (std430, binding = 3) buffer indicesBuf { uint indices[]; };
+layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 5) buffer velocityBuf1 { float velocity1[]; };
 
-layout (std430, binding = 5) buffer velocityBuf2 { float velocity2[]; };
-layout (std430, binding = 6) buffer positionBuf2 { float position2[]; };
+layout (std430, binding = 6) buffer velocityBuf2 { float velocity2[]; };
+layout (std430, binding = 7) buffer positionBuf2 { float position2[]; };
 
 
 ///
-uint cellId(uint cellCount, float length, float pos) {
-  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
+uint getVoxelId(uvec3 cellIds) {
+  return cellIds.x + gridResolution.x * (cellIds.y + gridResolution.y * cellIds.z);
 }
 
-uint voxelId(uint particleCount, vec3 pos) {
-  vec3 c = pos - gridOrigin;
-  if (c.x < 0.0 || c.x > gridLength.x || c.y < 0.0 || c.y > gridLength.y || c.z < 0.0 || c.z > gridLength.z)
-    return gridResolution.x * gridResolution.y * gridResolution.z;
-  uint xCell = cellId(gridResolution.x, gridLength.x, c.x);
-  uint yCell = cellId(gridResolution.y, gridLength.y, c.y);
-  uint zCell = cellId(gridResolution.z, gridLength.z, c.z);
-  uint vox = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
-  return vox;
+uvec3 getCellIds(uint voxelId) {
+  uint zCell = voxelId / (gridResolution.x * gridResolution.y);
+  voxelId -= (zCell * gridResolution.x * gridResolution.y);
+  uint yCell = voxelId / gridResolution.x;
+  uint xCell = voxelId % gridResolution.x;
+  return uvec3(xCell, yCell, zCell);
 }
 
 ///
@@ -93,16 +89,19 @@ vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
 ///
 void main() {
   vec3 voxelSize = gridLength / gridResolution;
-  uint particleCount = mappings.length() / 2;
+  uint particleCount = density2.length();
   uint p = gl_GlobalInvocationID.x;
   if (p >= particleCount)
     return;
 
-  vec3 pos = vec3(position1[p * 3 + 0], position1[p * 3 + 1], position1[p * 3 + 2]);
-  vec3 oldVelocity = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
-  uint vId = voxelId(particleCount, pos);
+  uint voxId = unsorted[p * 2 + 1];
+  ivec3 cellIds = ivec3(getCellIds(voxId));
+
+  vec3 piPos = vec3(position1[p * 3 + 0],
+    position1[p * 3 + 1], position1[p * 3 + 2]);
+  vec3 piVelo = vec3(velocity1[p * 3 + 0],
+    velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
   float piDen = density2[p];
-  vec3 piVelo = vec3(velocity1[p * 3 + 0], velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
 
   vec3 pressure = vec3(0.0);
   vec3 viscosity = vec3(0.0);
@@ -110,30 +109,33 @@ void main() {
   for (int x = -numCells.x; x <= numCells.x; ++x) {
     for (int y = -numCells.y; y <= numCells.y; ++y) {
       for (int z = -numCells.z; z <= numCells.z; ++z) {
-        vec3 newPos = pos + voxelSize * vec3(x, y, z);
-        uint otherVoxelId = voxelId(particleCount, newPos);
-        if (otherVoxelId >= gridResolution.x * gridResolution.y * gridResolution.z)
-          continue;
-        uint voxelParticleStart = indices[otherVoxelId * 2 + 0];
-        uint voxelParticleSize = indices[otherVoxelId * 2 + 1];
-        if (voxelParticleSize == 0)
+
+        ivec3 newCellIds = cellIds + ivec3(x, y, z);
+        if (newCellIds.x < 0 || newCellIds.x >= gridResolution.x) continue;
+        else if (newCellIds.y < 0 || newCellIds.y >= gridResolution.y) continue;
+        else if (newCellIds.z < 0 || newCellIds.z >= gridResolution.z) continue;
+
+        uint newVoxId = getVoxelId(uvec3(newCellIds));
+        uint newVoxStart = indices[newVoxId * 2 + 0];
+        uint newVoxSize = indices[newVoxId * 2 + 1];
+        if (newVoxSize == 0)
           continue;
 
-        for (uint c = 0; c < voxelParticleSize; ++c) {
-          uint pjId = mappings[voxelParticleStart * 2 + c * 2];
+        for (uint c = 0; c < newVoxSize; ++c) {
+          uint pjId = sorted[newVoxStart * 2 + c * 2];
           if (pjId == p)
             continue;
 
-          vec3 pjPos = vec3(position1[pjId * 3 + 0], position1[pjId * 3 + 1],
-            position1[pjId * 3 + 2]);
+          vec3 pjPos = vec3(position1[pjId * 3 + 0],
+            position1[pjId * 3 + 1], position1[pjId * 3 + 2]);
 
-          vec3 r = pjPos - pos;
+          vec3 r = pjPos - piPos;
           if (length(r) >= re)
             continue;
 
           float pjDen = density2[pjId];
-          vec3 pjVelo = vec3(velocity1[pjId * 3 + 0], velocity1[pjId * 3 + 1],
-            velocity1[pjId * 3 + 2]);
+          vec3 pjVelo = vec3(velocity1[pjId * 3 + 0],
+            velocity1[pjId * 3 + 1],  velocity1[pjId * 3 + 2]);
 
           pressure -= pressureForce(mass, r, piDen, pjDen);
           viscosity += viscosityForce(mass, r, piVelo, pjVelo, pjDen);
@@ -142,20 +144,18 @@ void main() {
     }
   }
 
-  // TODO: correct equations
-  // TODO: decide on one boundary-handling technique
   vec3 acceleration = vec3(0.0);
   acceleration += gravity;
   acceleration += (-1.0 / piDen) * pressure;
   acceleration += visCoeff * viscosity;
 
-  vec3 newVelo = oldVelocity + acceleration * dt;
-  vec3 newPos = pos + newVelo * dt;
+  vec3 newVelo = piVelo + acceleration * dt;
+  vec3 newPos = piPos + newVelo * dt;
   vec3 boundsL = gridOrigin;
   vec3 boundsH = boundsL + gridLength;
 
   float wallDamping = 0.25;
-  vec3 wallNormal = -1.0 * bbNormal(pos);
+  vec3 wallNormal = -1.0 * bbNormal(piPos);
   vec3 refl = reflect(newVelo * wallDamping, wallNormal);
   if (newPos.x >= boundsH.x) {
     newVelo.x = refl.x;

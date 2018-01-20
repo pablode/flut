@@ -11,7 +11,7 @@ namespace ansimproj {
       SimulationOptions()
         : gravity{0.0f, -9.81f, 0.0f}
         , deltaTimeMod{1.0f}
-        , colorMode{3}
+        , colorMode{1}
         , shadingMode{1} {}
       float gravity[3];
       float deltaTimeMod;
@@ -83,7 +83,8 @@ namespace ansimproj {
     GLuint programForceUpdate_;
     GLuint programRender_;
     GLuint bufColor_;
-    GLuint bufGridPairs_;
+    GLuint bufGridUnsorted_;
+    GLuint bufGridSorted_;
     GLuint bufGridIndices_;
     GLuint bufPosition1_;
     GLuint bufPosition2_;

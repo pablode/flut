@@ -10,7 +10,8 @@ ansimproj::Simulation::Simulation()
   , swapFrame_{false}
   , frame_{0}
   , bufColor_{0}
-  , bufGridPairs_{0}
+  , bufGridUnsorted_{0}
+  , bufGridSorted_{0}
   , bufGridIndices_{0}
   , bufPosition1_{0}
   , bufVelocity1_{0}
@@ -54,7 +55,8 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programForceUpdate_);
   deleteShader(programRender_);
   deleteBuffer(bufColor_);
-  deleteBuffer(bufGridPairs_);
+  deleteBuffer(bufGridUnsorted_);
+  deleteBuffer(bufGridSorted_);
   deleteBuffer(bufGridIndices_);
   deleteBuffer(bufPosition1_);
   deleteBuffer(bufPosition2_);
@@ -66,8 +68,10 @@ ansimproj::Simulation::~Simulation() {
 }
 
 void ansimproj::Simulation::preset1() {
-  if (bufGridPairs_)
-    deleteBuffer(bufGridPairs_);
+  if (bufGridUnsorted_)
+    deleteBuffer(bufGridUnsorted_);
+  if (bufGridSorted_)
+    deleteBuffer(bufGridSorted_);
   if (bufGridIndices_)
     deleteBuffer(bufGridIndices_);
   if (bufColor_)
@@ -89,7 +93,8 @@ void ansimproj::Simulation::preset1() {
 
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
-  bufGridPairs_ = createBuffer(gridPairsData, true);
+  bufGridUnsorted_ = createBuffer(gridPairsData, true);
+  bufGridSorted_ = createBuffer(gridPairsData, true);
 
   std::vector<GLuint> gridIndicesData;
   gridIndicesData.resize(GRID_VOXEL_COUNT * 2);
@@ -143,7 +148,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3uiv(programGridInsert_, 2, 1, GRID_RES.data());
   glProgramUniform1ui(programGridInsert_, 3, PARTICLE_COUNT);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridUnsorted_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridSorted_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);
@@ -152,7 +158,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // TODO: replace bitonic mergesort with counting sort
   glBeginQuery(GL_TIME_ELAPSED, query[1]);
   glUseProgram(programGridSort_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridSorted_);
   constexpr auto N = PARTICLE_COUNT;
   for (std::uint32_t size = 2; size <= N; size *= 2) {
     for (std::uint32_t stride = size / 2; stride > 0; stride /= 2) {
@@ -170,7 +176,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     static_cast<std::uint32_t>(std::ceil(GRID_VOXEL_COUNT / static_cast<float>(localSize)));
   glBeginQuery(GL_TIME_ELAPSED, query[2]);
   glUseProgram(programGridIndexing_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridPairs_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridSorted_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridIndices_);
   glProgramUniform1ui(programGridIndexing_, 0, searchDepth);
   glDispatchCompute(indexingWorkGroups, 1, 1);
@@ -186,9 +192,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1f(programDensityComputation_, 3, MASS);
   glProgramUniform1f(programDensityComputation_, 4, RANGE);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridUnsorted_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridSorted_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufGridIndices_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufDensity_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);
@@ -208,12 +215,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1f(programForceUpdate_, 9, REST_PRESSURE);
   glProgramUniform1f(programForceUpdate_, 10, REST_DENSITY);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, swapFrame_ ? bufVelocity1_ : bufVelocity2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapFrame_ ? bufPosition2_ : bufPosition1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridUnsorted_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridSorted_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufGridIndices_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufDensity_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, swapFrame_ ? bufVelocity1_ : bufVelocity2_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);

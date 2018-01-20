@@ -8,8 +8,6 @@
 ///   Input: Density (1), Uniform Grid, Position (1)
 ///   Output: Density (2)
 
-const float EPS = 0.001;
-
 layout (local_size_x = 128) in;
 
 layout (location = 0) uniform vec3 gridLength;
@@ -20,28 +18,27 @@ layout (location = 3) uniform float mass;
 layout (location = 4) uniform float re;
 
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
-layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
-layout (std430, binding = 2) buffer indicesBuf { uint indices[]; };
+layout (std430, binding = 1) buffer unsortedBuf { uint unsorted[]; };
+layout (std430, binding = 2) buffer sortedBuf { uint sorted[]; };
+layout (std430, binding = 3) buffer indicesBuf { uint indices[]; };
 
-layout (std430, binding = 3) buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
 
 
 ///
-uint cellId(uint cellCount, float length, float pos) {
-  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
+uint getVoxelId(uvec3 cellIds) {
+  return cellIds.x + gridResolution.x * (cellIds.y + gridResolution.y * cellIds.z);
 }
 
-uint voxelId(uint particleCount, vec3 pos) {
-  vec3 c = pos - gridOrigin;
-  if (c.x < 0.0 || c.x >= gridLength.x || c.y < 0.0 || c.y >= gridLength.y || c.z < 0.0 || c.z >= gridLength.z)
-    return gridResolution.x * gridResolution.y * gridResolution.z;
-  uint xCell = cellId(gridResolution.x, gridLength.x, c.x);
-  uint yCell = cellId(gridResolution.y, gridLength.y, c.y);
-  uint zCell = cellId(gridResolution.z, gridLength.z, c.z);
-  uint vox = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
-  return vox;
+uvec3 getCellIds(uint voxelId) {
+  uint zCell = voxelId / (gridResolution.x * gridResolution.y);
+  voxelId -= (zCell * gridResolution.x * gridResolution.y);
+  uint yCell = voxelId / gridResolution.x;
+  uint xCell = voxelId % gridResolution.x;
+  return uvec3(xCell, yCell, zCell);
 }
 
+///
 float weight(float re, float r) {
   return (315 * pow(re * re - r * r, 3)) / (64 * M_PI * pow(re, 9));
 }
@@ -49,32 +46,38 @@ float weight(float re, float r) {
 ///
 void main() {
   vec3 voxelSize = gridLength / gridResolution;
-  uint particleCount = mappings.length() / 2;
+  uint particleCount = density2.length();
   uint p = gl_GlobalInvocationID.x;
   if (p >= particleCount)
     return;
 
+  uint voxId = unsorted[p * 2 + 1];
+  ivec3 cellIds = ivec3(getCellIds(voxId));
   vec3 pos = vec3(position1[p * 3 + 0],
     position1[p * 3 + 1], position1[p * 3 + 2]);
+
   float d = 0.0;
   ivec3 numCells = ivec3(ceil(re / voxelSize));
   for (int x = -numCells.x; x <= numCells.x; ++x) {
     for (int y = -numCells.y; y <= numCells.y; ++y) {
       for (int z = -numCells.z; z <= numCells.z; ++z) {
-        vec3 newPos = pos + voxelSize * vec3(x, y, z);
-        uint otherVoxelId = voxelId(particleCount, newPos);
-        if (otherVoxelId >= gridResolution.x * gridResolution.y * gridResolution.z)
-          continue;
-        uint voxelParticleStart = indices[otherVoxelId * 2 + 0];
-        uint voxelParticleSize = indices[otherVoxelId * 2 + 1];
-        if (voxelParticleSize == 0)
+
+        ivec3 newCellIds = cellIds + ivec3(x, y, z);
+        if (newCellIds.x < 0 || newCellIds.x >= gridResolution.x) continue;
+        else if (newCellIds.y < 0 || newCellIds.y >= gridResolution.y) continue;
+        else if (newCellIds.z < 0 || newCellIds.z >= gridResolution.z) continue;
+
+        uint newVoxId = getVoxelId(uvec3(newCellIds));
+        uint newVoxStart = indices[newVoxId * 2 + 0];
+        uint newVoxSize = indices[newVoxId * 2 + 1];
+        if (newVoxSize == 0)
           continue;
 
         // Beware that otherParticleId == p is possible and
         // wanted because of density self-contribution.
         // Therefore, the density can never be equal to zero.
-        for (uint c = 0; c < voxelParticleSize; ++c) {
-          uint otherParticleId = mappings[voxelParticleStart * 2 + c * 2];
+        for (uint c = 0; c < newVoxSize; ++c) {
+          uint otherParticleId = sorted[newVoxStart * 2 + c * 2];
           vec3 otherParticlePos = vec3(position1[otherParticleId * 3 + 0],
             position1[otherParticleId * 3 + 1], position1[otherParticleId * 3 + 2]);
 
