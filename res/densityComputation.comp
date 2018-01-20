@@ -5,7 +5,7 @@
 /// Particle density is estimated by averaging the surrounding
 /// neighbor particles mass. Additionally, the influence of the
 /// walls are computed. The total density is stored in a buffer.
-///   Input: Density (1), Uniform Grid, Position (1), Distance Func, WallWeight Func
+///   Input: Density (1), Uniform Grid, Position (1)
 ///   Output: Density (2)
 
 const float EPS = 0.001;
@@ -22,9 +22,8 @@ layout (location = 4) uniform float re;
 layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer mappingBuf { uint mappings[]; };
 layout (std430, binding = 2) buffer indicesBuf { uint indices[]; };
-layout (std430, binding = 3) buffer wallweightBuf { float wallweight[]; };
 
-layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 3) buffer densityBuf2 { float density2[]; };
 
 
 ///
@@ -41,12 +40,6 @@ uint voxelId(uint particleCount, vec3 pos) {
   uint zCell = cellId(gridResolution.z, gridLength.z, c.z);
   uint vox = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
   return vox;
-}
-
-float wallDist(vec3 pos) {
-  vec3 centered = (pos - gridOrigin - gridLength / 2);
-  vec3 wallDist3d = gridLength / 2 - abs(centered);
-  return min(wallDist3d.x, min(wallDist3d.y, wallDist3d.z));
 }
 
 float weight(float re, float r) {
@@ -93,12 +86,6 @@ void main() {
         }
       }
     }
-  }
-
-  float dist = wallDist(pos);
-  if (dist <= re) {
-    uint i = 1024 - uint(1024 * (dist / re));
-    d += mass * wallweight[i];
   }
 
   density2[p] = d;

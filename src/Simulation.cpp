@@ -16,7 +16,6 @@ ansimproj::Simulation::Simulation()
   , bufVelocity1_{0}
   , bufPosition2_{0}
   , bufVelocity2_{0}
-  , bufWallweight_{0}
   , bufDensity_{0}
   , vao1_{0}
   , vao2_{0} {
@@ -61,7 +60,6 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufPosition2_);
   deleteBuffer(bufVelocity1_);
   deleteBuffer(bufVelocity2_);
-  deleteBuffer(bufWallweight_);
   deleteBuffer(bufDensity_);
   deleteVAO(vao1_);
   deleteVAO(vao2_);
@@ -82,8 +80,6 @@ void ansimproj::Simulation::preset1() {
     deleteBuffer(bufVelocity1_);
   if (bufVelocity2_)
     deleteBuffer(bufVelocity2_);
-  if (bufWallweight_)
-    deleteBuffer(bufWallweight_);
   if (bufDensity_)
     deleteBuffer(bufDensity_);
   if (vao1_)
@@ -126,20 +122,6 @@ void ansimproj::Simulation::preset1() {
   bufVelocity1_ = createBuffer(zeroFloatData, true);
   bufVelocity2_ = createBuffer(zeroFloatData, true);
   bufDensity_ = createBuffer(zeroFloatData, true);
-
-  // TODO: tweak this weight funtion!
-  const std::uint32_t numSamples = 1024;
-  std::vector<float> wallWeightData;
-  wallWeightData.reserve(numSamples);
-  wallWeightData.push_back(std::numeric_limits<float>::lowest());
-  const float D = REST_DENSITY;
-  const float D_r = std::sqrt(D);
-  for (std::uint32_t i = 1; i <= numSamples; ++i) {
-    const float r = 1.0f / i;
-    const auto weight = std::pow(D_r, r * 2);
-    wallWeightData.push_back(weight);
-  }
-  bufWallweight_ = createBuffer(wallWeightData, true);
 
   vao1_ = createVAO(bufPosition1_, bufColor_);
   vao2_ = createVAO(bufPosition2_, bufColor_);
@@ -206,8 +188,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridPairs_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridIndices_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufWallweight_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, bufDensity_);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, bufDensity_);
   glDispatchCompute(numWorkGroups, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);
@@ -240,7 +221,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = options_.shadingMode ? RANGE : RANGE / 2.0f;
+  const float pointRadius = options_.shadingMode ? RANGE / 2.0f : RANGE / 4.0f;
   const float pointScale = 650.0f;
   glUseProgram(programRender_);
   const auto &view = camera.view();

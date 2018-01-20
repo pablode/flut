@@ -5,8 +5,8 @@
 /// Calculates the new position and velocity using pressure and viscosity,
 /// gravity and wall boundary forces. To do that, a neighborhood search is performed.
 /// Results vary strongly based on the given physical parameters.
-///   Input: Density (2), Uniform Grid, Position (1), Velocity (1), Distance Func
-///   Output: Velocity (2)
+///   Input: Density (2), Uniform Grid, Position (1), Velocity (1)
+///   Output: Velocity (2), Position (2)
 
 const float EPS = 0.001;
 
@@ -76,19 +76,9 @@ float pressure(float density) {
   return restPressure + k * (density - restDensity);
 }
 
-vec3 wallForce(float mass, vec3 pos, float dt) {
-  vec3 centered = (pos - gridOrigin - gridLength / 2);
-  vec3 wallDist3d = gridLength / 2 - abs(centered);
-  float wallDist = min(wallDist3d.x, min(wallDist3d.y, wallDist3d.z));
-  if (wallDist >= re)
-    return vec3(0.0);
-  vec3 wallNormal = -1.0 * bbNormal(centered);
-  return (mass * (re - wallDist) * wallNormal) / (dt * dt);
-}
-
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
   if (length(r) <= 0.0)
-    r = vec3(0.00000001);
+    r = vec3(0.001);
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
   vec3 wPress = weightPress(re, r);
@@ -96,8 +86,6 @@ vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
 }
 
 vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
-  if (length(r) <= 0.0)
-    r = vec3(0.00000001);
   float wVis = weightVis(re, r);
   return (mass * (pjVelo - piVelo) * wVis) / (pjDen);
 }
@@ -156,21 +144,17 @@ void main() {
 
   // TODO: correct equations
   // TODO: decide on one boundary-handling technique
-  vec3 force = vec3(0.0);
-  force += (-1.0 / piDen) * pressure;
-  force += visCoeff * viscosity;
-  force += wallForce(mass, pos, dt);
-
   vec3 acceleration = vec3(0.0);
   acceleration += gravity;
-  acceleration += force;
+  acceleration += (-1.0 / piDen) * pressure;
+  acceleration += visCoeff * viscosity;
 
   vec3 newVelo = oldVelocity + acceleration * dt;
   vec3 newPos = pos + newVelo * dt;
   vec3 boundsL = gridOrigin;
   vec3 boundsH = boundsL + gridLength;
 
-  float wallDamping = 0.5;
+  float wallDamping = 0.25;
   vec3 wallNormal = -1.0 * bbNormal(pos);
   vec3 refl = reflect(newVelo * wallDamping, wallNormal);
   if (newPos.x >= boundsH.x) {

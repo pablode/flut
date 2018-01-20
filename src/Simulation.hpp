@@ -38,17 +38,17 @@ namespace ansimproj {
   public:
     constexpr static std::uint32_t PARTICLE_COUNT = 2 << 14;
     const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {64, 64, 64};
-    const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {10.0f, 6.0f, 2.0f};
-    const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-5.0f, -3.0f, -1.0f};
+    const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {5.0f, 3.0f, 1.0f};
+    const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-2.5f, -1.5f, -0.5f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
   private:
     constexpr static float DT = 0.005f;
-    constexpr static float K = 1.0f;
-    constexpr static float MASS = 0.05f;
-    constexpr static float RANGE = 0.1f;
+    constexpr static float K = 800.0f;
+    constexpr static float MASS = 0.1f;
+    constexpr static float RANGE = 0.075f;
     constexpr static float VIS_COEFF = 3.5f;
-    constexpr static float REST_PRESSURE = 0.0f;
+    constexpr static float REST_PRESSURE = 250.0f;
     constexpr static float REST_DENSITY = 1000.0f;
 
   public:
@@ -89,7 +89,6 @@ namespace ansimproj {
     GLuint bufPosition2_;
     GLuint bufVelocity1_;
     GLuint bufVelocity2_;
-    GLuint bufWallweight_;
     GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
