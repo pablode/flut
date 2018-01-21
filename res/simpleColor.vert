@@ -57,9 +57,14 @@ void main() {
       fragColor = (velo / w);
     }
   } else if (colorMode == 2) {
+    vec3 velo = abs(vec3(velocity[p * 3 + 0],
+      velocity[p * 3 + 1], velocity[p * 3 + 2]));
+    float speed = length(velo);
+    fragColor = vec3(speed, speed, 0.0);
+  } else if (colorMode == 3) {
     fragColor = vec3(density[p] / MAX_DENSITY, density[p] / MAX_DENSITY, 1.0);
     if (density[p] <= 0.0 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);
-  } else if (colorMode == 3) {
+  } else if (colorMode == 4) {
     fragColor = voxelColor(particleCount, p);
   }
 
