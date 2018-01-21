@@ -25,18 +25,15 @@ layout (location = 10) uniform int shadingMode;
 out vec3 fragPos;
 out vec3 fragColor;
 
-uint cellId(uint cellCount, float length, float pos) {
-  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
+uvec3 computeCellIds(vec3 pos) {
+  return uvec3((gridResolution * (1.0 - EPS) * (pos - gridOrigin)) / gridLength);
 }
 
 vec3 voxelColor(uint particleCount, uint p) {
-  float posX = position2[p * 3 + 0];
-  float posY = position2[p * 3 + 1];
-  float posZ = position2[p * 3 + 2];
-  uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
-  return vec3(xCell, yCell, zCell) / float(gridResolution);
+  vec3 pos = vec3(position2[p * 3 + 0],
+    position2[p * 3 + 1], position2[p * 3 + 2]);
+  uvec3 cellIds = computeCellIds(pos);
+  return vec3(cellIds) / gridResolution;
 }
 
 void main() {

@@ -20,19 +20,16 @@ layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) buffer unsortedBuf { uint unsorted[]; };
 layout (std430, binding = 2) buffer sortedBuf { uint sorted[]; };
 
-uint cellId(uint cellCount, float length, float pos) {
-  return uint((cellCount * (1.0 - EPS) * (length - pos)) / length);
+uvec3 computeCellIds(vec3 pos) {
+  return uvec3((gridResolution * (1.0 - EPS) * (pos - gridOrigin)) / gridLength);
 }
 
-uint voxelId(uint particleCount, uint particle) {
-  float posX = position1[particle * 3 + 0];
-  float posY = position1[particle * 3 + 1];
-  float posZ = position1[particle * 3 + 2];
-  uint xCell = cellId(gridResolution.x, gridLength.x, posX - gridOrigin.x);
-  uint yCell = cellId(gridResolution.y, gridLength.y, posY - gridOrigin.y);
-  uint zCell = cellId(gridResolution.z, gridLength.z, posZ - gridOrigin.z);
-  uint id = xCell + gridResolution.x * (yCell + gridResolution.y * zCell);
-  return id;
+uint computeVoxId(uint particle) {
+  vec3 pos = vec3(position1[particle * 3 + 0],
+    position1[particle * 3 + 1], position1[particle * 3 + 2]);
+  uvec3 cellIds = computeCellIds(pos);
+  uint voxId = cellIds.x + gridResolution.x * (cellIds.y + gridResolution.y * cellIds.z);
+  return voxId;
 }
 
 void main() {
@@ -40,9 +37,9 @@ void main() {
   if (p >= particleCount)
     return;
 
-  uint vox = voxelId(particleCount, p);
+  uint voxId = computeVoxId(p);
   unsorted[p * 2] = p;
-  unsorted[p * 2 + 1] = vox;
+  unsorted[p * 2 + 1] = voxId;
   sorted[p * 2] = p;
-  sorted[p * 2 + 1] = vox;
+  sorted[p * 2 + 1] = voxId;
 }
