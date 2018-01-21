@@ -123,10 +123,12 @@ void ansimproj::Simulation::preset1() {
   bufColor_ = createBuffer(colData, false);
 
   std::vector<float> zeroFloatData;
+  zeroFloatData.resize(PARTICLE_COUNT);
+  bufDensity_ = createBuffer(zeroFloatData, true);
+
   zeroFloatData.resize(PARTICLE_COUNT * 3);
   bufVelocity1_ = createBuffer(zeroFloatData, true);
   bufVelocity2_ = createBuffer(zeroFloatData, true);
-  bufDensity_ = createBuffer(zeroFloatData, true);
 
   vao1_ = createVAO(bufPosition1_, bufColor_);
   vao2_ = createVAO(bufPosition2_, bufColor_);
