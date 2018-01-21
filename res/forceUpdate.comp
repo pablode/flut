@@ -105,7 +105,7 @@ void main() {
 
   vec3 pressure = vec3(0.0);
   vec3 viscosity = vec3(0.0);
-  ivec3 numCells = ivec3(ceil(re / voxelSize));
+  ivec3 numCells = ivec3(re / voxelSize + vec3(1.0));
   for (int x = -numCells.x; x <= numCells.x; ++x) {
     for (int y = -numCells.y; y <= numCells.y; ++y) {
       for (int z = -numCells.z; z <= numCells.z; ++z) {
@@ -122,7 +122,7 @@ void main() {
           continue;
 
         for (uint c = 0; c < newVoxSize; ++c) {
-          uint pjId = sorted[newVoxStart * 2 + c * 2];
+          uint pjId = sorted[(newVoxStart + c) * 2 + 0];
           if (pjId == p)
             continue;
 
