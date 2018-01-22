@@ -25,6 +25,11 @@ void main() {
 
   if (shadingMode == 0) {
     finalColor = vec4(fragColor, 1.0);
+    vec4 eyeSpacePos = vec4(fragPos, 1.0);
+    vec4 clipSpacePos = projection * eyeSpacePos;
+    float ndcDepth = clipSpacePos.z / clipSpacePos.w;
+    float windowDepth = 0.5 * ndcDepth + 0.5;
+    gl_FragDepth = windowDepth;
     return;
 
   } else {
