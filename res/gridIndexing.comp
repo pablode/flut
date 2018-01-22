@@ -12,47 +12,48 @@
 layout (std430, binding = 0) restrict readonly buffer mappingBuf { uint mappings[]; };
 layout (std430, binding = 1) restrict writeonly buffer indicesBuf { uint indices[]; };
 
-layout (location = 0) uniform uint depth; // log2(N+1)
-
 layout (local_size_x = 128) in;
 
-void found(uint curPos, uint voxelId) {
-  uint lower = curPos;
-  uint upper = curPos;
-  while (mappings[(lower-1) * 2 + 1] == voxelId) {
+void found(int index, uint voxelId) {
+  uint particleCount = mappings.length() / 2;
+  int lower = index;
+  int upper = index;
+  while (lower > 0 && mappings[(lower-1) * 2 + 1] == voxelId) {
     lower--;
   }
-  while (mappings[(upper+1) * 2 + 1] == voxelId) {
+  while (upper < particleCount-1 && mappings[(upper+1) * 2 + 1] == voxelId) {
     upper++;
   }
-  indices[voxelId * 2 + 0] = lower;
-  indices[voxelId * 2 + 1] = (upper - lower) + 1;
-}
-
-uint search(uint curPos, uint targetId, uint stride) {
-  uint voxId = mappings[curPos * 2 + 1];
-  uint dir = (targetId < voxId) ? -1 : (targetId == voxId) ? 0 : 1;
-  return dir * stride + curPos;
+  indices[voxelId * 2 + 0] = uint(lower);
+  indices[voxelId * 2 + 1] = uint((upper - lower) + 1);
 }
 
 void main() {
   uint voxelId = gl_GlobalInvocationID.x;
-  uint len = mappings.length() / 2;
-  if (voxelId >= indices.length() / 2)
+  uint particleCount = mappings.length() / 2;
+  uint voxelCount = indices.length() / 2;
+  if (voxelId >= voxelCount)
     return;
 
-  uint curPos = len / 2;
-  uint stride = curPos;
-  for(uint i = 0; i < depth; ++i) {
-    stride /= 2;
-    curPos = search(curPos, voxelId, stride);
-    if (mappings[curPos * 2 + 1] == voxelId) {
-      found(curPos, voxelId);
+  int start = 0;
+  int end = int(particleCount) - 1;
+
+  while (end >= start) {
+    int middle = (start + end) / 2;
+    uint val = mappings[middle * 2 + 1];
+
+    if (voxelId == val) {
+      found(middle, voxelId);
       return;
+    }
+    else if (voxelId < val) {
+      end = middle - 1;
+    }
+    else if (voxelId > val) {
+      start = middle + 1;
     }
   }
 
-  // Not found.
   indices[voxelId * 2 + 0] = 0;
   indices[voxelId * 2 + 1] = 0;
 }
