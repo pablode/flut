@@ -9,8 +9,8 @@
 ///   Input: Particle/Voxel pairs (sorted)
 ///   Output: Voxel Indices/Element Count pairs
 
-layout (std430, binding = 0) buffer mappingBuf { uint mappings[]; };
-layout (std430, binding = 1) buffer indicesBuf { uint indices[]; };
+layout (std430, binding = 0) restrict readonly buffer mappingBuf { uint mappings[]; };
+layout (std430, binding = 1) restrict writeonly buffer indicesBuf { uint indices[]; };
 
 layout (location = 0) uniform uint depth; // log2(N+1)
 

@@ -10,7 +10,7 @@
 layout (location = 0) uniform uint size;
 layout (location = 1) uniform uint stride;
 
-layout (std430, binding = 0) buffer mappingBuf { uint mappings[]; };
+layout (std430, binding = 0) restrict buffer mappingBuf { uint mappings[]; };
 
 layout (local_size_x = 128) in;
 

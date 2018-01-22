@@ -23,15 +23,15 @@ layout (location = 8) uniform float visCoeff;
 layout (location = 9) uniform float restPressure;
 layout (location = 10) uniform float restDensity;
 
-layout (std430, binding = 0) buffer positionBuf1 { float position1[]; };
-layout (std430, binding = 1) buffer unsortedBuf { uint unsorted[]; };
-layout (std430, binding = 2) buffer sortedBuf { uint sorted[]; };
-layout (std430, binding = 3) buffer indicesBuf { uint indices[]; };
-layout (std430, binding = 4) buffer densityBuf2 { float density2[]; };
-layout (std430, binding = 5) buffer velocityBuf1 { float velocity1[]; };
+layout (std430, binding = 0) restrict readonly buffer positionBuf1 { float position1[]; };
+layout (std430, binding = 1) restrict readonly buffer unsortedBuf { uint unsorted[]; };
+layout (std430, binding = 2) restrict readonly buffer sortedBuf { uint sorted[]; };
+layout (std430, binding = 3) restrict readonly buffer indicesBuf { uint indices[]; };
+layout (std430, binding = 4) restrict readonly buffer densityBuf2 { float density2[]; };
+layout (std430, binding = 5) restrict readonly buffer velocityBuf1 { float velocity1[]; };
 
-layout (std430, binding = 6) buffer velocityBuf2 { float velocity2[]; };
-layout (std430, binding = 7) buffer positionBuf2 { float position2[]; };
+layout (std430, binding = 6) restrict writeonly buffer velocityBuf2 { float velocity2[]; };
+layout (std430, binding = 7) restrict writeonly buffer positionBuf2 { float position2[]; };
 
 
 ///
