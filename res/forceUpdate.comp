@@ -193,7 +193,7 @@ void main() {
   if (newPos.x >= boundsH.x) {
     newVelo.x = refl.x;
     newPos.x = boundsH.x;
-  } else if (newPos.x < boundsL.x) {
+  } else if (newPos.x <= boundsL.x) {
     newVelo.x = refl.x;
     newPos.x = boundsL.x;
   }
@@ -201,7 +201,7 @@ void main() {
   if (newPos.y >= boundsH.y) {
     newVelo.y = refl.y;
     newPos.y = boundsH.y;
-  } else if (newPos.y < boundsL.y) {
+  } else if (newPos.y <= boundsL.y) {
     newVelo.y = refl.y;
     newPos.y = boundsL.y;
   }
@@ -209,7 +209,7 @@ void main() {
   if (newPos.z >= boundsH.z) {
     newVelo.z = refl.z;
     newPos.z = boundsH.z;
-  } else if (newPos.z < boundsL.z) {
+  } else if (newPos.z <= boundsL.z) {
     newVelo.z = refl.z;
     newPos.z = boundsL.z;
   }
