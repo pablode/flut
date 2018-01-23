@@ -37,7 +37,7 @@ namespace ansimproj {
 
   public:
     constexpr static std::uint32_t PARTICLE_COUNT = 2 << 14;
-    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {64, 64, 64};
+    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {64, 32, 8};
     const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {2.5f, 1.5f, 0.5f};
     const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-1.25f, -0.75f, -0.25f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
