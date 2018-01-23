@@ -64,7 +64,7 @@ vec3 weightPress(float re, vec3 r) {
 }
 
 float weightVis(float re, vec3 r) {
-  return (re - length(r)) / (M_PI * pow(re, 6));
+  return (45 * (re - length(r))) / (M_PI * pow(re, 6));
 }
 
 ///
