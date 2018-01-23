@@ -190,6 +190,8 @@ void main() {
   float wallDamping = 0.5;
   vec3 wallNormal = bbNormalInward(piPos);
   vec3 refl = reflect(newVelo * wallDamping, wallNormal);
+
+  // Reflect on sides and handle range.
   if (newPos.x >= boundsH.x) {
     newVelo.x = refl.x;
     newPos.x = boundsH.x;
@@ -197,7 +199,6 @@ void main() {
     newVelo.x = refl.x;
     newPos.x = boundsL.x;
   }
-
   if (newPos.y >= boundsH.y) {
     newVelo.y = refl.y;
     newPos.y = boundsH.y;
@@ -205,13 +206,20 @@ void main() {
     newVelo.y = refl.y;
     newPos.y = boundsL.y;
   }
-
   if (newPos.z >= boundsH.z) {
     newVelo.z = refl.z;
     newPos.z = boundsH.z;
   } else if (newPos.z <= boundsL.z) {
     newVelo.z = refl.z;
     newPos.z = boundsL.z;
+  }
+
+  // Handle corner cases (literally).
+  if ((newPos.x == boundsL.x || newPos.x == boundsH.x) &&
+      (newPos.y == boundsL.y || newPos.y == boundsH.y) &&
+      (newPos.z == boundsL.z || newPos.z == boundsH.z)) {
+    newVelo = normalize((gridOrigin + gridLength / 2) - newPos) * re;
+    newPos = piPos + newVelo * dt;
   }
 
   velocity2[p * 3 + 0] = newVelo.x;
