@@ -152,8 +152,9 @@ void main() {
 
   vec3 newVelo = piVelo + acceleration * dt;
   vec3 newPos = piPos + newVelo * dt;
-  vec3 boundsL = gridOrigin;
-  vec3 boundsH = boundsL + gridLength;
+  vec3 safeDist = vec3(0.01);
+  vec3 boundsL = gridOrigin + safeDist;
+  vec3 boundsH = gridOrigin + gridLength - safeDist;
 
   float wallDamping = 0.5;
   vec3 wallNormal = -1.0 * bbNormal(piPos);
