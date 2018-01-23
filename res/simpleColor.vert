@@ -48,9 +48,10 @@ void main() {
   } else if (colorMode == 1) {
     vec3 velo = abs(vec3(velocity[p * 3 + 0],
       velocity[p * 3 + 1], velocity[p * 3 + 2]));
-    if (velo.x == 0.0 || isinf(velo.x) || isnan(velo.x)
-         || velo.y == 0.0 || isinf(velo.y) || isnan(velo.y)
-         || velo.z == 0.0 || isinf(velo.z) || isnan(velo.z)) {
+    if (isinf(velo.x) || isnan(velo.x)
+        || isinf(velo.y) || isnan(velo.y)
+        || isinf(velo.z) || isnan(velo.z)
+        || velo == vec3(0.0)) {
       fragColor = vec3(0.0);
     } else {
       float w = max(velo.x, max(velo.y, velo.z));
