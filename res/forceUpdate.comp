@@ -142,6 +142,26 @@ void main() {
           if (length(r) >= re)
             continue;
 
+          // Beware of this special case:
+          // pi and pj may have the exact same position.
+          // In this case, they would have the same density
+          // and the same forces. Consequently, they behave
+          // exactly the same way and stick together until the
+          // end of the simulation. Obviously, we don't want that.
+          // But how to apply something to one particle and
+          // something else to the other? We need "randomness" - and
+          // the most convenient way to get a different value for
+          // each particle is by using the particle id.
+          // Of course, this handling is not physically correct.
+          if (length(r) == 0.0) {
+            float zeroToOne = float(p) / float(particleCount);
+            vec3 toMiddle = (gridOrigin + gridLength / 2) - pjPos;
+            if (length(toMiddle) == 0.0)
+              r = vec3(zeroToOne);
+            else
+              r = normalize(toMiddle) * zeroToOne * re;
+          }
+
           float pjDen = density2[pjId];
           vec3 pjVelo = vec3(velocity1[pjId * 3 + 0],
             velocity1[pjId * 3 + 1],  velocity1[pjId * 3 + 2]);
