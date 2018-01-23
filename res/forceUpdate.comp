@@ -1,5 +1,6 @@
 #version 430 core
 #define M_PI 3.14159265358979323846
+#define FLOAT_MIN 1.175494351e-38
 
 /// Pipeline stage 3.
 /// Calculates the new position and velocity using pressure and viscosity,
@@ -53,12 +54,17 @@ vec3 bbNormal(vec3 pos) {
   float x = (absPos.x > absPos.y && absPos.x > absPos.z) ? 1.0 : 0.0;
   float y = (absPos.y > absPos.x && absPos.y > absPos.z) ? 1.0 : 0.0;
   float z = (absPos.z > absPos.x && absPos.z > absPos.y) ? 1.0 : 0.0;
-  return normalize(vec3(pos.x * x, pos.y * y, pos.z * z));
+  vec3 normal = vec3(pos.x * x, pos.y * y, pos.z * z);
+  // Prevent normalize() from division by zero!
+  if (length(normal) == 0.0)
+    return vec3(0.0);
+  return normalize(normal);
 }
 
 ///
 vec3 weightPress(float re, vec3 r) {
-  return (45 * pow(re - length(r), 3) * r) / (M_PI * pow(re, 6) * length(r));
+  return (45 * pow(re - length(r), 3) * r) /
+    max(FLOAT_MIN, (M_PI * pow(re, 6) * length(r)));
 }
 
 float weightVis(float re, vec3 r) {
@@ -71,8 +77,6 @@ float pressure(float density) {
 }
 
 vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
-  if (length(r) <= 0.0)
-    r = vec3(0.001);
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
   vec3 wPress = weightPress(re, r);
