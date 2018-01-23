@@ -10,7 +10,7 @@ ansimproj::core::Camera::Camera(Window &window)
   : window_(window) {
   width_ = window.width();
   height_ = window.height();
-  radius_ = 3.5f;
+  radius_ = 2.25f;
   theta_ = static_cast<float>(M_PI) / 2.0f;
   phi_ = 0.0f;
   up_ = {0.0f, 1.0f, 0.0f};

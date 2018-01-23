@@ -53,8 +53,6 @@ vec3 bbNormal(vec3 pos) {
   float x = (absPos.x > absPos.y && absPos.x > absPos.z) ? 1.0 : 0.0;
   float y = (absPos.y > absPos.x && absPos.y > absPos.z) ? 1.0 : 0.0;
   float z = (absPos.z > absPos.x && absPos.z > absPos.y) ? 1.0 : 0.0;
-  if (x == 0.0 && y == 0.0 && z == 0.0)
-    return normalize(pos);
   return normalize(vec3(pos.x * x, pos.y * y, pos.z * z));
 }
 
@@ -78,7 +76,7 @@ vec3 pressureForce(float mass, vec3 r, float piDen, float pjDen) {
   float pi = pressure(piDen);
   float pj = pressure(pjDen);
   vec3 wPress = weightPress(re, r);
-  return -1.0 * (mass * (pi + pj) * wPress) / (2.0 * pjDen);
+  return (mass * (pi + pj) * wPress) / (2.0 * pjDen);
 }
 
 vec3 viscosityForce(float mass, vec3 r, vec3 piVelo, vec3 pjVelo, float pjDen) {
@@ -102,9 +100,6 @@ void main() {
   vec3 piVelo = vec3(velocity1[p * 3 + 0],
     velocity1[p * 3 + 1], velocity1[p * 3 + 2]);
   float piDen = density2[p];
-
-  // TODO!...
-  if (isnan(piDen) || isinf(piDen) || piDen == 0.0) piDen = 1000;
 
   vec3 pressure = vec3(0.0);
   vec3 viscosity = vec3(0.0);
@@ -140,24 +135,27 @@ void main() {
           vec3 pjVelo = vec3(velocity1[pjId * 3 + 0],
             velocity1[pjId * 3 + 1],  velocity1[pjId * 3 + 2]);
 
-          pressure -= pressureForce(mass, r, piDen, pjDen);
+          pressure += pressureForce(mass, r, piDen, pjDen);
           viscosity += viscosityForce(mass, r, piVelo, pjVelo, pjDen);
         }
       }
     }
   }
 
+  vec3 force = vec3(0.0);
+  force += piDen * (-pressure);
+  force += visCoeff * viscosity;
+
   vec3 acceleration = vec3(0.0);
+  acceleration += force / piDen;
   acceleration += gravity;
-  acceleration += (-1.0 / piDen) * pressure;
-  acceleration += visCoeff * viscosity;
 
   vec3 newVelo = piVelo + acceleration * dt;
   vec3 newPos = piPos + newVelo * dt;
   vec3 boundsL = gridOrigin;
   vec3 boundsH = boundsL + gridLength;
 
-  float wallDamping = 0.25;
+  float wallDamping = 0.5;
   vec3 wallNormal = -1.0 * bbNormal(piPos);
   vec3 refl = reflect(newVelo * wallDamping, wallNormal);
   if (newPos.x >= boundsH.x) {
