@@ -38,8 +38,8 @@ void main() {
     return;
 
   uint voxId = computeVoxId(p);
-  unsorted[p * 2] = p;
+  unsorted[p * 2 + 0] = p;
   unsorted[p * 2 + 1] = voxId;
-  sorted[p * 2] = p;
+  sorted[p * 2 + 0] = p;
   sorted[p * 2 + 1] = voxId;
 }

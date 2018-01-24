@@ -35,7 +35,8 @@ uvec3 getCellIds(uint voxelId) {
   uint zCell = voxelId / (gridResolution.x * gridResolution.y);
   voxelId -= (zCell * gridResolution.x * gridResolution.y);
   uint yCell = voxelId / gridResolution.x;
-  uint xCell = voxelId % gridResolution.x;
+  voxelId -= (yCell * gridResolution.x);
+  uint xCell = voxelId;
   return uvec3(xCell, yCell, zCell);
 }
 

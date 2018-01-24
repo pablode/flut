@@ -1,7 +1,8 @@
 #version 430 core
 
 const float EPS = 0.001;
-const float MAX_DENSITY = 2500.0;
+const float OFF_DENSITY = 750.0;
+const float MAX_DENSITY = 1250.0;
 
 layout (location = 0) in vec3 vertPos;
 layout (location = 1) in vec3 vertColor;
@@ -63,7 +64,8 @@ void main() {
     float speed = length(velo);
     fragColor = vec3(speed, speed, 0.0);
   } else if (colorMode == 3) {
-    fragColor = vec3(density[p] / MAX_DENSITY, density[p] / MAX_DENSITY, 1.0);
+    float d = max(0.0, (density[p] - OFF_DENSITY) / MAX_DENSITY);
+    fragColor = vec3(d, d, 1.0);
     if (density[p] <= 0.0 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);
   } else if (colorMode == 4) {
     fragColor = voxelColor(particleCount, p);

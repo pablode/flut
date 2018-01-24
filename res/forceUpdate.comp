@@ -46,7 +46,8 @@ uvec3 getCellIds(uint voxelId) {
   uint zCell = voxelId / (gridResolution.x * gridResolution.y);
   voxelId -= (zCell * gridResolution.x * gridResolution.y);
   uint yCell = voxelId / gridResolution.x;
-  uint xCell = voxelId % gridResolution.x;
+  voxelId -= (yCell * gridResolution.x);
+  uint xCell = voxelId;
   return uvec3(xCell, yCell, zCell);
 }
 
@@ -158,7 +159,7 @@ void main() {
             float zeroToOne = float(p) / float(particleCount);
             vec3 toMiddle = (gridOrigin + gridLength / 2) - pjPos;
             if (length(toMiddle) == 0.0)
-              r = vec3(zeroToOne);
+              r = vec3(zeroToOne) * re;
             else
               r = normalize(toMiddle) * zeroToOne * re;
           }
