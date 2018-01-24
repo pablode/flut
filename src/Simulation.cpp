@@ -1,5 +1,8 @@
 #include "Simulation.hpp"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <iostream>
@@ -35,6 +38,11 @@ ansimproj::Simulation::Simulation()
   const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
   const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
   programRender_ = createVertFragShader(vert, frag);
+
+  // Precalc weight functions
+  weightConstViscosity_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
+  weightConstPressure_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
+  weightConstDefault_ = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(RANGE, 9)));
 
   // Buffers
   preset1();
@@ -191,6 +199,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform3uiv(programDensityComputation_, 2, 1, GRID_RES.data());
   glProgramUniform1f(programDensityComputation_, 3, MASS);
   glProgramUniform1f(programDensityComputation_, 4, RANGE);
+  glProgramUniform1f(programDensityComputation_, 5, weightConstDefault_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridUnsorted_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridSorted_);
@@ -214,6 +223,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1f(programForceUpdate_, 8, VIS_COEFF);
   glProgramUniform1f(programForceUpdate_, 9, REST_PRESSURE);
   glProgramUniform1f(programForceUpdate_, 10, REST_DENSITY);
+  glProgramUniform1f(programForceUpdate_, 11, weightConstViscosity_);
+  glProgramUniform1f(programForceUpdate_, 12, weightConstPressure_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition1_ : bufPosition2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufGridUnsorted_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufGridSorted_);

@@ -75,6 +75,9 @@ namespace ansimproj {
     std::uint64_t frame_;
     SimulationTime time_;
     SimulationOptions options_;
+    float weightConstViscosity_;
+    float weightConstPressure_;
+    float weightConstDefault_;
     GLuint timerQueries_[2][6];
     GLuint programGridInsert_;
     GLuint programGridSort_;

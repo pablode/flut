@@ -23,6 +23,8 @@ layout (location = 7) uniform float re;
 layout (location = 8) uniform float visCoeff;
 layout (location = 9) uniform float restPressure;
 layout (location = 10) uniform float restDensity;
+layout (location = 11) uniform float weightConstVis;
+layout (location = 12) uniform float weightConstPress;
 
 layout (std430, binding = 0) restrict readonly buffer positionBuf1 { float position1[]; };
 layout (std430, binding = 1) restrict readonly buffer unsortedBuf { uint unsorted[]; };
@@ -70,12 +72,11 @@ vec3 bbNormalInward(vec3 pos) {
 
 ///
 vec3 weightPress(float re, vec3 r) {
-  return (45 * pow(re - length(r), 3) * r) /
-    max(FLOAT_MIN, (M_PI * pow(re, 6) * length(r)));
+  return ((pow(re - length(r), 3) * r) / max(FLOAT_MIN, length(r))) * weightConstPress;
 }
 
 float weightVis(float re, vec3 r) {
-  return (45 * (re - length(r))) / (M_PI * pow(re, 6));
+  return (re - length(r)) * weightConstVis;
 }
 
 ///
