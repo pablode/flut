@@ -96,6 +96,11 @@ namespace ansimproj {
     GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
+
+    GLuint fbo_;
+    GLuint colorTex_;
+    GLuint depthTex_;
+
     bool swapFrame_;
   };
 }

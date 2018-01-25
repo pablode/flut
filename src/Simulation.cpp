@@ -73,6 +73,8 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufDensity_);
   deleteVAO(vao1_);
   deleteVAO(vao2_);
+
+  deleteFBO(fbo_);
 }
 
 void ansimproj::Simulation::preset1() {
@@ -98,6 +100,8 @@ void ansimproj::Simulation::preset1() {
     deleteVAO(vao1_);
   if (vao2_)
     deleteVAO(vao2_);
+  if (fbo_)
+    deleteFBO(fbo_);
 
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
@@ -140,6 +144,12 @@ void ansimproj::Simulation::preset1() {
 
   vao1_ = createVAO(bufPosition1_, bufColor_);
   vao2_ = createVAO(bufPosition2_, bufColor_);
+
+  colorTex_ = createTexture();
+  depthTex_ = createTexture();
+
+  //fbo_ = createFBO(colorTex_, depthTex_);
+
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {

@@ -214,6 +214,39 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
   return handle;
 }
 
+GLuint ansimproj::core::BaseRenderer::createFBO(
+  GLuint &colorTex, GLuint &depthTex) const {
+  GLuint handle;
+  glGenFramebuffers(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create buffer.");
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, handle);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+  return handle;
+}
+
+GLuint ansimproj::core::BaseRenderer::createTexture() const {
+  GLuint handle;
+  glGenTextures(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create texture.");
+  }
+  glBindTexture(GL_TEXTURE_2D, handle);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  return handle;
+}
+
+void ansimproj::core::BaseRenderer::deleteTexture(const GLuint &handle) const {
+  glDeleteTextures(1, &handle);
+}
+
+void ansimproj::core::BaseRenderer::deleteFBO(const GLuint &handle) const {
+  glDeleteFramebuffers(1, &handle);
+}
+
 void ansimproj::core::BaseRenderer::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }

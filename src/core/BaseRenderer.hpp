@@ -35,9 +35,17 @@ namespace ansimproj {
 
       GLuint createBuffer(const std::vector<GLuint> &data, bool dynamic) const;
 
+      GLuint createFBO(GLuint &colorTex, GLuint &depthTex) const;
+
+      GLuint createTexture() const;
+
       void deleteShader(const GLuint &handle) const;
 
       void deleteBuffer(const GLuint &handle) const;
+
+      void deleteFBO(const GLuint &handle )const;
+
+      void deleteTexture(const GLuint &handle) const;
 
     private:
       GLint versionMajor_;
