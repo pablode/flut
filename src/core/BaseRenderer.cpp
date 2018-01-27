@@ -224,7 +224,41 @@ GLuint ansimproj::core::BaseRenderer::createFBO(
   glBindFramebuffer(GL_FRAMEBUFFER, handle);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex, 0);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
-  return handle;
+  GLenum status = glCheckNamedFramebufferStatus(handle, GL_FRAMEBUFFER);
+  if (status == GL_FRAMEBUFFER_COMPLETE) {
+    return handle;
+  } else {
+    switch (status) {
+    case GL_FRAMEBUFFER_UNDEFINED:
+      throw std::runtime_error("Default Framebuffer does not exist!");
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+      throw std::runtime_error("Invalid attachment point(s)!");
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+      throw std::runtime_error("Framebuffer does not have image attached!");
+    case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+      throw std::runtime_error(
+        "Value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE for any color attachment "
+        "point(s) named by GL_DRAW_BUFFERi!");
+    case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+      throw std::runtime_error(
+        "GL_READ_BUFFER is not GL_NONE and the value of GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE "
+        "is GL_NONE for the color attachment point named by GL_READ_BUFFER.");
+    case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+      throw std::runtime_error(
+        "Value of GL_RENDERBUFFER_SAMPLES is not the same for all attached renderbuffers or "
+        "value of GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not the same for all attached textures");
+    case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+      throw std::runtime_error(
+        "Any framebuffer attachment is layered, and any populated attachment is not layered, or "
+        "all populated color attachments are not from textures of the same target.");
+    case GL_FRAMEBUFFER_UNSUPPORTED:
+      throw std::runtime_error(
+        "The combination of internal formats of the attached images violates an "
+        "implementation-dependent set of restrictions");
+    default:
+      throw std::runtime_error("Unknown Framebuffer error code.");
+    }
+  }
 }
 
 GLuint ansimproj::core::BaseRenderer::createColorTexture(
