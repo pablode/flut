@@ -250,7 +250,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE / 2.0f : RANGE / 4.0f;
   const float pointScale = 650.0f;
@@ -275,6 +275,10 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
   glEndQuery(GL_TIME_ELAPSED);
+
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+  glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
   // Fetch GPU Timer Queries
   if (frame_ > 1) {
