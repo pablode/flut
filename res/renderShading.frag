@@ -8,6 +8,7 @@ const vec3 lightPosEye = vec3(-0.577, -0.577, -0.577);
 const vec3 lightDirEye = normalize(-lightPosEye);
 const float ambientCoeff = 0.3;
 const float shininess = 10.0;
+const float maxDepth = 0.999999;
 
 layout (location = 0) uniform sampler2D depthTex;
 layout (location = 1) uniform sampler2D colorTex;
@@ -23,6 +24,10 @@ void main() {
   // Retrieve values from GBuffer
   vec2 coord = gl_FragCoord.xy / vec2(width, height);
   float viewportDepth = texture(depthTex, coord).x;
+  if (viewportDepth > maxDepth) {
+    discard;
+    return;
+  }
   vec3 normal = texture(normalTex, coord).xyz;
   vec3 color = texture(colorTex, coord).xyz;
 

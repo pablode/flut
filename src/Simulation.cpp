@@ -259,6 +259,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindFramebuffer(GL_FRAMEBUFFER, fbo1_);
   const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
   glDrawBuffers(2, drawBuffers);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE : RANGE / 2.0f;
   const float pointScale = 650.0f;
@@ -286,6 +287,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 4.4 Shading Pass
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texDepth_);
   glActiveTexture(GL_TEXTURE1);
