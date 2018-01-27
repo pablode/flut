@@ -261,7 +261,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
   glDrawBuffers(2, drawBuffers);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = options_.shadingMode ? RANGE / 2.0f : RANGE / 4.0f;
+  const float pointRadius = options_.shadingMode ? RANGE : RANGE / 2.0f;
   const float pointScale = 650.0f;
   glUseProgram(programRenderGeometry_);
   const auto &view = camera.view();
