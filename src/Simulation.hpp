@@ -52,7 +52,7 @@ namespace ansimproj {
     constexpr static float REST_DENSITY = 998.27f;
 
   public:
-    Simulation();
+    Simulation(const std::uint32_t &width, const std::uint32_t &height);
 
     ~Simulation();
 
@@ -72,6 +72,8 @@ namespace ansimproj {
     void deleteVAO(GLuint handle);
 
   private:
+    std::uint32_t width_;
+    std::uint32_t height_;
     std::uint64_t frame_;
     SimulationTime time_;
     SimulationOptions options_;
@@ -96,11 +98,9 @@ namespace ansimproj {
     GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
-
     GLuint fbo_;
-    GLuint colorTex_;
-    GLuint depthTex_;
-
+    GLuint texColor_;
+    GLuint texDepth_;
     bool swapFrame_;
   };
 }

@@ -35,9 +35,11 @@ namespace ansimproj {
 
       GLuint createBuffer(const std::vector<GLuint> &data, bool dynamic) const;
 
-      GLuint createFBO(GLuint &colorTex, GLuint &depthTex) const;
+      GLuint createFBO(const GLuint &colorTex, const GLuint &depthTex) const;
 
-      GLuint createTexture() const;
+      GLuint createColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
+
+      GLuint createDepthTexture(const std::uint32_t &width, const std::uint32_t &height) const;
 
       void deleteShader(const GLuint &handle) const;
 

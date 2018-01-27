@@ -8,8 +8,10 @@
 #include <iostream>
 #include <limits>
 
-ansimproj::Simulation::Simulation()
+ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
   : BaseRenderer()
+  , width_(width)
+  , height_(height)
   , swapFrame_{false}
   , frame_{0}
   , bufColor_{0}
@@ -39,6 +41,11 @@ ansimproj::Simulation::Simulation()
   const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
   programRender_ = createVertFragShader(vert, frag);
 
+  // Deferred Shading
+  texColor_ = createColorTexture(width, height);
+  texDepth_ = createDepthTexture(width, height);
+  fbo_ = createFBO(texColor_, texDepth_);
+
   // Precalc weight functions
   weightConstViscosity_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
   weightConstPressure_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
@@ -56,6 +63,9 @@ ansimproj::Simulation::Simulation()
 ansimproj::Simulation::~Simulation() {
   glDeleteQueries(6, &timerQueries_[0][0]);
   glDeleteQueries(6, &timerQueries_[1][0]);
+  deleteFBO(fbo_);
+  deleteTexture(texColor_);
+  deleteTexture(texDepth_);
   deleteShader(programGridInsert_);
   deleteShader(programGridSort_);
   deleteShader(programGridIndexing_);
@@ -73,8 +83,6 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufDensity_);
   deleteVAO(vao1_);
   deleteVAO(vao2_);
-
-  deleteFBO(fbo_);
 }
 
 void ansimproj::Simulation::preset1() {
@@ -100,8 +108,6 @@ void ansimproj::Simulation::preset1() {
     deleteVAO(vao1_);
   if (vao2_)
     deleteVAO(vao2_);
-  if (fbo_)
-    deleteFBO(fbo_);
 
   std::vector<GLuint> gridPairsData;
   gridPairsData.resize(PARTICLE_COUNT * 2);
@@ -144,12 +150,6 @@ void ansimproj::Simulation::preset1() {
 
   vao1_ = createVAO(bufPosition1_, bufColor_);
   vao2_ = createVAO(bufPosition2_, bufColor_);
-
-  colorTex_ = createTexture();
-  depthTex_ = createTexture();
-
-  //fbo_ = createFBO(colorTex_, depthTex_);
-
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
@@ -250,6 +250,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE / 2.0f : RANGE / 4.0f;
   const float pointScale = 650.0f;
@@ -293,7 +294,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   }
 }
 
-GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint& vboCol) const {
+GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint &vboCol) const {
   GLuint handle;
   glGenVertexArrays(1, &handle);
   if (!handle) {
@@ -317,6 +318,14 @@ void ansimproj::Simulation::deleteVAO(GLuint handle) {
 
 void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   glViewport(0, 0, width, height);
+  height_ = height;
+  width_ = width;
+  deleteFBO(fbo_);
+  deleteTexture(texColor_);
+  deleteTexture(texDepth_);
+  texColor_ = createColorTexture(width, height);
+  texDepth_ = createDepthTexture(width, height);
+  fbo_ = createFBO(texColor_, texDepth_);
 }
 
 ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {

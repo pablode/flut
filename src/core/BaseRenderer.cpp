@@ -215,7 +215,7 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
 }
 
 GLuint ansimproj::core::BaseRenderer::createFBO(
-  GLuint &colorTex, GLuint &depthTex) const {
+  const GLuint &colorTex, const GLuint &depthTex) const {
   GLuint handle;
   glGenFramebuffers(1, &handle);
   if (!handle) {
@@ -227,15 +227,32 @@ GLuint ansimproj::core::BaseRenderer::createFBO(
   return handle;
 }
 
-GLuint ansimproj::core::BaseRenderer::createTexture() const {
+GLuint ansimproj::core::BaseRenderer::createColorTexture(
+  const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glGenTextures(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create texture.");
   }
   glBindTexture(GL_TEXTURE_2D, handle);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  return handle;
+}
+
+GLuint ansimproj::core::BaseRenderer::createDepthTexture(
+  const std::uint32_t &width, const std::uint32_t &height) const {
+  GLuint handle;
+  glGenTextures(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create texture.");
+  }
+  glBindTexture(GL_TEXTURE_2D, handle);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT,
+    GL_UNSIGNED_BYTE, nullptr);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return handle;
 }
 
