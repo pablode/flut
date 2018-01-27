@@ -100,6 +100,7 @@ namespace ansimproj {
     GLuint vao2_;
     GLuint fbo_;
     GLuint texColor_;
+    GLuint texNormal_;
     GLuint texDepth_;
     bool swapFrame_;
   };

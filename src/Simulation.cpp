@@ -43,8 +43,9 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
 
   // Deferred Shading
   texColor_ = createColorTexture(width, height);
+  texNormal_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo_ = createFBO(texColor_, texDepth_);
+  fbo_ = createFBO(texDepth_, {texColor_, texNormal_});
 
   // Precalc weight functions
   weightConstViscosity_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
@@ -65,6 +66,7 @@ ansimproj::Simulation::~Simulation() {
   glDeleteQueries(6, &timerQueries_[1][0]);
   deleteFBO(fbo_);
   deleteTexture(texColor_);
+  deleteTexture(texNormal_);
   deleteTexture(texDepth_);
   deleteShader(programGridInsert_);
   deleteShader(programGridSort_);
@@ -328,8 +330,9 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   deleteTexture(texColor_);
   deleteTexture(texDepth_);
   texColor_ = createColorTexture(width, height);
+  texNormal_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo_ = createFBO(texColor_, texDepth_);
+  fbo_ = createFBO(texDepth_, {texColor_, texNormal_});
 }
 
 ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {

@@ -215,15 +215,17 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
 }
 
 GLuint ansimproj::core::BaseRenderer::createFBO(
-  const GLuint &colorTex, const GLuint &depthTex) const {
+  const GLuint &depthTexture, std::vector<GLuint> colorTextures) const {
   GLuint handle;
   glGenFramebuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
   glBindFramebuffer(GL_FRAMEBUFFER, handle);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex, 0);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+  for (std::uint32_t i = 0; i < colorTextures.size(); ++i)
+    glFramebufferTexture2D(
+      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorTextures[i], 0);
   GLenum status = glCheckNamedFramebufferStatus(handle, GL_FRAMEBUFFER);
   if (status == GL_FRAMEBUFFER_COMPLETE) {
     return handle;
