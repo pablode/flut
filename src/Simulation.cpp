@@ -37,9 +37,12 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   programDensityComputation_ = createComputeShader(shaderSource);
   shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/forceUpdate.comp");
   programForceUpdate_ = createComputeShader(shaderSource);
-  const auto &vert = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.vert");
-  const auto &frag = core::Utils::loadFileText(RESOURCES_PATH "/simpleColor.frag");
-  programRender_ = createVertFragShader(vert, frag);
+  auto vert = core::Utils::loadFileText(RESOURCES_PATH "/renderGeometry.vert");
+  auto frag = core::Utils::loadFileText(RESOURCES_PATH "/renderGeometry.frag");
+  programRenderGeometry_ = createVertFragShader(vert, frag);
+  vert = core::Utils::loadFileText(RESOURCES_PATH "/renderFullscreen.vert");
+  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderShading.frag");
+  programRenderShading_ = createVertFragShader(vert, frag);
 
   // Deferred Shading
   texColor_ = createColorTexture(width, height);
@@ -73,7 +76,8 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programGridIndexing_);
   deleteShader(programDensityComputation_);
   deleteShader(programForceUpdate_);
-  deleteShader(programRender_);
+  deleteShader(programRenderGeometry_);
+  deleteShader(programRenderShading_);
   deleteBuffer(bufColor_);
   deleteBuffer(bufGridUnsorted_);
   deleteBuffer(bufGridSorted_);
@@ -252,37 +256,53 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
   // 4. Rendering
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
+  // (Geometry Pass)
   glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
   const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
   glDrawBuffers(2, drawBuffers);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE / 2.0f : RANGE / 4.0f;
   const float pointScale = 650.0f;
-  glUseProgram(programRender_);
+  glUseProgram(programRenderGeometry_);
   const auto &view = camera.view();
   const auto &projection = camera.projection();
+  const auto &invProjection = camera.invProjection();
   const Eigen::Matrix4f mvp = projection * view;
-  glProgramUniformMatrix4fv(programRender_, 0, 1, GL_FALSE, mvp.data());
-  glProgramUniformMatrix4fv(programRender_, 1, 1, GL_FALSE, view.data());
-  glProgramUniformMatrix4fv(programRender_, 2, 1, GL_FALSE, projection.data());
-  glProgramUniform3fv(programRender_, 3, 1, GRID_LEN.data());
-  glProgramUniform3fv(programRender_, 4, 1, GRID_ORIGIN.data());
-  glProgramUniform3uiv(programRender_, 5, 1, GRID_RES.data());
-  glProgramUniform1ui(programRender_, 6, PARTICLE_COUNT);
-  glProgramUniform1f(programRender_, 7, pointRadius);
-  glProgramUniform1f(programRender_, 8, pointScale);
-  glProgramUniform1i(programRender_, 9, options_.colorMode);
-  glProgramUniform1i(programRender_, 10, options_.shadingMode);
+  glProgramUniformMatrix4fv(programRenderGeometry_, 0, 1, GL_FALSE, mvp.data());
+  glProgramUniformMatrix4fv(programRenderGeometry_, 1, 1, GL_FALSE, view.data());
+  glProgramUniformMatrix4fv(programRenderGeometry_, 2, 1, GL_FALSE, projection.data());
+  glProgramUniform3fv(programRenderGeometry_, 3, 1, GRID_LEN.data());
+  glProgramUniform3fv(programRenderGeometry_, 4, 1, GRID_ORIGIN.data());
+  glProgramUniform3uiv(programRenderGeometry_, 5, 1, GRID_RES.data());
+  glProgramUniform1ui(programRenderGeometry_, 6, PARTICLE_COUNT);
+  glProgramUniform1f(programRenderGeometry_, 7, pointRadius);
+  glProgramUniform1f(programRenderGeometry_, 8, pointScale);
+  glProgramUniform1i(programRenderGeometry_, 9, options_.colorMode);
+  glProgramUniform1i(programRenderGeometry_, 10, options_.shadingMode);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufPosition2_ : bufPosition1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, bufDensity_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+  // (Shading Pass)
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texDepth_);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, texColor_);
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, texNormal_);
+  glDisable(GL_DEPTH_TEST);
+  glUseProgram(programRenderShading_);
+  glProgramUniform1i(programRenderShading_, 0, 0);
+  glProgramUniform1i(programRenderShading_, 1, 1);
+  glProgramUniform1i(programRenderShading_, 2, 2);
+  glProgramUniform1ui(programRenderShading_, 3, width_);
+  glProgramUniform1ui(programRenderShading_, 4, height_);
+  glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+  glEnable(GL_DEPTH_TEST);
   glEndQuery(GL_TIME_ELAPSED);
-
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
   // Fetch GPU Timer Queries
   if (frame_ > 1) {

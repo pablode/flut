@@ -1,5 +1,8 @@
 #version 430 core
 
+/// Pipeline stage 4 (1).
+/// Determine point color, size and position.
+
 const float EPS = 0.001;
 const float OFF_DENSITY = 750.0;
 const float MAX_DENSITY = 1250.0;
