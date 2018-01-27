@@ -7,7 +7,8 @@ const float shininess = 10.0;
 in vec3 fragPos;
 in vec3 fragColor;
 
-out vec4 finalColor;
+out vec3 finalColor;
+out vec3 finalNormal;
 
 layout (location = 0) uniform mat4 modelViewProj;
 layout (location = 1) uniform mat4 view;
@@ -24,12 +25,13 @@ layout (location = 10) uniform int shadingMode;
 void main() {
 
   if (shadingMode == 0) {
-    finalColor = vec4(fragColor, 1.0);
     vec4 eyeSpacePos = vec4(fragPos, 1.0);
     vec4 clipSpacePos = projection * eyeSpacePos;
     float ndcDepth = clipSpacePos.z / clipSpacePos.w;
     float windowDepth = 0.5 * ndcDepth + 0.5;
     gl_FragDepth = windowDepth;
+    finalColor = fragColor;
+    finalNormal = vec3(0.0, 0.0, 1.0);
     return;
 
   } else {
@@ -61,6 +63,7 @@ void main() {
 
     float ambientCoeff = 0.3;
     vec3 ambientColor = ambientCoeff * fragColor;
-    finalColor = vec4(ambientColor + diffColor + specColor, 1.0);
+    finalColor = ambientColor + diffColor + specColor;
+    finalNormal = N;
   }
 }
