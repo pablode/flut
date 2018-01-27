@@ -19,6 +19,7 @@ ansimproj::core::Camera::Camera(Window &window)
   oldMouseX_ = window_.mouseX();
   oldMouseY_ = window_.mouseY();
   projection_.setZero();
+  invProjection_.setZero();
   view_.setIdentity();
   recalcView();
   recalcProjection();
@@ -104,6 +105,7 @@ void ansimproj::core::Camera::recalcProjection() {
   projection_(2, 2) = -(NEAR_PLANE + FAR_PLANE) / range;
   projection_(3, 2) = -1.0f;
   projection_(2, 3) = -(2.0f * NEAR_PLANE * FAR_PLANE) / range;
+  invProjection_ = projection_.inverse();
 }
 
 Eigen::Matrix4f ansimproj::core::Camera::view() const {
@@ -112,4 +114,8 @@ Eigen::Matrix4f ansimproj::core::Camera::view() const {
 
 Eigen::Matrix4f ansimproj::core::Camera::projection() const {
   return projection_;
+}
+
+Eigen::Matrix4f ansimproj::core::Camera::invProjection() const {
+  return invProjection_;
 }

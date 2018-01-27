@@ -25,6 +25,8 @@ namespace ansimproj {
 
       Eigen::Matrix4f projection() const;
 
+      Eigen::Matrix4f invProjection() const;
+
     private:
       void recalcView();
 
@@ -36,6 +38,7 @@ namespace ansimproj {
       std::uint32_t height_;
       Eigen::Matrix4f view_;
       Eigen::Matrix4f projection_;
+      Eigen::Matrix4f invProjection_;
       Eigen::Vector3f position_;
       Eigen::Vector3f center_;
       Eigen::Vector3f up_;
