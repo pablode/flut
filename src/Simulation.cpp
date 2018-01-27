@@ -48,7 +48,7 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   texColor_ = createColorTexture(width, height);
   texNormal_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo_ = createFBO(texDepth_, {texColor_, texNormal_});
+  fbo1_ = createFBO(texDepth_, {texColor_, texNormal_});
 
   // Precalc weight functions
   weightConstViscosity_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
@@ -67,7 +67,7 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
 ansimproj::Simulation::~Simulation() {
   glDeleteQueries(6, &timerQueries_[0][0]);
   glDeleteQueries(6, &timerQueries_[1][0]);
-  deleteFBO(fbo_);
+  deleteFBO(fbo1_);
   deleteTexture(texColor_);
   deleteTexture(texNormal_);
   deleteTexture(texDepth_);
@@ -254,10 +254,9 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   glEndQuery(GL_TIME_ELAPSED);
 
-  // 4. Rendering
+  // 4.1 Geometry Pass
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
-  // (Geometry Pass)
-  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo1_);
   const GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
   glDrawBuffers(2, drawBuffers);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -284,7 +283,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
-  // (Shading Pass)
+
+  // 4.4 Shading Pass
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texDepth_);
@@ -348,13 +348,14 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   glViewport(0, 0, width, height);
   height_ = height;
   width_ = width;
-  deleteFBO(fbo_);
+  deleteFBO(fbo1_);
   deleteTexture(texColor_);
+  deleteTexture(texNormal_);
   deleteTexture(texDepth_);
   texColor_ = createColorTexture(width, height);
   texNormal_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo_ = createFBO(texDepth_, {texColor_, texNormal_});
+  fbo1_ = createFBO(texDepth_, {texColor_, texNormal_});
 }
 
 ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {

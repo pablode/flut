@@ -99,7 +99,7 @@ namespace ansimproj {
     GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
-    GLuint fbo_;
+    GLuint fbo1_;
     GLuint texColor_;
     GLuint texNormal_;
     GLuint texDepth_;
