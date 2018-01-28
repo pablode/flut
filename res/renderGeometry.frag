@@ -32,7 +32,7 @@ void main() {
 
   } else {
     // Visibility & Normal
-    N.xy = gl_PointCoord * 2.0 - 1.0;
+    N.xy = gl_PointCoord * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
     float r2 = dot(N.xy, N.xy);
     if (r2 > 1.0)
       discard; // Outside of circle
