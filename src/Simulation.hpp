@@ -104,6 +104,7 @@ namespace ansimproj {
     GLuint fbo1_;
     GLuint fbo2_;
     GLuint texColor_;
+    GLuint texPosition_;
     GLuint texNormal_;
     GLuint texDepth_;
     GLuint texTemp_;

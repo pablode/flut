@@ -1,15 +1,13 @@
 #version 430 core
 
 /// Pipeline stage 4 (4).
-/// Read GBuffer values, reconstruct position
-/// from depth and do simple Phong shading.
+/// Read GBuffer values and do Blinn-Phong shading.
 
 const vec3 lightPos = vec3(0.0, 1.0, 0.0);
 const float ambientCoeff = 0.3;
 const float shininess = 25.0;
-const float maxDepth = 0.999999;
 
-layout (location = 0) uniform sampler2D depthTex;
+layout (location = 0) uniform sampler2D positionTex;
 layout (location = 1) uniform sampler2D colorTex;
 layout (location = 2) uniform sampler2D normalTex;
 layout (location = 3) uniform uint width;
@@ -19,33 +17,18 @@ layout (location = 6) uniform mat4 view;
 
 out vec4 finalColor;
 
-///
-vec3 getEyePos(vec2 coord) {
-  // Reconstruct position from depth
-  float viewportDepth = texture(depthTex, coord).x;
-  float ndcDepth = viewportDepth * 2.0 - 1.0;
-  vec4 clipSpacePos = vec4(coord * 2.0 - vec2(1.0), ndcDepth, 1.0);
-  vec4 eyeSpacePos = invProjection * clipSpacePos;
-  return eyeSpacePos.xyz / eyeSpacePos.w;
-}
-
-///
 void main() {
-
   // Retrieve values from GBuffer
   vec2 texelSize = 1.0 / vec2(width, height);
   vec2 coord = gl_FragCoord.xy * texelSize;
-  float viewportDepth = texture(depthTex, coord).x;
-  if (viewportDepth > maxDepth) {
+  vec3 eyeSpacePos = texture(positionTex, coord).xyz;
+  if (eyeSpacePos.z == 0.0f) {
     discard;
     return;
   }
   vec3 color = texture(colorTex, coord).xyz;
   vec3 normal = texture(normalTex, coord).xyz;
   normal = normalize(normal);
-
-  // Reconstruct position from depth
-  vec3 eyeSpacePos = getEyePos(coord);
 
   // Diffuse
   vec3 lightPosEye = (view * vec4(lightPos, 1.0)).xyz;

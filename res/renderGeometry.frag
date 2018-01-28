@@ -8,6 +8,7 @@ in vec3 fragColor;
 
 out vec3 finalColor;
 out vec3 finalNormal;
+out vec3 finalPosition;
 
 layout(location = 0) uniform mat4 modelViewProj;
 layout(location = 1) uniform mat4 view;
@@ -48,9 +49,8 @@ void main() {
   float windowDepth = 0.5 * ndcDepth + 0.5;
   gl_FragDepth = windowDepth;
 
-  // Color
+  // Output
+  finalPosition = eyeSpacePos.xyz;
   finalColor = fragColor;
-
-  // Normal
   finalNormal = N;
 }

@@ -48,12 +48,13 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderShading.frag");
   programRenderShading_ = createVertFragShader(vert, frag);
 
-  // Deferred Shading
+  // FBOs and Textures
   texColor_ = createColorTexture(width, height);
   texNormal_ = createColorTexture(width, height);
+  texPosition_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_});
   texTemp_ = createColorTexture(width, height);
+  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_, texPosition_});
   fbo2_ = createFlatFBO(texTemp_);
 
   // Precalc weight functions
@@ -77,6 +78,7 @@ ansimproj::Simulation::~Simulation() {
   deleteFBO(fbo2_);
   deleteTexture(texColor_);
   deleteTexture(texNormal_);
+  deleteTexture(texPosition_);
   deleteTexture(texDepth_);
   deleteTexture(texTemp_);
   deleteShader(programGridInsert_);
@@ -273,8 +275,8 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     renderProgram = programRenderFlat_;
   } else {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo1_);
-    GLenum drawBuffers1[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, drawBuffers1);
+    GLenum drawBuffers1[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, drawBuffers1);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     renderProgram = programRenderGeometry_;
   }
@@ -335,7 +337,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texDepth_);
+    glBindTexture(GL_TEXTURE_2D, texPosition_);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texColor_);
     glActiveTexture(GL_TEXTURE2);
@@ -398,16 +400,18 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   height_ = height;
   width_ = width;
   deleteFBO(fbo1_);
+  deleteFBO(fbo2_);
   deleteTexture(texColor_);
   deleteTexture(texNormal_);
+  deleteTexture(texPosition_);
   deleteTexture(texDepth_);
+  deleteTexture(texTemp_);
   texColor_ = createColorTexture(width, height);
   texNormal_ = createColorTexture(width, height);
+  texPosition_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_});
-  deleteFBO(fbo2_);
-  deleteTexture(texTemp_);
   texTemp_ = createColorTexture(width, height);
+  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_, texPosition_});
   fbo2_ = createFlatFBO(texTemp_);
 }
 
