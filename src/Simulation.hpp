@@ -87,6 +87,7 @@ namespace ansimproj {
     GLuint programDensityComputation_;
     GLuint programForceUpdate_;
     GLuint programRenderGeometry_;
+    GLuint programRenderFlat_;
     GLuint programRenderBlur_;
     GLuint programRenderShading_;
     GLuint bufColor_;
