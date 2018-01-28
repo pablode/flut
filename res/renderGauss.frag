@@ -11,11 +11,17 @@
 layout(location = 0) uniform vec2 res;
 layout(location = 1) uniform vec2 dir;
 layout(location = 2) uniform sampler2D tex;
+layout(location = 3) uniform sampler2D positionTex;
 
 out vec3 finalColor;
 
 void main(void) {
   vec2 tc = gl_FragCoord.xy / res;
+  vec3 pos = texture(positionTex, tc).xyz;
+  if (pos.z == 0.0f) {
+    discard;
+    return;
+  }
   vec4 sum = vec4(0.0);
   float blurX = 0.95 / res.y;
   float blurY = 0.95 / res.x;
@@ -24,7 +30,7 @@ void main(void) {
   sum += texture(tex, vec2(tc.x - 3.0 * blurX * dir.x, tc.y - 3.0 * blurY * dir.y)) * 0.074433;
   sum += texture(tex, vec2(tc.x - 2.0 * blurX * dir.x, tc.y - 2.0 * blurY * dir.y)) * 0.120988;
   sum += texture(tex, vec2(tc.x - 1.0 * blurX * dir.x, tc.y - 1.0 * blurY * dir.y)) * 0.161927;
-  sum += texture(tex, vec2(tc.x, tc.y)) * 0.178448;
+  sum += texture(tex, tc) * 0.178448;
   sum += texture(tex, vec2(tc.x + 1.0 * blurX * dir.x, tc.y + 1.0 * blurY * dir.y)) * 0.161927;
   sum += texture(tex, vec2(tc.x + 2.0 * blurX * dir.x, tc.y + 2.0 * blurY * dir.y)) * 0.120988;
   sum += texture(tex, vec2(tc.x + 3.0 * blurX * dir.x, tc.y + 3.0 * blurY * dir.y)) * 0.074433;

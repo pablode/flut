@@ -315,11 +315,14 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glClear(GL_COLOR_BUFFER_BIT);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texNormal_);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texPosition_);
     glUseProgram(programRenderBlur_);
     glProgramUniform2f(
       programRenderBlur_, 0, static_cast<float>(width_), static_cast<float>(height_));
     glProgramUniform2f(programRenderBlur_, 1, 1.0f, 0.0f);
     glProgramUniform1i(programRenderBlur_, 2, 0);
+    glProgramUniform1i(programRenderBlur_, 3, 1);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // 4.3 Vertical Blur
