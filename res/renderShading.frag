@@ -6,7 +6,7 @@
 
 const vec3 lightPos = vec3(0.0, 1.0, 0.0);
 const float ambientCoeff = 0.3;
-const float shininess = 20.0;
+const float shininess = 25.0;
 const float maxDepth = 0.999999;
 
 layout (location = 0) uniform sampler2D depthTex;
@@ -53,11 +53,11 @@ void main() {
   float dcoeff = max(0.0, dot(normal, lightDir));
   vec3 diffColor = color * dcoeff;
 
-  // Specular
+  // Specular (Blinn-Phong)
   vec3 incidence = normalize(lightPosEye - eyeSpacePos.xyz);
-  vec3 reflection = normalize(reflect(-incidence, normal));
-  vec3 surfaceToCamera = normalize(vec3(0.0) - eyeSpacePos.xyz);
-  float cosAngle = max(0.0, dot(surfaceToCamera, reflection));
+  vec3 viewDir = normalize(vec3(0.0) - eyeSpacePos.xyz);
+  vec3 halfDir = normalize(incidence + viewDir);
+  float cosAngle = max(dot(halfDir, normal), 0.0);
   float scoeff = pow(cosAngle, shininess);
   vec3 specColor = vec3(1.0) * scoeff;
 
