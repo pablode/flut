@@ -40,8 +40,9 @@ void main() {
     discard;
     return;
   }
-  vec3 normal = texture(normalTex, coord).xyz;
   vec3 color = texture(colorTex, coord).xyz;
+  vec3 normal = texture(normalTex, coord).xyz;
+  normal = normalize(normal);
 
   // Reconstruct position from depth
   vec3 eyeSpacePos = getEyePos(coord);
@@ -54,7 +55,7 @@ void main() {
 
   // Specular
   vec3 incidence = normalize(lightPosEye - eyeSpacePos.xyz);
-  vec3 reflection = reflect(-incidence, normal);
+  vec3 reflection = normalize(reflect(-incidence, normal));
   vec3 surfaceToCamera = normalize(vec3(0.0) - eyeSpacePos.xyz);
   float cosAngle = max(0.0, dot(surfaceToCamera, reflection));
   float scoeff = pow(cosAngle, shininess);
