@@ -87,6 +87,7 @@ namespace ansimproj {
     GLuint programDensityComputation_;
     GLuint programForceUpdate_;
     GLuint programRenderGeometry_;
+    GLuint programRenderBlur_;
     GLuint programRenderShading_;
     GLuint bufColor_;
     GLuint bufGridUnsorted_;
@@ -100,9 +101,11 @@ namespace ansimproj {
     GLuint vao1_;
     GLuint vao2_;
     GLuint fbo1_;
+    GLuint fbo2_;
     GLuint texColor_;
     GLuint texNormal_;
     GLuint texDepth_;
+    GLuint texTemp_;
     bool swapFrame_;
   };
 }

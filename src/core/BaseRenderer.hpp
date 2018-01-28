@@ -35,7 +35,9 @@ namespace ansimproj {
 
       GLuint createBuffer(const std::vector<GLuint> &data, bool dynamic) const;
 
-      GLuint createFBO(const GLuint &depthTexture, std::vector<GLuint> colorTextures) const;
+      GLuint createFullFBO(const GLuint &depthTexture, std::vector<GLuint> colorTextures) const;
+
+      GLuint createFlatFBO(const GLuint &colorTexture) const;
 
       GLuint createColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
 
