@@ -46,19 +46,6 @@ void main() {
   // Reconstruct position from depth
   vec3 eyeSpacePos = getEyePos(coord);
 
-  // Reconstruct normal from depth
-  vec3 ddx = getEyePos(coord + vec2(texelSize.x, 0.0)) - eyeSpacePos;
-  vec3 ddx2 = eyeSpacePos - getEyePos(coord + vec2(-texelSize.x, 0.0));
-  if (abs(ddx.z) > abs(ddx2.z)) {
-    ddx = ddx2;
-  }
-  vec3 ddy = getEyePos(coord + vec2(0.0, texelSize.y)) - eyeSpacePos;
-  vec3 ddy2 = eyeSpacePos - getEyePos(coord + vec2(0.0, -texelSize.y));
-  if (abs(ddy.z) > abs(ddy2.z)) {
-    ddy = ddy2;
-  }
-  normal = normalize(cross(ddx, ddy));
-
   // Diffuse
   vec3 lightPosEye = (view * vec4(lightPos, 1.0)).xyz;
   vec3 lightDir = normalize(lightPosEye - eyeSpacePos.xyz);
