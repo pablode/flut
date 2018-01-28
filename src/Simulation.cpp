@@ -335,6 +335,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glProgramUniform1ui(programRenderShading_, 3, width_);
   glProgramUniform1ui(programRenderShading_, 4, height_);
   glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
+  glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, view.data());
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glEnable(GL_DEPTH_TEST);
   glEndQuery(GL_TIME_ELAPSED);

@@ -4,10 +4,9 @@
 /// Read GBuffer values, reconstruct position
 /// from depth and do simple Phong shading.
 
-const vec3 lightPosEye = vec3(-0.577, -0.577, -0.577);
-const vec3 lightDirEye = normalize(-lightPosEye);
+const vec3 lightPos = vec3(0.0, 1.0, 0.0);
 const float ambientCoeff = 0.3;
-const float shininess = 10.0;
+const float shininess = 20.0;
 const float maxDepth = 0.999999;
 
 layout (location = 0) uniform sampler2D depthTex;
@@ -16,6 +15,7 @@ layout (location = 2) uniform sampler2D normalTex;
 layout (location = 3) uniform uint width;
 layout (location = 4) uniform uint height;
 layout (location = 5) uniform mat4 invProjection;
+layout (location = 6) uniform mat4 view;
 
 out vec4 finalColor;
 
@@ -38,13 +38,17 @@ void main() {
   eyeSpacePos.xyz /= eyeSpacePos.w;
 
   // Diffuse
-  float dcoeff = max(0.0, dot(normal, lightDirEye));
+  vec3 lightPosEye = (view * vec4(lightPos, 1.0)).xyz;
+  vec3 lightDir = normalize(lightPosEye - eyeSpacePos.xyz);
+  float dcoeff = max(0.0, dot(normal, lightDir));
   vec3 diffColor = color * dcoeff;
 
   // Specular
-  vec3 eye = normalize(-eyeSpacePos.xyz);
-  vec3 reflection = normalize(reflect(-lightDirEye, normal));
-  float scoeff = pow(max(dot(reflection, eye), 0.0f), shininess);
+  vec3 incidence = normalize(lightPosEye - eyeSpacePos.xyz);
+  vec3 reflection = reflect(-incidence, normal);
+  vec3 surfaceToCamera = normalize(vec3(0.0) - eyeSpacePos.xyz);
+  float cosAngle = max(0.0, dot(surfaceToCamera, reflection));
+  float scoeff = pow(cosAngle, shininess);
   vec3 specColor = vec3(1.0) * scoeff;
 
   // Final
