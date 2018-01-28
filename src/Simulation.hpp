@@ -11,7 +11,7 @@ namespace ansimproj {
       SimulationOptions()
         : gravity{0.0f, -9.81f, 0.0f}
         , deltaTimeMod{1.5f}
-        , colorMode{1}
+        , colorMode{0}
         , shadingMode{1} {}
       float gravity[3];
       float deltaTimeMod;

@@ -145,8 +145,8 @@ void ansimproj::Simulation::preset1() {
     posData.push_back((GRID_ORIGIN(0) + x) / 2.0f);
     posData.push_back((GRID_ORIGIN(1) + y) / 2.0f);
     posData.push_back((GRID_ORIGIN(2) + z) / 2.0f);
-    colData.push_back(1.0f - yi * 0.5f);
-    colData.push_back(1.0f - yi * 0.5f);
+    colData.push_back(0.0f);
+    colData.push_back(0.0f);
     colData.push_back(1.0f);
   }
   bufPosition1_ = createBuffer(posData, true);
