@@ -10,7 +10,7 @@ namespace ansimproj {
     struct SimulationOptions {
       SimulationOptions()
         : gravity{0.0f, -9.81f, 0.0f}
-        , deltaTimeMod{1.5f}
+        , deltaTimeMod{1.2f}
         , colorMode{0}
         , shadingMode{1} {}
       float gravity[3];
@@ -37,14 +37,14 @@ namespace ansimproj {
 
   public:
     constexpr static std::uint32_t PARTICLE_COUNT = 2 << 14;
-    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {64, 32, 8};
+    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {128, 32, 8};
     const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {2.5f, 1.5f, 0.5f};
     const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-1.25f, -0.75f, -0.25f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
   private:
-    constexpr static float DT = 0.001f;
-    constexpr static float K = 4.0f;
+    constexpr static float DT = 0.003f;
+    constexpr static float K = 0.3f;
     constexpr static float MASS = 0.02f;
     constexpr static float RANGE = 0.045f;
     constexpr static float VIS_COEFF = 35.0f;
