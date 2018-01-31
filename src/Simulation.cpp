@@ -43,8 +43,8 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderFlat.frag");
   programRenderFlat_ = createVertFragShader(vert, frag);
   vert = core::Utils::loadFileText(RESOURCES_PATH "/renderFullscreen.vert");
-  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderGauss.frag");
-  programRenderBlur_ = createVertFragShader(vert, frag);
+  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderCurvature.frag");
+  programRenderCurvature_ = createVertFragShader(vert, frag);
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderShading.frag");
   programRenderShading_ = createVertFragShader(vert, frag);
 
@@ -54,7 +54,7 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   texPosition_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
   texTemp_ = createColorTexture(width, height);
-  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_, texPosition_});
+  fbo1_ = createFullFBO(texDepth_, {texNormal_, texColor_, texPosition_});
   fbo2_ = createFlatFBO(texTemp_);
 
   // Precalc weight functions
@@ -88,7 +88,7 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programForceUpdate_);
   deleteShader(programRenderFlat_);
   deleteShader(programRenderGeometry_);
-  deleteShader(programRenderBlur_);
+  deleteShader(programRenderCurvature_);
   deleteShader(programRenderShading_);
   deleteBuffer(bufColor_);
   deleteBuffer(bufGridUnsorted_);
@@ -306,36 +306,29 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
   if (options_.shadingMode == 1) {
 
-    // 4.2 Horizontal Blur
+    // 4.2 Curvature Flow
+    bool swap = false;
+    std::uint32_t texSmoothed = texDepth_;
     glDisable(GL_DEPTH_TEST);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo2_);
-    GLenum drawBuffers2[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, drawBuffers2);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texNormal_);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texPosition_);
-    glUseProgram(programRenderBlur_);
-    glProgramUniform2f(
-      programRenderBlur_, 0, static_cast<float>(width_), static_cast<float>(height_));
-    glProgramUniform2f(programRenderBlur_, 1, 1.0f, 0.0f);
-    glProgramUniform1i(programRenderBlur_, 2, 0);
-    glProgramUniform1i(programRenderBlur_, 3, 1);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glUseProgram(programRenderCurvature_);
+    glProgramUniform1i(programRenderCurvature_, 0, 0);
+    glProgramUniformMatrix4fv(programRenderCurvature_, 1, 1, GL_FALSE, projection.data());
+    glProgramUniform2i(programRenderCurvature_, 2, width_, height_);
+    GLenum drawBuffers1[] = {GL_COLOR_ATTACHMENT0};
+    for (int i = 0; i < 30; ++i) {
+      glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo1_ : fbo2_);
+      std::uint32_t activeTex = (i == 0) ? texDepth_ : swap ? texTemp_ : texNormal_;
+      glDrawBuffers(1, drawBuffers1);
+      glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, activeTex);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
+      texSmoothed = swap ? texNormal_ : texTemp_;
+      swap = !swap;
+    }
 
-    // 4.3 Vertical Blur
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo1_);
-    GLenum drawBuffers3[] = {GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(1, drawBuffers3);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texTemp_);
-    glProgramUniform2f(programRenderBlur_, 1, 0.0f, 1.0f);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // 4.4 Shading Pass
+    // 4.3 Shading Pass
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -345,14 +338,17 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glBindTexture(GL_TEXTURE_2D, texColor_);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, texNormal_);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, texSmoothed);
     glUseProgram(programRenderShading_);
     glProgramUniform1i(programRenderShading_, 0, 0);
     glProgramUniform1i(programRenderShading_, 1, 1);
     glProgramUniform1i(programRenderShading_, 2, 2);
-    glProgramUniform1ui(programRenderShading_, 3, width_);
-    glProgramUniform1ui(programRenderShading_, 4, height_);
-    glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
-    glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, view.data());
+    glProgramUniform1i(programRenderShading_, 3, 3);
+    glProgramUniform1ui(programRenderShading_, 4, width_);
+    glProgramUniform1ui(programRenderShading_, 5, height_);
+    glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, invProjection.data());
+    glProgramUniformMatrix4fv(programRenderShading_, 7, 1, GL_FALSE, view.data());
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glEnable(GL_DEPTH_TEST);
   }
@@ -414,7 +410,7 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   texPosition_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
   texTemp_ = createColorTexture(width, height);
-  fbo1_ = createFullFBO(texDepth_, {texColor_, texNormal_, texPosition_});
+  fbo1_ = createFullFBO(texDepth_, {texNormal_, texColor_, texPosition_});
   fbo2_ = createFlatFBO(texTemp_);
 }
 

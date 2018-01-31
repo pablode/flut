@@ -6,8 +6,8 @@
 in vec3 fragPos;
 in vec3 fragColor;
 
-out vec3 finalColor;
 out vec3 finalNormal;
+out vec3 finalColor;
 out vec3 finalPosition;
 
 layout(location = 0) uniform mat4 modelViewProj;
