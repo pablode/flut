@@ -12,9 +12,10 @@
 const float DEPTH_THRESHOLD = 0.001;
 const float SMOOTH_DT = 0.0005;
 
-layout (location = 0) uniform sampler2D depthTex;
-layout (location = 1) uniform mat4 projection;
-layout (location = 2) uniform ivec2 res;
+layout (location = 0) uniform mat4 modelViewProjection;
+layout (location = 1) uniform sampler2D depthTex;
+layout (location = 2) uniform mat4 projection;
+layout (location = 3) uniform ivec2 res;
 
 out float finalDepth;
 

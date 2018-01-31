@@ -7,12 +7,13 @@ const vec3 lightPos = vec3(0.0, 1.0, 0.0);
 const float ambientCoeff = 0.3;
 const float shininess = 25.0;
 
-layout (location = 0) uniform sampler2D depthTex;
-layout (location = 1) uniform sampler2D colorTex;
-layout (location = 2) uniform uint width;
-layout (location = 3) uniform uint height;
-layout (location = 4) uniform mat4 invProjection;
-layout (location = 5) uniform mat4 view;
+layout (location = 0) uniform mat4 modelViewProjection;
+layout (location = 1) uniform sampler2D depthTex;
+layout (location = 2) uniform sampler2D colorTex;
+layout (location = 3) uniform uint width;
+layout (location = 4) uniform uint height;
+layout (location = 5) uniform mat4 invProjection;
+layout (location = 6) uniform mat4 view;
 
 out vec4 finalColor;
 

@@ -194,6 +194,8 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
+  // "When you're just creating and/or filling the buffer object with data,
+  // the target you use doesn't technically matter."
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
   glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(float), data.data(),
     dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);

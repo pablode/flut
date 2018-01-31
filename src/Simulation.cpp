@@ -42,7 +42,7 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   programRenderGeometry_ = createVertFragShader(vert, frag);
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderFlat.frag");
   programRenderFlat_ = createVertFragShader(vert, frag);
-  vert = core::Utils::loadFileText(RESOURCES_PATH "/renderFullscreen.vert");
+  vert = core::Utils::loadFileText(RESOURCES_PATH "/renderBoundingBox.vert");
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderCurvature.frag");
   programRenderCurvature_ = createVertFragShader(vert, frag);
   frag = core::Utils::loadFileText(RESOURCES_PATH "/renderShading.frag");
@@ -62,10 +62,41 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   weightConstPressure_ = static_cast<float>(45.0f / (M_PI * std::pow(RANGE, 6)));
   weightConstDefault_ = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(RANGE, 9)));
 
+  // Bounding Box
+  const std::vector<Eigen::Vector3f> bboxVertices {
+    GRID_ORIGIN + Eigen::Vector3f{0.0f, 0.0f, GRID_LEN(2)},
+    GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), 0.0f, GRID_LEN(2)},
+    GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), GRID_LEN(1), GRID_LEN(2)},
+    GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_LEN(1), GRID_LEN(2)},
+    GRID_ORIGIN + Eigen::Vector3f{0.0f, 0.0f, 0.0f},
+    GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), 0.0f, 0.0f},
+    GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), GRID_LEN(1), 0.0f},
+    GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_LEN(1), 0.0f},
+  };
+  std::vector<float> bboxVertexData;
+  for (const auto& vertex : bboxVertices) {
+    bboxVertexData.push_back(vertex(0));
+    bboxVertexData.push_back(vertex(1));
+    bboxVertexData.push_back(vertex(2));
+  }
+  bufBBoxVertices_ = createBuffer(bboxVertexData, false);
+  // clang-format off
+  const std::vector<std::uint32_t> bboxIndices {
+    0, 1, 2, 2, 3, 0,
+    1, 5, 6, 6, 2, 1,
+    7, 6, 5, 5, 4, 7,
+    4, 0, 3, 3, 7, 4,
+    4, 5, 1, 1, 0, 4,
+    3, 2, 6, 6, 7, 3
+  };
+  // clang-format on
+  bufBBoxIndices_ = createBuffer(bboxIndices, false);
+
   // Buffers
   preset1();
 
   // Other
+  vao3_ = createBBoxVAO(bufBBoxVertices_, bufBBoxIndices_);
   glGenQueries(6, &timerQueries_[0][0]);
   glGenQueries(6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -90,6 +121,8 @@ ansimproj::Simulation::~Simulation() {
   deleteShader(programRenderGeometry_);
   deleteShader(programRenderCurvature_);
   deleteShader(programRenderShading_);
+  deleteBuffer(bufBBoxVertices_);
+  deleteBuffer(bufBBoxIndices_);
   deleteBuffer(bufColor_);
   deleteBuffer(bufGridUnsorted_);
   deleteBuffer(bufGridSorted_);
@@ -101,6 +134,7 @@ ansimproj::Simulation::~Simulation() {
   deleteBuffer(bufDensity_);
   deleteVAO(vao1_);
   deleteVAO(vao2_);
+  deleteVAO(vao3_);
 }
 
 void ansimproj::Simulation::preset1() {
@@ -166,8 +200,8 @@ void ansimproj::Simulation::preset1() {
   bufVelocity1_ = createBuffer(zeroFloatData, true);
   bufVelocity2_ = createBuffer(zeroFloatData, true);
 
-  vao1_ = createVAO(bufPosition1_, bufColor_);
-  vao2_ = createVAO(bufPosition2_, bufColor_);
+  vao1_ = createParticleVAO(bufPosition1_, bufColor_);
+  vao2_ = createParticleVAO(bufPosition2_, bufColor_);
 }
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
@@ -306,19 +340,20 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
     // 4.2 Curvature Flow
     glDisable(GL_DEPTH_TEST);
+    glBindVertexArray(vao3_);
     glUseProgram(programRenderCurvature_);
-    glProgramUniform1i(programRenderCurvature_, 0, 0);
-    glProgramUniformMatrix4fv(programRenderCurvature_, 1, 1, GL_FALSE, projection.data());
-    glProgramUniform2i(programRenderCurvature_, 2, width_, height_);
+    glProgramUniformMatrix4fv(programRenderCurvature_, 0, 1, GL_FALSE, mvp.data());
+    glProgramUniform1i(programRenderCurvature_, 1, 0);
+    glProgramUniformMatrix4fv(programRenderCurvature_, 2, 1, GL_FALSE, projection.data());
+    glProgramUniform2i(programRenderCurvature_, 3, width_, height_);
     std::uint32_t inputDepthTex = texDepth_;
     bool swap = false;
-    constexpr std::uint32_t SMOOTH_ITERATIONS = 26;
     for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i) {
       glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo3_ : fbo2_);
       glClear(GL_COLOR_BUFFER_BIT);
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_2D, inputDepthTex);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
       inputDepthTex = swap ? texTemp2_ : texTemp1_;
       swap = !swap;
     }
@@ -332,13 +367,14 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texColor_);
     glUseProgram(programRenderShading_);
-    glProgramUniform1i(programRenderShading_, 0, 0);
-    glProgramUniform1i(programRenderShading_, 1, 1);
-    glProgramUniform1ui(programRenderShading_, 2, width_);
-    glProgramUniform1ui(programRenderShading_, 3, height_);
-    glProgramUniformMatrix4fv(programRenderShading_, 4, 1, GL_FALSE, invProjection.data());
-    glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, view.data());
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glProgramUniformMatrix4fv(programRenderShading_, 0, 1, GL_FALSE, mvp.data());
+    glProgramUniform1i(programRenderShading_, 1, 0);
+    glProgramUniform1i(programRenderShading_, 2, 1);
+    glProgramUniform1ui(programRenderShading_, 3, width_);
+    glProgramUniform1ui(programRenderShading_, 4, height_);
+    glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
+    glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, view.data());
+    glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
     glEnable(GL_DEPTH_TEST);
   }
   glEndQuery(GL_TIME_ELAPSED);
@@ -361,7 +397,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   }
 }
 
-GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint &vboCol) const {
+GLuint ansimproj::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const {
   GLuint handle;
   glGenVertexArrays(1, &handle);
   if (!handle) {
@@ -376,6 +412,21 @@ GLuint ansimproj::Simulation::createVAO(const GLuint &vboPos, const GLuint &vboC
   glBindBuffer(GL_ARRAY_BUFFER, vboCol);
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+  return handle;
+}
+
+GLuint ansimproj::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &indices) const {
+  GLuint handle;
+  glGenVertexArrays(1, &handle);
+  if (!handle) {
+    throw std::runtime_error("Unable to create VAO.");
+  }
+  glBindVertexArray(handle);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vertices);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
   return handle;
 }
 

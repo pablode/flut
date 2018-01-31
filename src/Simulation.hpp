@@ -51,6 +51,9 @@ namespace ansimproj {
     constexpr static float REST_PRESSURE = 100.0f;
     constexpr static float REST_DENSITY = 998.27f;
 
+  private:
+    constexpr static std::uint32_t SMOOTH_ITERATIONS = 26;
+
   public:
     Simulation(const std::uint32_t &width, const std::uint32_t &height);
 
@@ -62,12 +65,14 @@ namespace ansimproj {
 
     void resize(std::uint32_t width, std::uint32_t height);
 
-    SimulationOptions& options();
+    SimulationOptions &options();
 
-    const SimulationTime& time() const;
+    const SimulationTime &time() const;
 
   private:
-    GLuint createVAO(const GLuint &vboPos, const GLuint &vboCol) const;
+    GLuint createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const;
+
+    GLuint createBBoxVAO(const GLuint &vertices, const GLuint &indices) const;
 
     void deleteVAO(GLuint handle);
 
@@ -90,6 +95,8 @@ namespace ansimproj {
     GLuint programRenderFlat_;
     GLuint programRenderCurvature_;
     GLuint programRenderShading_;
+    GLuint bufBBoxVertices_;
+    GLuint bufBBoxIndices_;
     GLuint bufColor_;
     GLuint bufGridUnsorted_;
     GLuint bufGridSorted_;
@@ -101,6 +108,7 @@ namespace ansimproj {
     GLuint bufDensity_;
     GLuint vao1_;
     GLuint vao2_;
+    GLuint vao3_;
     GLuint fbo1_;
     GLuint fbo2_;
     GLuint fbo3_;
