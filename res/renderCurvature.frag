@@ -23,8 +23,9 @@ void main(void) {
   float z = texture(depthTex, coords).x;
 
   // Handle screen borders and background
-  if (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 || gl_FragCoord.y <= 1 ||
-    gl_FragCoord.y >= res.y - 1 || z == 0.0) {
+  if (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 ||
+      gl_FragCoord.y <= 1 || gl_FragCoord.y >= res.y - 1 ||
+      z == 0.0) {
     finalDepth = z;
     return;
   }

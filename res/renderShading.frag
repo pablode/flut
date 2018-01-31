@@ -8,14 +8,12 @@ const float ambientCoeff = 0.3;
 const float shininess = 25.0;
 const float maxDepth = 0.999999;
 
-layout (location = 0) uniform sampler2D positionTex;
+layout (location = 0) uniform sampler2D depthTex;
 layout (location = 1) uniform sampler2D colorTex;
-layout (location = 2) uniform sampler2D normalTex;
-layout (location = 3) uniform sampler2D depthTex;
-layout (location = 4) uniform uint width;
-layout (location = 5) uniform uint height;
-layout (location = 6) uniform mat4 invProjection;
-layout (location = 7) uniform mat4 view;
+layout (location = 2) uniform uint width;
+layout (location = 3) uniform uint height;
+layout (location = 4) uniform mat4 invProjection;
+layout (location = 5) uniform mat4 view;
 
 out vec4 finalColor;
 
@@ -38,9 +36,6 @@ void main() {
     discard;
     return;
   }
-  vec3 color = texture(colorTex, coord).xyz;
-  vec3 normal = texture(normalTex, coord).xyz;
-  normal = normalize(normal);
 
   // Reconstruct position from depth
   vec3 eyeSpacePos = getEyePos(coord);
@@ -56,9 +51,10 @@ void main() {
   if (abs(ddy.z) > abs(ddy2.z)) {
     ddy = ddy2;
   }
-  normal = normalize(cross(ddx, ddy));
+  vec3 normal = normalize(cross(ddx, ddy));
 
   // Diffuse
+  vec3 color = texture(colorTex, coord).xyz;
   vec3 lightPosEye = (view * vec4(lightPos, 1.0)).xyz;
   vec3 lightDir = normalize(lightPosEye - eyeSpacePos.xyz);
   float dcoeff = max(0.0, dot(normal, lightDir));

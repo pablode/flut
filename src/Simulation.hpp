@@ -103,11 +103,11 @@ namespace ansimproj {
     GLuint vao2_;
     GLuint fbo1_;
     GLuint fbo2_;
-    GLuint texColor_;
-    GLuint texPosition_;
-    GLuint texNormal_;
+    GLuint fbo3_;
     GLuint texDepth_;
-    GLuint texTemp_;
+    GLuint texColor_;
+    GLuint texTemp1_;
+    GLuint texTemp2_;
     bool swapFrame_;
   };
 }
