@@ -10,8 +10,8 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
-  constexpr std::uint32_t WIDTH = 1280;
-  constexpr std::uint32_t HEIGHT = 960;
+  constexpr std::uint32_t WIDTH = 800;
+  constexpr std::uint32_t HEIGHT = 600;
   ansimproj::core::Window window{"ansimproj", WIDTH, HEIGHT};
   ansimproj::core::Camera camera{window};
   ansimproj::Simulation simulation{WIDTH, HEIGHT};

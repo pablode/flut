@@ -312,7 +312,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glProgramUniform2i(programRenderCurvature_, 2, width_, height_);
     std::uint32_t inputDepthTex = texDepth_;
     bool swap = false;
-    constexpr std::uint32_t SMOOTH_ITERATIONS = 32;
+    constexpr std::uint32_t SMOOTH_ITERATIONS = 26;
     for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i) {
       glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo3_ : fbo2_);
       glClear(GL_COLOR_BUFFER_BIT);

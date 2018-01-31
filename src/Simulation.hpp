@@ -46,7 +46,7 @@ namespace ansimproj {
     constexpr static float DT = 0.003f;
     constexpr static float K = 0.3f;
     constexpr static float MASS = 0.02f;
-    constexpr static float RANGE = 0.045f;
+    constexpr static float RANGE = 0.04f;
     constexpr static float VIS_COEFF = 35.0f;
     constexpr static float REST_PRESSURE = 100.0f;
     constexpr static float REST_DENSITY = 998.27f;
