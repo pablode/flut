@@ -5,6 +5,7 @@
 
 #include <GL/glew.h>
 #include <stdexcept>
+#include <iostream>
 
 ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
   : shouldClose_{false} {
@@ -28,8 +29,12 @@ ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uin
   if (!context_) {
     throw std::runtime_error(SDL_GetError());
   }
-  const auto ret = glewInit();
-  if (ret != GLEW_OK) {
+  const auto vsyncSucc = SDL_GL_SetSwapInterval(1);
+  if (vsyncSucc != 0) {
+    std::cout << "Warning: Unable to activate VSync." << std::endl;
+  }
+  const auto glewSucc = glewInit();
+  if (glewSucc != GLEW_OK) {
     throw std::runtime_error("Unable to initialize GLEW.");
   }
   ImGui_ImplSdlGlew_Init(window_);
