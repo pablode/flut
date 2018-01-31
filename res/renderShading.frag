@@ -6,7 +6,6 @@
 const vec3 lightPos = vec3(0.0, 1.0, 0.0);
 const float ambientCoeff = 0.3;
 const float shininess = 25.0;
-const float maxDepth = 0.999999;
 
 layout (location = 0) uniform sampler2D depthTex;
 layout (location = 1) uniform sampler2D colorTex;
@@ -32,7 +31,7 @@ void main() {
   vec2 texelSize = 1.0 / vec2(width, height);
   vec2 coord = gl_FragCoord.xy * texelSize;
   float viewportDepth = texture(depthTex, coord).x;
-  if (viewportDepth > maxDepth) {
+  if (viewportDepth == 1.0) {
     discard;
     return;
   }

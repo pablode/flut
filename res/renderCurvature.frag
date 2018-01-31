@@ -25,7 +25,7 @@ void main(void) {
   // Handle screen borders and background
   if (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 ||
       gl_FragCoord.y <= 1 || gl_FragCoord.y >= res.y - 1 ||
-      z == 0.0) {
+      z == 1.0) {
     finalDepth = z;
     return;
   }
