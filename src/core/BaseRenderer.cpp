@@ -226,7 +226,7 @@ GLuint ansimproj::core::BaseRenderer::createFullFBO(
   for (std::uint32_t i = 0; i < colorTextures.size(); ++i)
     glFramebufferTexture2D(
       GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorTextures[i], 0);
-  GLenum status = glCheckNamedFramebufferStatus(handle, GL_FRAMEBUFFER);
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status == GL_FRAMEBUFFER_COMPLETE) {
     return handle;
   } else {
@@ -271,7 +271,7 @@ GLuint ansimproj::core::BaseRenderer::createFlatFBO(const GLuint &colorTexture) 
   }
   glBindFramebuffer(GL_FRAMEBUFFER, handle);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
-  GLenum status = glCheckNamedFramebufferStatus(handle, GL_FRAMEBUFFER);
+  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status == GL_FRAMEBUFFER_COMPLETE) {
     return handle;
   } else {
