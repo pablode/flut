@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <stdexcept>
 
-ansimproj::core::Window::Window(std::string title, std::int32_t width, std::int32_t height)
+ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
   : shouldClose_{false} {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
     throw std::runtime_error(SDL_GetError());
