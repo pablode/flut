@@ -8,9 +8,10 @@
 /// by Van der Laan, Green and Sainz (NVIDIA).
 /// Thanks to pysph and simpleflow.
 
-// TODO: Depth is not linear! Convert range start/end to view space.
-const float DEPTH_THRESHOLD = 0.001;
+const float Z_THRESHOLD = 5.0;
 const float SMOOTH_DT = 0.0005;
+const float NEAR = 0.01;
+const float FAR = 25.0;
 
 layout (location = 0) uniform mat4 modelViewProjection;
 layout (location = 1) uniform sampler2D depthTex;
@@ -19,15 +20,22 @@ layout (location = 3) uniform ivec2 res;
 
 out float finalDepth;
 
+///
+float depthToEyeSpaceZ(float depth) {
+  float ndc = 2.0 * depth - 1.0;
+  return 2.0 * NEAR * FAR / (FAR + NEAR - ndc * (FAR - NEAR));
+}
+vec4 depthToEyeSpaceZ(vec4 depth) {
+  vec4 ndc = 2.0 * depth - 1.0;
+  return 2.0 * NEAR * FAR / (FAR + NEAR - ndc * (FAR - NEAR));
+}
+
+///
 void main(void) {
   vec2 coords = gl_FragCoord.xy / res;
   float z = texture(depthTex, coords).x;
-
-  // Handle screen borders and background
-  if (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 ||
-      gl_FragCoord.y <= 1 || gl_FragCoord.y >= res.y - 1 ||
-      z == 1.0) {
-    finalDepth = z;
+  if (z == 1.0) {
+    finalDepth = 1.0;
     return;
   }
 
@@ -41,16 +49,21 @@ void main(void) {
   float top = texture(depthTex, coords + dy).x;
   float bottom = texture(depthTex, coords - dy).x;
 
-  // Disallow large change in depth
-  if (abs(z - right) > DEPTH_THRESHOLD || abs(z - left) > DEPTH_THRESHOLD ||
-    abs(z - top) > DEPTH_THRESHOLD || abs(z - bottom) > DEPTH_THRESHOLD) {
+  // Disallow large changes in depth
+  float eyeZ = depthToEyeSpaceZ(z);
+  vec4 neighborEyeZ = depthToEyeSpaceZ(vec4(right, left, top, bottom));
+  vec4 zDiff = abs(eyeZ - neighborEyeZ);
+  if (zDiff.x > Z_THRESHOLD || zDiff.y > Z_THRESHOLD ||
+      zDiff.z > Z_THRESHOLD || zDiff.w > Z_THRESHOLD) {
     finalDepth = z;
     return;
   }
 
-  // Gradient (first derivative)
-  float dzdx = (right == 0.0 || left == 0.0) ? 0.0 : 0.5 * (right - left);
-  float dzdy = (top == 0.0 || bottom == 0.0) ? 0.0 : 0.5 * (top - bottom);
+  // Gradient (first derivative) with border handling
+  float dzdx = (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 ||
+                right == 1.0 || left == 1.0) ? 0.0 : 0.5 * (right - left);
+  float dzdy = (gl_FragCoord.y <= 1 || gl_FragCoord.y >= res.y - 1 ||
+                top == 1.0 || bottom == 1.0) ? 0.0 : 0.5 * (top - bottom);
 
   // Diagonal neighbors
   float topRight = texture(depthTex, coords + dx + dy).x;

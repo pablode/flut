@@ -305,14 +305,13 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   glBeginQuery(GL_TIME_ELAPSED, query[5]);
   if (options_.shadingMode == 0) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     renderProgram = programRenderFlat_;
   } else {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo1_);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     renderProgram = programRenderGeometry_;
   }
   glUseProgram(renderProgram);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE * 1.5f : RANGE / 2.0f;
   const float pointScale = 650.0f;
