@@ -52,7 +52,7 @@ namespace ansimproj {
     constexpr static float REST_DENSITY = 998.27f;
 
   private:
-    constexpr static std::uint32_t SMOOTH_ITERATIONS = 26;
+    constexpr static std::uint32_t SMOOTH_ITERATIONS = 30;
 
   public:
     Simulation(const std::uint32_t &width, const std::uint32_t &height);
