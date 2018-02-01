@@ -39,7 +39,9 @@ namespace ansimproj {
 
       GLuint createFlatFBO(const GLuint &colorTexture) const;
 
-      GLuint createColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
+      GLuint createRGB32FColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
+
+      GLuint createR32FColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
 
       GLuint createDepthTexture(const std::uint32_t &width, const std::uint32_t &height) const;
 
@@ -50,6 +52,10 @@ namespace ansimproj {
       void deleteFBO(const GLuint &handle )const;
 
       void deleteTexture(const GLuint &handle) const;
+
+    private:
+      GLuint createColorTexture(GLint internalFormat, GLenum format, GLenum type,
+        const std::uint32_t &width, const std::uint32_t &height) const;
 
     private:
       GLint versionMajor_;

@@ -310,15 +310,25 @@ GLuint ansimproj::core::BaseRenderer::createFlatFBO(const GLuint &colorTexture) 
   }
 }
 
-GLuint ansimproj::core::BaseRenderer::createColorTexture(
+GLuint ansimproj::core::BaseRenderer::createR32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
+  return createColorTexture(GL_R32F, GL_RED, GL_FLOAT, width, height);
+}
+
+GLuint ansimproj::core::BaseRenderer::createRGB32FColorTexture(
+  const std::uint32_t &width, const std::uint32_t &height) const {
+  return createColorTexture(GL_RGB32F, GL_RGB, GL_FLOAT, width, height);
+}
+
+GLuint ansimproj::core::BaseRenderer::createColorTexture(GLint internalFormat, GLenum format,
+  GLenum type, const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glGenTextures(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create texture.");
   }
   glBindTexture(GL_TEXTURE_2D, handle);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, nullptr);
+  glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return handle;

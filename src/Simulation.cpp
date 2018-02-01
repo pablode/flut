@@ -50,9 +50,9 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
 
   // FBOs and Textures
   texDepth_ = createDepthTexture(width, height);
-  texColor_ = createColorTexture(width, height);
-  texTemp1_ = createColorTexture(width, height);
-  texTemp2_ = createColorTexture(width, height);
+  texColor_ = createRGB32FColorTexture(width, height);
+  texTemp1_ = createR32FColorTexture(width, height);
+  texTemp2_ = createR32FColorTexture(width, height);
   fbo1_ = createFullFBO(texDepth_, {texColor_});
   fbo2_ = createFlatFBO(texTemp1_);
   fbo3_ = createFlatFBO(texTemp2_);
@@ -445,10 +445,10 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   deleteTexture(texColor_);
   deleteTexture(texTemp1_);
   deleteTexture(texTemp2_);
-  texColor_ = createColorTexture(width, height);
   texDepth_ = createDepthTexture(width, height);
-  texTemp1_ = createColorTexture(width, height);
-  texTemp2_ = createColorTexture(width, height);
+  texColor_ = createRGB32FColorTexture(width, height);
+  texTemp1_ = createR32FColorTexture(width, height);
+  texTemp2_ = createR32FColorTexture(width, height);
   fbo1_ = createFullFBO(texDepth_, {texColor_});
   fbo2_ = createFlatFBO(texTemp1_);
   fbo3_ = createFlatFBO(texTemp2_);
