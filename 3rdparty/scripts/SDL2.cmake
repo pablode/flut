@@ -1,0 +1,13 @@
+include(ExternalProject)
+
+set(SDL2_INSTALL_DIR "${3RDPARTY_INSTALL_DIR}")
+set(SDL2_BUILD_DIR "${3RDPARTY_BINARY_DIR}/SDL2")
+set(SDL2_CONFIGURE_ARGS "")
+
+ExternalProject_Add(SDL2
+  PREFIX ${SDL2_BUILD_DIR}
+  INSTALL_DIR ${SDL2_INSTALL_DIR}
+  URL https://www.libsdl.org/release/SDL2-2.0.8.tar.gz
+  URL_MD5 3800d705cef742c6a634f202c37f263f
+  CONFIGURE_COMMAND <SOURCE_DIR>/configure ${SDL2_CONFIGURE_ARGS} --prefix=<INSTALL_DIR>
+  INSTALL_COMMAND make install -j8)
