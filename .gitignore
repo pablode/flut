@@ -1,6 +1,7 @@
 ### Project specific ###
 
-3rdparty/BUILD/*.pdb
+3rdparty/INSTALL
+3rdparty/temp
 BUILD
 
 ### C++ ###

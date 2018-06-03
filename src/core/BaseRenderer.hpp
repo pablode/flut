@@ -1,7 +1,7 @@
 #pragma once
 
-#include <GL/glew.h>
 #include <cstdint>
+#include <glbinding/gl/gl.h>
 #include <vector>
 
 #include "core/Camera.hpp"
@@ -18,48 +18,52 @@ namespace ansimproj {
       virtual ~BaseRenderer();
 
     private:
-      static void glDebugOutput(GLenum source, GLenum type, GLuint id,
-        GLenum severity, GLsizei length, const GLchar *message,
+      static void glDebugOutput(::gl::GLenum source, ::gl::GLenum type, ::gl::GLuint id,
+        ::gl::GLenum severity, ::gl::GLsizei length, const ::gl::GLchar *message,
         const void *userParam);
 
     public:
       virtual void render(const Camera &camera, float dt) = 0;
 
     protected:
-      GLuint createVertFragShader(
+      ::gl::GLuint createVertFragShader(
         const std::vector<char> &vertSource, const std::vector<char> &fragSource) const;
 
-      GLuint createComputeShader(const std::vector<char> &shaderSource) const;
+      ::gl::GLuint createComputeShader(const std::vector<char> &shaderSource) const;
 
-      GLuint createBuffer(const std::vector<float> &data, bool dynamic) const;
+      ::gl::GLuint createBuffer(const std::vector<float> &data, bool dynamic) const;
 
-      GLuint createBuffer(const std::vector<GLuint> &data, bool dynamic) const;
+      ::gl::GLuint createBuffer(const std::vector<::gl::GLuint> &data, bool dynamic) const;
 
-      GLuint createFullFBO(const GLuint &depthTexture, std::vector<GLuint> colorTextures) const;
+      ::gl::GLuint createFullFBO(
+        const ::gl::GLuint &depthTexture, std::vector<::gl::GLuint> colorTextures) const;
 
-      GLuint createFlatFBO(const GLuint &colorTexture) const;
+      ::gl::GLuint createFlatFBO(const ::gl::GLuint &colorTexture) const;
 
-      GLuint createRGB32FColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
-
-      GLuint createR32FColorTexture(const std::uint32_t &width, const std::uint32_t &height) const;
-
-      GLuint createDepthTexture(const std::uint32_t &width, const std::uint32_t &height) const;
-
-      void deleteShader(const GLuint &handle) const;
-
-      void deleteBuffer(const GLuint &handle) const;
-
-      void deleteFBO(const GLuint &handle )const;
-
-      void deleteTexture(const GLuint &handle) const;
-
-    private:
-      GLuint createColorTexture(GLint internalFormat, GLenum format, GLenum type,
+      ::gl::GLuint createRGB32FColorTexture(
         const std::uint32_t &width, const std::uint32_t &height) const;
 
+      ::gl::GLuint createR32FColorTexture(
+        const std::uint32_t &width, const std::uint32_t &height) const;
+
+      ::gl::GLuint createDepthTexture(
+        const std::uint32_t &width, const std::uint32_t &height) const;
+
+      void deleteShader(const ::gl::GLuint &handle) const;
+
+      void deleteBuffer(const ::gl::GLuint &handle) const;
+
+      void deleteFBO(const ::gl::GLuint &handle) const;
+
+      void deleteTexture(const ::gl::GLuint &handle) const;
+
     private:
-      GLint versionMajor_;
-      GLint versionMinor_;
+      ::gl::GLuint createColorTexture(::gl::GLenum internalFormat, ::gl::GLenum format,
+        ::gl::GLenum type, const std::uint32_t &width, const std::uint32_t &height) const;
+
+    private:
+      ::gl::GLint versionMajor_;
+      ::gl::GLint versionMinor_;
     };
   }
 }

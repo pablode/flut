@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Eigen/Core>
+
 #include "core/BaseRenderer.hpp"
 
 namespace ansimproj {
@@ -37,9 +39,9 @@ namespace ansimproj {
 
   public:
     constexpr static std::uint32_t PARTICLE_COUNT = 2 << 14;
-    const Eigen::Matrix<GLuint, 3, 1> GRID_RES = {128, 32, 8};
-    const Eigen::Matrix<GLfloat, 3, 1> GRID_LEN = {2.5f, 1.5f, 0.5f};
-    const Eigen::Matrix<GLfloat, 3, 1> GRID_ORIGIN = {-1.25f, -0.75f, -0.25f};
+    const Eigen::Matrix<::gl::GLuint, 3, 1> GRID_RES = {128, 32, 8};
+    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_LEN = {2.5f, 1.5f, 0.5f};
+    const Eigen::Matrix<::gl::GLfloat, 3, 1> GRID_ORIGIN = {-1.25f, -0.75f, -0.25f};
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
 
   private:
@@ -70,11 +72,11 @@ namespace ansimproj {
     const SimulationTime &time() const;
 
   private:
-    GLuint createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const;
+    ::gl::GLuint createParticleVAO(const ::gl::GLuint &vboPos, const ::gl::GLuint &vboCol) const;
 
-    GLuint createBBoxVAO(const GLuint &vertices, const GLuint &indices) const;
+    ::gl::GLuint createBBoxVAO(const ::gl::GLuint &vertices, const ::gl::GLuint &indices) const;
 
-    void deleteVAO(GLuint handle);
+    void deleteVAO(::gl::GLuint handle);
 
   private:
     std::uint32_t width_;
@@ -85,37 +87,37 @@ namespace ansimproj {
     float weightConstViscosity_;
     float weightConstPressure_;
     float weightConstDefault_;
-    GLuint timerQueries_[2][6];
-    GLuint programGridInsert_;
-    GLuint programGridSort_;
-    GLuint programGridIndexing_;
-    GLuint programDensityComputation_;
-    GLuint programForceUpdate_;
-    GLuint programRenderGeometry_;
-    GLuint programRenderFlat_;
-    GLuint programRenderCurvature_;
-    GLuint programRenderShading_;
-    GLuint bufBBoxVertices_;
-    GLuint bufBBoxIndices_;
-    GLuint bufColor_;
-    GLuint bufGridUnsorted_;
-    GLuint bufGridSorted_;
-    GLuint bufGridIndices_;
-    GLuint bufPosition1_;
-    GLuint bufPosition2_;
-    GLuint bufVelocity1_;
-    GLuint bufVelocity2_;
-    GLuint bufDensity_;
-    GLuint vao1_;
-    GLuint vao2_;
-    GLuint vao3_;
-    GLuint fbo1_;
-    GLuint fbo2_;
-    GLuint fbo3_;
-    GLuint texDepth_;
-    GLuint texColor_;
-    GLuint texTemp1_;
-    GLuint texTemp2_;
+    ::gl::GLuint timerQueries_[2][6];
+    ::gl::GLuint programGridInsert_;
+    ::gl::GLuint programGridSort_;
+    ::gl::GLuint programGridIndexing_;
+    ::gl::GLuint programDensityComputation_;
+    ::gl::GLuint programForceUpdate_;
+    ::gl::GLuint programRenderGeometry_;
+    ::gl::GLuint programRenderFlat_;
+    ::gl::GLuint programRenderCurvature_;
+    ::gl::GLuint programRenderShading_;
+    ::gl::GLuint bufBBoxVertices_;
+    ::gl::GLuint bufBBoxIndices_;
+    ::gl::GLuint bufColor_;
+    ::gl::GLuint bufGridUnsorted_;
+    ::gl::GLuint bufGridSorted_;
+    ::gl::GLuint bufGridIndices_;
+    ::gl::GLuint bufPosition1_;
+    ::gl::GLuint bufPosition2_;
+    ::gl::GLuint bufVelocity1_;
+    ::gl::GLuint bufVelocity2_;
+    ::gl::GLuint bufDensity_;
+    ::gl::GLuint vao1_;
+    ::gl::GLuint vao2_;
+    ::gl::GLuint vao3_;
+    ::gl::GLuint fbo1_;
+    ::gl::GLuint fbo2_;
+    ::gl::GLuint fbo3_;
+    ::gl::GLuint texDepth_;
+    ::gl::GLuint texColor_;
+    ::gl::GLuint texTemp1_;
+    ::gl::GLuint texTemp2_;
     bool swapFrame_;
   };
 }

@@ -8,6 +8,8 @@
 #include <iostream>
 #include <limits>
 
+using namespace ::gl;
+
 ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
   : BaseRenderer()
   , width_(width)

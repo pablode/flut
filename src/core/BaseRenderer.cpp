@@ -2,14 +2,17 @@
 
 #include <iostream>
 
+using namespace ::gl;
+
 ansimproj::core::BaseRenderer::BaseRenderer() {
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
 #ifndef NDEBUG
-  GLint flags;
-  glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-  if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+  ContextFlagMask flags;
+  glGetIntegerv(GL_CONTEXT_FLAGS, (GLint *)&flags);
+  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE_BIT) {
+
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(&glDebugOutput, nullptr);
@@ -80,7 +83,7 @@ GLuint ansimproj::core::BaseRenderer::createVertFragShader(
   glShaderSource(vertHandle, 1, &vertShaderPtr, &vertSize);
   glCompileShader(vertHandle);
   GLint logLength;
-  GLint result = GL_FALSE;
+  GLboolean result = GL_FALSE;
   glGetShaderiv(vertHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
@@ -152,7 +155,7 @@ GLuint ansimproj::core::BaseRenderer::createComputeShader(
   glShaderSource(sourceHandle, 1, &sourceShaderPtr, &sourceSize);
   glCompileShader(sourceHandle);
   GLint logLength;
-  GLint result = GL_FALSE;
+  GLboolean result = GL_FALSE;
   glGetShaderiv(sourceHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);
@@ -320,7 +323,7 @@ GLuint ansimproj::core::BaseRenderer::createRGB32FColorTexture(
   return createColorTexture(GL_RGB32F, GL_RGB, GL_FLOAT, width, height);
 }
 
-GLuint ansimproj::core::BaseRenderer::createColorTexture(GLint internalFormat, GLenum format,
+GLuint ansimproj::core::BaseRenderer::createColorTexture(GLenum internalFormat, GLenum format,
   GLenum type, const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glGenTextures(1, &handle);
