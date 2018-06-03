@@ -9,7 +9,7 @@ namespace ansimproj {
     class Camera {
 
     private:
-      constexpr static float FOV = static_cast<const float>(60.0f * M_PI / 180.0f);
+      constexpr static float FOV = static_cast<float>(60.0f * M_PI / 180.0f);
       constexpr static float SENSITIVITY = 0.005f;
       constexpr static float NEAR_PLANE = 0.01f;
       constexpr static float FAR_PLANE = 25.0f;
