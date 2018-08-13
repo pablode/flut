@@ -1,5 +1,4 @@
 #include "core/Window.hpp"
-
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl_glbinding.h"
 
@@ -58,8 +57,8 @@ void ansimproj::core::Window::pollEvents() {
         switch (event.window.event) {
         case SDL_WINDOWEVENT_RESIZED:
         case SDL_WINDOWEVENT_SIZE_CHANGED: {
-          const std::uint32_t width = static_cast<std::uint32_t>(event.window.data1);
-          const std::uint32_t height = static_cast<std::uint32_t>(event.window.data2);
+          const auto width = static_cast<std::uint32_t>(event.window.data1);
+          const auto height = static_cast<std::uint32_t>(event.window.data2);
           if (resizeCallback_) {
             resizeCallback_(width, height);
           }

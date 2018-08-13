@@ -1,7 +1,6 @@
 #include "Simulation.hpp"
 #include "core/Camera.hpp"
 #include "core/Window.hpp"
-
 #include "imgui/imgui.h"
 
 #include <chrono>
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]) {
       ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
     const float frameTime = time.gridInsertMs + time.gridSortMs + time.gridIndexingMs +
-      time.densityComputationMs + time.forceUpdateMs + time.rendering;
+      time.densityComputationMs + time.forceUpdateMs + time.renderingMs;
     ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
     ImGui::Text(
       "Grid: %dx%dx%d", simulation.GRID_RES(0), simulation.GRID_RES(1), simulation.GRID_RES(2));
@@ -55,7 +54,7 @@ int main(int argc, char *argv[]) {
     ImGui::Text("GrIns   GrSort  GrIdx   DensCom  ForceUp  Render");
     ImGui::Text("%.2fms  %.2fms  %.2fms  %.2fms   %.2fms   %.2fms", time.gridInsertMs,
       time.gridSortMs, time.gridIndexingMs, time.densityComputationMs, time.forceUpdateMs,
-      time.rendering);
+      time.renderingMs);
 
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
 

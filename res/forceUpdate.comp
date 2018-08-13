@@ -154,7 +154,6 @@ void main() {
           // something else to the other? We need "randomness" - and
           // the most convenient way to get a different value for
           // each particle is by using the particle id.
-          // Of course, this handling is not physically correct.
           if (length(r) == 0.0) {
             float zeroToOne = float(p) / float(particleCount);
             vec3 toMiddle = (gridOrigin + gridLength / 2) - pjPos;

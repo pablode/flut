@@ -208,7 +208,7 @@ void ansimproj::Simulation::preset1() {
 
 void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
-  assert(PARTICLE_COUNT % localSize == 0);
+  static_assert(PARTICLE_COUNT % localSize == 0, "Invalid particle count.");
   const std::uint32_t numWorkGroups = PARTICLE_COUNT / localSize;
   auto &lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
   auto &query = timerQueries_[swapFrame_ ? 1 : 0];
@@ -394,7 +394,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glGetQueryObjectui64v(lastQuery[4], GL_QUERY_RESULT, &elapsedTime);
     time_.forceUpdateMs = elapsedTime / 1000000.0f;
     glGetQueryObjectui64v(lastQuery[5], GL_QUERY_RESULT, &elapsedTime);
-    time_.rendering = elapsedTime / 1000000.0f;
+    time_.renderingMs = elapsedTime / 1000000.0f;
   }
 }
 

@@ -12,7 +12,6 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
   ContextFlagMask flags;
   glGetIntegerv(GL_CONTEXT_FLAGS, (GLint *)&flags);
   if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE_BIT) {
-
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(&glDebugOutput, nullptr);

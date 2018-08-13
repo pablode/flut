@@ -28,13 +28,13 @@ namespace ansimproj {
         , gridIndexingMs{0.0f}
         , densityComputationMs{0.0f}
         , forceUpdateMs{0.0f}
-        , rendering{0.0f} {}
+        , renderingMs{0.0f} {}
       float gridInsertMs;
       float gridSortMs;
       float gridIndexingMs;
       float densityComputationMs;
       float forceUpdateMs;
-      float rendering;
+      float renderingMs;
     };
 
   public:
