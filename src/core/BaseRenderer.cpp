@@ -1,5 +1,6 @@
 #include "BaseRenderer.hpp"
 
+#include <glbinding/Binding.h>
 #include <iostream>
 
 using namespace ::gl;
@@ -20,6 +21,17 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
   } else {
     std::cout << "Debug output not available (context flag not set)." << std::endl;
   }
+  glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, {"glGetError"});
+  glbinding::setAfterCallback([](const glbinding::FunctionCall &) {
+    auto error = glGetError();
+    if (error != GL_NO_ERROR) {
+      do {
+        const auto errorInt = static_cast<std::uint32_t>(error);
+        std::cout << "GL_ERROR: 0x" << std::hex << errorInt << std::endl;
+      } while ((error = glGetError()) != GL_NO_ERROR);
+      throw std::runtime_error{"OpenGL Error(s) occured."};
+    }
+  });
 #endif
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
