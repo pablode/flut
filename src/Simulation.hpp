@@ -2,11 +2,11 @@
 
 #include <Eigen/Core>
 
-#include "core/BaseRenderer.hpp"
+#include "core/SimulationBase.hpp"
 
 namespace ansimproj {
 
-  class Simulation : public core::BaseRenderer {
+  class Simulation : public core::SimulationBase {
 
   public:
     struct SimulationOptions {

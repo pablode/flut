@@ -11,7 +11,7 @@
 using namespace ::gl;
 
 ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
-  : BaseRenderer()
+  : SimulationBase()
   , width_(width)
   , height_(height)
   , swapFrame_{false}

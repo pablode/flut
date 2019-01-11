@@ -1,11 +1,11 @@
-#include "BaseRenderer.hpp"
+#include "SimulationBase.hpp"
 
 #include <glbinding/Binding.h>
 #include <iostream>
 
 using namespace ::gl;
 
-ansimproj::core::BaseRenderer::BaseRenderer() {
+ansimproj::core::SimulationBase::SimulationBase() {
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
@@ -39,9 +39,9 @@ ansimproj::core::BaseRenderer::BaseRenderer() {
   glDepthMask(GL_TRUE);
 }
 
-ansimproj::core::BaseRenderer::~BaseRenderer() {}
+ansimproj::core::SimulationBase::~SimulationBase() {}
 
-void ansimproj::core::BaseRenderer::glDebugOutput(GLenum source, GLenum type, GLuint id,
+void ansimproj::core::SimulationBase::glDebugOutput(GLenum source, GLenum type, GLuint id,
   GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
   // clang-format off
   if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
@@ -81,7 +81,7 @@ void ansimproj::core::BaseRenderer::glDebugOutput(GLenum source, GLenum type, GL
   // clang-format on
 }
 
-GLuint ansimproj::core::BaseRenderer::createVertFragShader(
+GLuint ansimproj::core::SimulationBase::createVertFragShader(
   const std::vector<char> &vertSource, const std::vector<char> &fragSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -149,11 +149,11 @@ GLuint ansimproj::core::BaseRenderer::createVertFragShader(
   return handle;
 }
 
-void ansimproj::core::BaseRenderer::deleteShader(const GLuint &handle) const {
+void ansimproj::core::SimulationBase::deleteShader(const GLuint &handle) const {
   glDeleteProgram(handle);
 }
 
-GLuint ansimproj::core::BaseRenderer::createComputeShader(
+GLuint ansimproj::core::SimulationBase::createComputeShader(
   const std::vector<char> &shaderSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -200,7 +200,7 @@ GLuint ansimproj::core::BaseRenderer::createComputeShader(
   return handle;
 }
 
-GLuint ansimproj::core::BaseRenderer::createBuffer(
+GLuint ansimproj::core::SimulationBase::createBuffer(
   const std::vector<float> &data, bool dynamic) const {
   GLuint handle;
   glGenBuffers(1, &handle);
@@ -216,7 +216,7 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
   return handle;
 }
 
-GLuint ansimproj::core::BaseRenderer::createBuffer(
+GLuint ansimproj::core::SimulationBase::createBuffer(
   const std::vector<GLuint> &data, bool dynamic) const {
   GLuint handle;
   glGenBuffers(1, &handle);
@@ -230,7 +230,7 @@ GLuint ansimproj::core::BaseRenderer::createBuffer(
   return handle;
 }
 
-GLuint ansimproj::core::BaseRenderer::createFullFBO(
+GLuint ansimproj::core::SimulationBase::createFullFBO(
   const GLuint &depthTexture, std::vector<GLuint> colorTextures) const {
   GLuint handle;
   glGenFramebuffers(1, &handle);
@@ -279,7 +279,7 @@ GLuint ansimproj::core::BaseRenderer::createFullFBO(
   }
 }
 
-GLuint ansimproj::core::BaseRenderer::createFlatFBO(const GLuint &colorTexture) const {
+GLuint ansimproj::core::SimulationBase::createFlatFBO(const GLuint &colorTexture) const {
   GLuint handle;
   glGenFramebuffers(1, &handle);
   if (!handle) {
@@ -324,17 +324,17 @@ GLuint ansimproj::core::BaseRenderer::createFlatFBO(const GLuint &colorTexture) 
   }
 }
 
-GLuint ansimproj::core::BaseRenderer::createR32FColorTexture(
+GLuint ansimproj::core::SimulationBase::createR32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   return createColorTexture(GL_R32F, GL_RED, GL_FLOAT, width, height);
 }
 
-GLuint ansimproj::core::BaseRenderer::createRGB32FColorTexture(
+GLuint ansimproj::core::SimulationBase::createRGB32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   return createColorTexture(GL_RGB32F, GL_RGB, GL_FLOAT, width, height);
 }
 
-GLuint ansimproj::core::BaseRenderer::createColorTexture(GLenum internalFormat, GLenum format,
+GLuint ansimproj::core::SimulationBase::createColorTexture(GLenum internalFormat, GLenum format,
   GLenum type, const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glGenTextures(1, &handle);
@@ -348,7 +348,7 @@ GLuint ansimproj::core::BaseRenderer::createColorTexture(GLenum internalFormat, 
   return handle;
 }
 
-GLuint ansimproj::core::BaseRenderer::createDepthTexture(
+GLuint ansimproj::core::SimulationBase::createDepthTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glGenTextures(1, &handle);
@@ -363,14 +363,14 @@ GLuint ansimproj::core::BaseRenderer::createDepthTexture(
   return handle;
 }
 
-void ansimproj::core::BaseRenderer::deleteTexture(const GLuint &handle) const {
+void ansimproj::core::SimulationBase::deleteTexture(const GLuint &handle) const {
   glDeleteTextures(1, &handle);
 }
 
-void ansimproj::core::BaseRenderer::deleteFBO(const GLuint &handle) const {
+void ansimproj::core::SimulationBase::deleteFBO(const GLuint &handle) const {
   glDeleteFramebuffers(1, &handle);
 }
 
-void ansimproj::core::BaseRenderer::deleteBuffer(const GLuint &handle) const {
+void ansimproj::core::SimulationBase::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }

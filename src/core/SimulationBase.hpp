@@ -10,12 +10,12 @@
 namespace ansimproj {
   namespace core {
 
-    class BaseRenderer {
+    class SimulationBase {
 
     public:
-      BaseRenderer();
+      SimulationBase();
 
-      virtual ~BaseRenderer();
+      virtual ~SimulationBase();
 
     private:
       static void glDebugOutput(::gl::GLenum source, ::gl::GLenum type, ::gl::GLuint id,
