@@ -4,7 +4,7 @@
 
 #include <glbinding/Binding.h>
 #include <stdexcept>
-#include <iostream>
+#include <cstdio>
 
 ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
   : shouldClose_{false} {
@@ -30,7 +30,7 @@ ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uin
   }
   const auto vsyncSucc = SDL_GL_SetSwapInterval(1);
   if (vsyncSucc != 0) {
-    std::cout << "Warning: Unable to activate VSync." << std::endl;
+    std::printf("Warning: Unable to activate VSync.\n");
   }
 
   glbinding::Binding::initialize();

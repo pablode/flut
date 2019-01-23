@@ -17,9 +17,9 @@ ansimproj::core::SimulationBase::SimulationBase() {
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(&glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    std::cout << "Debug output enabled." << std::endl;
+    std::printf("Debug output enabled.\n");
   } else {
-    std::cout << "Debug output not available (context flag not set)." << std::endl;
+    std::printf("Debug output not available (context flag not set).\n");
   }
   glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, {"glGetError"});
   glbinding::setAfterCallback([](const glbinding::FunctionCall &) {
@@ -27,7 +27,7 @@ ansimproj::core::SimulationBase::SimulationBase() {
     if (error != GL_NO_ERROR) {
       do {
         const auto errorInt = static_cast<std::uint32_t>(error);
-        std::cout << "GL_ERROR: 0x" << std::hex << errorInt << std::endl;
+        std::printf("GL/ERROR: 0x%04x\n",  errorInt);
       } while ((error = glGetError()) != GL_NO_ERROR);
       throw std::runtime_error{"OpenGL Error(s) occured."};
     }
@@ -43,42 +43,52 @@ ansimproj::core::SimulationBase::~SimulationBase() {}
 
 void ansimproj::core::SimulationBase::glDebugOutput(GLenum source, GLenum type, GLuint id,
   GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
-  // clang-format off
-  if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
-  std::cout << "---------------" << std::endl;
-  std::cout << "Debug message (" << id << "): " << message << std::endl;
-  switch (source) {
-  case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
-  case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: GlfwWindow System"; break;
-  case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
-  case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
-  case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
-  case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
-  default: break;
-  } std::cout << std::endl;
 
-  switch (type) {
-  case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
-  case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
-  case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
-  case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
-  case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
-  case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
-  case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
-  case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
-  case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
-  default: break;
-  } std::cout << std::endl;
+  const char* sourceStr = "Unknown";
+  if (source == GL_DEBUG_SOURCE_API) {
+    sourceStr = "API";
+  } else if (source == GL_DEBUG_SOURCE_WINDOW_SYSTEM) {
+    sourceStr = "Window System";
+  } else if (source == GL_DEBUG_SOURCE_SHADER_COMPILER) {
+    sourceStr = "Shader Compiler";
+  } else if (source == GL_DEBUG_SOURCE_THIRD_PARTY) {
+    sourceStr = "Third Party";
+  } else if (source == GL_DEBUG_SOURCE_APPLICATION) {
+    sourceStr = "Application";
+  } else if (source == GL_DEBUG_SOURCE_OTHER) {
+    sourceStr = "Other";
+  }
 
-  switch (severity) {
-  case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
-  case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
-  case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
-  case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
-  default: break;
-  } std::cout << std::endl;
-  std::cout << std::endl;
-  // clang-format on
+  const char* typeStr = "Unknown";
+  if (type == GL_DEBUG_TYPE_ERROR) {
+    typeStr = "Error";
+  } else if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR) {
+    typeStr = "Deprecated Behaviour";
+  } else if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) {
+    typeStr = "Undefined Behaviour";
+  } else if (type == GL_DEBUG_TYPE_PORTABILITY) {
+    typeStr = "Portability";
+  } else if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+    typeStr = "Performance";
+  } else if (type == GL_DEBUG_TYPE_MARKER) {
+    typeStr = "Marker";
+  } else if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
+    typeStr = "Push Group";
+  } else if (type == GL_DEBUG_TYPE_POP_GROUP) {
+    typeStr = "Pop Group";
+  } else if (type == GL_DEBUG_TYPE_OTHER) {
+    typeStr = "Other";
+  }
+
+  if (severity == GL_DEBUG_SEVERITY_HIGH) {
+    std::printf("GL/ERROR: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+  } else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+    std::printf("GL/WARNING: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+  } else if (severity == GL_DEBUG_SEVERITY_LOW) {
+    std::printf("GL/INFO: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+  } else {
+    std::printf("GL/DEBUG: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+  }
 }
 
 GLuint ansimproj::core::SimulationBase::createVertFragShader(
