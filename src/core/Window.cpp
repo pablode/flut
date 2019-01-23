@@ -19,7 +19,7 @@ ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uin
   }
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 #ifdef NDEBUG
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_NO_ERROR, 1);
