@@ -1,5 +1,7 @@
 #version 430 core
 
+#extension ARB_bindless_texture : require
+
 /// Pipeline stage 4 (3).
 /// Read GBuffer values and do Blinn-Phong shading.
 
@@ -8,8 +10,8 @@ const float ambientCoeff = 0.3;
 const float shininess = 25.0;
 
 layout (location = 0) uniform mat4 modelViewProjection;
-layout (location = 1) uniform sampler2D depthTex;
-layout (location = 2) uniform sampler2D colorTex;
+layout (location = 1, bindless_sampler) uniform sampler2D depthTex;
+layout (location = 2, bindless_sampler) uniform sampler2D colorTex;
 layout (location = 3) uniform uint width;
 layout (location = 4) uniform uint height;
 layout (location = 5) uniform mat4 invProjection;

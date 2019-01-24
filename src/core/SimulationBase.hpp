@@ -49,6 +49,10 @@ namespace ansimproj {
       ::gl::GLuint createDepthTexture(
         const std::uint32_t &width, const std::uint32_t &height) const;
 
+      ::gl::GLuint64 makeTextureResident(::gl::GLuint &handle) const;
+
+      void makeTextureNonResident(::gl::GLuint64 &bindlessHandle) const;
+
       void deleteShader(const ::gl::GLuint &handle) const;
 
       void deleteBuffer(const ::gl::GLuint &handle) const;

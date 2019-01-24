@@ -115,9 +115,13 @@ namespace ansimproj {
     ::gl::GLuint fbo2_;
     ::gl::GLuint fbo3_;
     ::gl::GLuint texDepth_;
+    ::gl::GLuint64 texDepthHandle_;
     ::gl::GLuint texColor_;
+    ::gl::GLuint64 texColorHandle_;
     ::gl::GLuint texTemp1_;
+    ::gl::GLuint64 texTemp1Handle_;
     ::gl::GLuint texTemp2_;
+    ::gl::GLuint64 texTemp2Handle_;
     bool swapFrame_;
   };
 }

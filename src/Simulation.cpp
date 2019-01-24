@@ -52,9 +52,13 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
 
   // FBOs and Textures
   texDepth_ = createDepthTexture(width, height);
+  texDepthHandle_ = makeTextureResident(texDepth_);
   texColor_ = createRGB32FColorTexture(width, height);
+  texColorHandle_ = makeTextureResident(texColor_);
   texTemp1_ = createR32FColorTexture(width, height);
+  texTemp1Handle_ = makeTextureResident(texTemp1_);
   texTemp2_ = createR32FColorTexture(width, height);
+  texTemp2Handle_ = makeTextureResident(texTemp2_);
   fbo1_ = createFullFBO(texDepth_, {texColor_});
   fbo2_ = createFlatFBO(texTemp1_);
   fbo3_ = createFlatFBO(texTemp2_);
@@ -110,9 +114,13 @@ ansimproj::Simulation::~Simulation() {
   deleteFBO(fbo1_);
   deleteFBO(fbo2_);
   deleteFBO(fbo3_);
+  makeTextureNonResident(texDepthHandle_);
   deleteTexture(texDepth_);
+  makeTextureNonResident(texColorHandle_);
   deleteTexture(texColor_);
+  makeTextureNonResident(texTemp1Handle_);
   deleteTexture(texTemp1_);
+  makeTextureNonResident(texTemp2Handle_);
   deleteTexture(texTemp2_);
   deleteShader(programGridInsert_);
   deleteShader(programGridSort_);
@@ -344,18 +352,18 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glBindVertexArray(vao3_);
     glUseProgram(programRenderCurvature_);
     glProgramUniformMatrix4fv(programRenderCurvature_, 0, 1, GL_FALSE, mvp.data());
-    glProgramUniform1i(programRenderCurvature_, 1, 0);
     glProgramUniformMatrix4fv(programRenderCurvature_, 2, 1, GL_FALSE, projection.data());
     glProgramUniform2i(programRenderCurvature_, 3, width_, height_);
-    std::uint32_t inputDepthTex = texDepth_;
+    GLuint64 inputDepthTexHandle = texDepthHandle_;
     bool swap = false;
     for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i) {
       glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo3_ : fbo2_);
       glClear(GL_COLOR_BUFFER_BIT);
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, inputDepthTex);
+
+      glProgramUniformHandleui64ARB(programRenderCurvature_, 1, inputDepthTexHandle);
+
       glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
-      inputDepthTex = swap ? texTemp2_ : texTemp1_;
+      inputDepthTexHandle = swap ? texTemp2Handle_ : texTemp1Handle_;
       swap = !swap;
     }
 
@@ -363,18 +371,16 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, inputDepthTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texColor_);
+
     glUseProgram(programRenderShading_);
     glProgramUniformMatrix4fv(programRenderShading_, 0, 1, GL_FALSE, mvp.data());
-    glProgramUniform1i(programRenderShading_, 1, 0);
-    glProgramUniform1i(programRenderShading_, 2, 1);
+    glProgramUniformHandleui64ARB(programRenderShading_, 1, inputDepthTexHandle);
+    glProgramUniformHandleui64ARB(programRenderShading_, 2, texColorHandle_);
     glProgramUniform1ui(programRenderShading_, 3, width_);
     glProgramUniform1ui(programRenderShading_, 4, height_);
     glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
     glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, view.data());
+
     glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
     glEnable(GL_DEPTH_TEST);
   }
@@ -447,14 +453,22 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   deleteFBO(fbo1_);
   deleteFBO(fbo2_);
   deleteFBO(fbo3_);
+  makeTextureNonResident(texDepthHandle_);
   deleteTexture(texDepth_);
+  makeTextureNonResident(texColorHandle_);
   deleteTexture(texColor_);
+  makeTextureNonResident(texTemp1Handle_);
   deleteTexture(texTemp1_);
+  makeTextureNonResident(texTemp2Handle_);
   deleteTexture(texTemp2_);
   texDepth_ = createDepthTexture(width, height);
+  texDepthHandle_ = makeTextureResident(texDepth_);
   texColor_ = createRGB32FColorTexture(width, height);
+  texColorHandle_ = makeTextureResident(texColor_);
   texTemp1_ = createR32FColorTexture(width, height);
+  texTemp1Handle_ = makeTextureResident(texTemp1_);
   texTemp2_ = createR32FColorTexture(width, height);
+  texTemp2Handle_ = makeTextureResident(texTemp2_);
   fbo1_ = createFullFBO(texDepth_, {texColor_});
   fbo2_ = createFlatFBO(texTemp1_);
   fbo3_ = createFlatFBO(texTemp2_);

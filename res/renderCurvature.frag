@@ -1,5 +1,7 @@
 #version 430 core
 
+#extension ARB_bindless_texture : require
+
 /// Pipeline stage 4 (2).
 /// Depth buffer smoothing using Curvature Flow. This pass is applied
 /// several times on alternating FBOs. The smoothed depth values are
@@ -14,7 +16,7 @@ const float NEAR = 0.01;
 const float FAR = 25.0;
 
 layout (location = 0) uniform mat4 modelViewProjection;
-layout (location = 1) uniform sampler2D depthTex;
+layout (location = 1, bindless_sampler) uniform sampler2D depthTex;
 layout (location = 2) uniform mat4 projection;
 layout (location = 3) uniform ivec2 res;
 

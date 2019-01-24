@@ -1,6 +1,7 @@
 #include "SimulationBase.hpp"
 
 #include <glbinding/Binding.h>
+#include <glbinding/ContextInfo.h>
 #include <iostream>
 
 using namespace ::gl;
@@ -33,6 +34,11 @@ ansimproj::core::SimulationBase::SimulationBase() {
     }
   });
 #endif
+
+  const auto extensions = glbinding::ContextInfo::extensions();
+  if (!extensions.count(GLextension::GL_ARB_bindless_texture)) {
+    throw std::runtime_error{"ARB_bindless_texture extension is required."};
+  }
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -361,6 +367,16 @@ GLuint ansimproj::core::SimulationBase::createDepthTexture(
   glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return handle;
+}
+
+GLuint64 ansimproj::core::SimulationBase::makeTextureResident(GLuint &handle) const {
+  GLuint64 bindlessHandle = glGetTextureHandleARB(handle);
+  glMakeTextureHandleResidentARB(bindlessHandle);
+  return bindlessHandle;
+}
+
+void ansimproj::core::SimulationBase::makeTextureNonResident(GLuint64 &bindlessHandle) const {
+  glMakeTextureHandleNonResidentARB(bindlessHandle);
 }
 
 void ansimproj::core::SimulationBase::deleteTexture(const GLuint &handle) const {
