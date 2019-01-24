@@ -213,46 +213,41 @@ GLuint ansimproj::core::SimulationBase::createComputeShader(
 GLuint ansimproj::core::SimulationBase::createBuffer(
   const std::vector<float> &data, bool dynamic) const {
   GLuint handle;
-  glGenBuffers(1, &handle);
+  glCreateBuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
-  // "When you're just creating and/or filling the buffer object with data,
-  // the target you use doesn't technically matter."
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(float), data.data(),
-    dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  glNamedBufferData(
+    handle, size * sizeof(float), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
   return handle;
 }
 
 GLuint ansimproj::core::SimulationBase::createBuffer(
   const std::vector<GLuint> &data, bool dynamic) const {
   GLuint handle;
-  glGenBuffers(1, &handle);
+  glCreateBuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
   const auto size = data.size();
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(GLuint), data.data(),
-    dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  glNamedBufferData(
+    handle, size * sizeof(GLuint), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
   return handle;
 }
 
 GLuint ansimproj::core::SimulationBase::createFullFBO(
   const GLuint &depthTexture, std::vector<GLuint> colorTextures) const {
   GLuint handle;
-  glGenFramebuffers(1, &handle);
+  glCreateFramebuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, handle);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
-  for (std::uint32_t i = 0; i < colorTextures.size(); ++i)
-    glFramebufferTexture2D(
-      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorTextures[i], 0);
-  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  glNamedFramebufferTexture(handle, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+  for (std::uint32_t i = 0; i < colorTextures.size(); ++i) {
+    glNamedFramebufferTexture(handle, GL_COLOR_ATTACHMENT0 + i, colorTextures[i], 0);
+  }
+  const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status == GL_FRAMEBUFFER_COMPLETE) {
     return handle;
   } else {
@@ -291,13 +286,12 @@ GLuint ansimproj::core::SimulationBase::createFullFBO(
 
 GLuint ansimproj::core::SimulationBase::createFlatFBO(const GLuint &colorTexture) const {
   GLuint handle;
-  glGenFramebuffers(1, &handle);
+  glCreateFramebuffers(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, handle);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
-  GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+  glNamedFramebufferTexture(handle, GL_COLOR_ATTACHMENT0, colorTexture, 0);
+  const GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status == GL_FRAMEBUFFER_COMPLETE) {
     return handle;
   } else {
@@ -336,40 +330,36 @@ GLuint ansimproj::core::SimulationBase::createFlatFBO(const GLuint &colorTexture
 
 GLuint ansimproj::core::SimulationBase::createR32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
-  return createColorTexture(GL_R32F, GL_RED, GL_FLOAT, width, height);
+  return createColorTexture(GL_R32F, width, height);
 }
 
 GLuint ansimproj::core::SimulationBase::createRGB32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
-  return createColorTexture(GL_RGB32F, GL_RGB, GL_FLOAT, width, height);
+  return createColorTexture(GL_RGB32F, width, height);
 }
 
-GLuint ansimproj::core::SimulationBase::createColorTexture(GLenum internalFormat, GLenum format,
-  GLenum type, const std::uint32_t &width, const std::uint32_t &height) const {
+GLuint ansimproj::core::SimulationBase::createColorTexture(GLenum internalFormat, const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
-  glGenTextures(1, &handle);
+  glCreateTextures(GL_TEXTURE_2D, 1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create texture.");
   }
-  glBindTexture(GL_TEXTURE_2D, handle);
-  glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTextureStorage2D(handle, 1, internalFormat, width, height);
+  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return handle;
 }
 
 GLuint ansimproj::core::SimulationBase::createDepthTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
-  glGenTextures(1, &handle);
+  glCreateTextures(GL_TEXTURE_2D, 1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create texture.");
   }
-  glBindTexture(GL_TEXTURE_2D, handle);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT,
-    GL_UNSIGNED_BYTE, nullptr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTextureStorage2D(handle, 1, GL_DEPTH_COMPONENT24, width, height);
+  glTextureParameteri(handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(handle, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return handle;
 }
 

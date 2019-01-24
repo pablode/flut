@@ -99,8 +99,8 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
 
   // Other
   vao3_ = createBBoxVAO(bufBBoxVertices_, bufBBoxIndices_);
-  glGenQueries(6, &timerQueries_[0][0]);
-  glGenQueries(6, &timerQueries_[1][0]);
+  glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[0][0]);
+  glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
@@ -400,34 +400,39 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
 
 GLuint ansimproj::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const {
   GLuint handle;
-  glGenVertexArrays(1, &handle);
+  glCreateVertexArrays(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create VAO.");
   }
-  glBindVertexArray(handle);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vboPos);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+  glEnableVertexArrayAttrib(handle, 0);
+  glVertexArrayVertexBuffer(handle, 0, vboPos, 0, 3 * sizeof(float));
+  glVertexArrayAttribBinding(handle, 0, 0);
+  glVertexArrayAttribFormat(handle, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vboCol);
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+  glEnableVertexArrayAttrib(handle, 1);
+  glVertexArrayVertexBuffer(handle, 1, vboCol, 0, 3 * sizeof(float));
+  glVertexArrayAttribBinding(handle, 1, 1);
+  glVertexArrayAttribFormat(handle, 1, 3, GL_FLOAT, GL_FALSE, 0);
   return handle;
 }
 
 GLuint ansimproj::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &indices) const {
   GLuint handle;
-  glGenVertexArrays(1, &handle);
+  glCreateVertexArrays(1, &handle);
   if (!handle) {
     throw std::runtime_error("Unable to create VAO.");
   }
-  glBindVertexArray(handle);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertices);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, nullptr);
+  glEnableVertexArrayAttrib(handle, 0);
+  glVertexArrayVertexBuffer(handle, 0, vertices, 0, 3 * sizeof(float));
+  glVertexArrayAttribBinding(handle, 0, 0);
+  glVertexArrayAttribFormat(handle, 0, 3, GL_FLOAT, GL_FALSE, 0);
+
+  glEnableVertexArrayAttrib(handle, 1);
+  glVertexArrayElementBuffer(handle, indices);
+  glVertexArrayAttribBinding(handle, 1, 0);
+  glVertexArrayAttribFormat(handle, 1, 1, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
   return handle;
 }
 

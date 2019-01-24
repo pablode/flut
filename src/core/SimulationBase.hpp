@@ -58,8 +58,7 @@ namespace ansimproj {
       void deleteTexture(const ::gl::GLuint &handle) const;
 
     private:
-      ::gl::GLuint createColorTexture(::gl::GLenum internalFormat, ::gl::GLenum format,
-        ::gl::GLenum type, const std::uint32_t &width, const std::uint32_t &height) const;
+      ::gl::GLuint createColorTexture(::gl::GLenum internalFormat, const std::uint32_t &width, const std::uint32_t &height) const;
 
     private:
       ::gl::GLint versionMajor_;
