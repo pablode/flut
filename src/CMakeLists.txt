@@ -22,7 +22,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   target_compile_options(ansimproj PRIVATE -Wno-unused-parameter)
   target_compile_options(ansimproj PRIVATE -Wno-reorder)
   target_compile_options(ansimproj PRIVATE -Wno-error=int-in-bool-context)
-  target_compile_options(ansimproj PRIVATE -msse2)
 elseif(MSVC)
   target_compile_options(ansimproj PRIVATE /MP)
   target_compile_options(ansimproj PRIVATE /Wall)
@@ -34,24 +33,16 @@ target_compile_definitions(
 )
 
 target_link_libraries(
-  ansimproj PUBLIC
+  ansimproj PRIVATE
   imgui
-  ${SDL2_LIBRARY}
-  ${SDL2MAIN_LIBRARY}
-  ${OPENGL_LIBRARIES}
-  ${GLBINDING_LIBRARIES}
+  SDL2::SDL2
+  SDL2::SDL2main
+  Eigen::Eigen
+  glbinding::glbinding
+  OpenGL::GL
 )
 
-target_include_directories(ansimproj
-  PUBLIC
-  ${PROJECT_SOURCE_DIR}/src)
-
 target_include_directories(
-  ansimproj PUBLIC
-  imgui
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${SDL2_INCLUDE_DIR}
-  ${GLBINDING_INCLUDE_DIR}
-  ${OPENGL_INCLUDE_DIR}
-  ${EIGEN_INCLUDE_DIR}
+  ansimproj PRIVATE
+  ${PROJECT_SOURCE_DIR}/src
 )
