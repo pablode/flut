@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <cstdio>
 
-ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
+flut::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
   : shouldClose_{false} {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
     throw std::runtime_error(SDL_GetError());
@@ -40,14 +40,14 @@ ansimproj::core::Window::Window(std::string title, std::uint32_t width, std::uin
   ImGui_ImplSdlGlBinding_NewFrame(window_);
 }
 
-ansimproj::core::Window::~Window() {
+flut::core::Window::~Window() {
   ImGui_ImplSdlGlBinding_Shutdown();
   SDL_GL_DeleteContext(context_);
   SDL_DestroyWindow(window_);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-void ansimproj::core::Window::pollEvents() {
+void flut::core::Window::pollEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     if (!ImGui_ImplSdlGlBinding_ProcessEvent(&event)) {
@@ -77,54 +77,54 @@ void ansimproj::core::Window::pollEvents() {
   }
 }
 
-bool ansimproj::core::Window::shouldClose() {
+bool flut::core::Window::shouldClose() {
   return shouldClose_;
 }
 
-void ansimproj::core::Window::swap() {
+void flut::core::Window::swap() {
   ImGui::Render();
   SDL_GL_SwapWindow(window_);
   ImGui_ImplSdlGlBinding_NewFrame(window_);
 }
 
-std::uint32_t ansimproj::core::Window::width() const {
+std::uint32_t flut::core::Window::width() const {
   int width;
   SDL_GL_GetDrawableSize(window_, &width, nullptr);
   return static_cast<std::uint32_t>(width);
 }
 
-std::uint32_t ansimproj::core::Window::height() const {
+std::uint32_t flut::core::Window::height() const {
   int height;
   SDL_GL_GetDrawableSize(window_, nullptr, &height);
   return static_cast<std::uint32_t>(height);
 }
 
-std::int32_t ansimproj::core::Window::mouseX() const {
+std::int32_t flut::core::Window::mouseX() const {
   int x;
   SDL_GetMouseState(&x, nullptr);
   return x;
 }
 
-std::int32_t ansimproj::core::Window::mouseY() const {
+std::int32_t flut::core::Window::mouseY() const {
   int y;
   SDL_GetMouseState(nullptr, &y);
   return y;
 }
 
-bool ansimproj::core::Window::mouseDown() const {
+bool flut::core::Window::mouseDown() const {
   return static_cast<bool>(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT));
 }
 
-bool ansimproj::core::Window::keyUp() const {
+bool flut::core::Window::keyUp() const {
   const auto& states = SDL_GetKeyboardState(nullptr);
   return static_cast<bool>(states[SDL_SCANCODE_W]);
 }
 
-bool ansimproj::core::Window::keyDown() const {
+bool flut::core::Window::keyDown() const {
   const auto& states = SDL_GetKeyboardState(nullptr);
   return static_cast<bool>(states[SDL_SCANCODE_S]);
 }
 
-void ansimproj::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
+void flut::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
   resizeCallback_ = callback;
 }

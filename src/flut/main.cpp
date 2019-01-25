@@ -11,9 +11,9 @@
 int main(int argc, char *argv[]) {
   constexpr std::uint32_t WIDTH = 800;
   constexpr std::uint32_t HEIGHT = 600;
-  ansimproj::core::Window window{"ansimproj", WIDTH, HEIGHT};
-  ansimproj::core::Camera camera{window};
-  ansimproj::Simulation simulation{WIDTH, HEIGHT};
+  flut::core::Window window{"flut", WIDTH, HEIGHT};
+  flut::core::Camera camera{window};
+  flut::Simulation simulation{WIDTH, HEIGHT};
 
   window.resize(
     [&](std::uint32_t width, std::uint32_t height) { simulation.resize(width, height); });

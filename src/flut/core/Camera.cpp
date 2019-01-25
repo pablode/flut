@@ -5,7 +5,7 @@
 #include <iostream>
 #include <math.h>
 
-ansimproj::core::Camera::Camera(Window &window)
+flut::core::Camera::Camera(Window &window)
   : window_(window) {
   width_ = window.width();
   height_ = window.height();
@@ -24,9 +24,9 @@ ansimproj::core::Camera::Camera(Window &window)
   recalcProjection();
 }
 
-ansimproj::core::Camera::~Camera() {}
+flut::core::Camera::~Camera() {}
 
-void ansimproj::core::Camera::update(float dt) {
+void flut::core::Camera::update(float dt) {
   const auto &mouseX = window_.mouseX();
   const auto &mouseY = window_.mouseY();
   bool recalcPos = false;
@@ -76,7 +76,7 @@ void ansimproj::core::Camera::update(float dt) {
   }
 }
 
-void ansimproj::core::Camera::recalcView() {
+void flut::core::Camera::recalcView() {
   Eigen::Vector3f f = (center_ - position_).normalized();
   Eigen::Vector3f s = f.cross(up_).normalized();
   Eigen::Vector3f u = s.cross(f).normalized();
@@ -94,7 +94,7 @@ void ansimproj::core::Camera::recalcView() {
   view_(2, 3) = f.dot(position_);
 }
 
-void ansimproj::core::Camera::recalcProjection() {
+void flut::core::Camera::recalcProjection() {
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);
   const float range = FAR_PLANE - NEAR_PLANE;
@@ -107,14 +107,14 @@ void ansimproj::core::Camera::recalcProjection() {
   invProjection_ = projection_.inverse();
 }
 
-Eigen::Matrix4f ansimproj::core::Camera::view() const {
+Eigen::Matrix4f flut::core::Camera::view() const {
   return view_;
 }
 
-Eigen::Matrix4f ansimproj::core::Camera::projection() const {
+Eigen::Matrix4f flut::core::Camera::projection() const {
   return projection_;
 }
 
-Eigen::Matrix4f ansimproj::core::Camera::invProjection() const {
+Eigen::Matrix4f flut::core::Camera::invProjection() const {
   return invProjection_;
 }

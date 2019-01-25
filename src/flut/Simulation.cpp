@@ -8,7 +8,7 @@
 
 using namespace ::gl;
 
-ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
+flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
   : SimulationBase()
   , width_(width)
   , height_(height)
@@ -106,7 +106,7 @@ ansimproj::Simulation::Simulation(const std::uint32_t &width, const std::uint32_
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 }
 
-ansimproj::Simulation::~Simulation() {
+flut::Simulation::~Simulation() {
   glDeleteQueries(6, &timerQueries_[0][0]);
   glDeleteQueries(6, &timerQueries_[1][0]);
   deleteFBO(fbo1_);
@@ -145,7 +145,7 @@ ansimproj::Simulation::~Simulation() {
   deleteVAO(vao3_);
 }
 
-void ansimproj::Simulation::preset1() {
+void flut::Simulation::preset1() {
   if (bufGridUnsorted_)
     deleteBuffer(bufGridUnsorted_);
   if (bufGridSorted_)
@@ -212,7 +212,7 @@ void ansimproj::Simulation::preset1() {
   vao2_ = createParticleVAO(bufPosition2_, bufColor_);
 }
 
-void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float dt) {
+void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
   constexpr auto localSize = 128;
   static_assert(PARTICLE_COUNT % localSize == 0, "Invalid particle count.");
   const std::uint32_t numWorkGroups = PARTICLE_COUNT / localSize;
@@ -402,7 +402,7 @@ void ansimproj::Simulation::render(const ansimproj::core::Camera &camera, float 
   }
 }
 
-GLuint ansimproj::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const {
+GLuint flut::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const {
   GLuint handle;
   glCreateVertexArrays(1, &handle);
   if (!handle) {
@@ -421,7 +421,7 @@ GLuint ansimproj::Simulation::createParticleVAO(const GLuint &vboPos, const GLui
   return handle;
 }
 
-GLuint ansimproj::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &indices) const {
+GLuint flut::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &indices) const {
   GLuint handle;
   glCreateVertexArrays(1, &handle);
   if (!handle) {
@@ -440,11 +440,11 @@ GLuint ansimproj::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint
   return handle;
 }
 
-void ansimproj::Simulation::deleteVAO(GLuint handle) {
+void flut::Simulation::deleteVAO(GLuint handle) {
   glDeleteVertexArrays(1, &handle);
 }
 
-void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
+void flut::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   glViewport(0, 0, width, height);
   height_ = height;
   width_ = width;
@@ -472,10 +472,10 @@ void ansimproj::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   fbo3_ = createFlatFBO(texTemp2_);
 }
 
-ansimproj::Simulation::SimulationOptions &ansimproj::Simulation::options() {
+flut::Simulation::SimulationOptions &flut::Simulation::options() {
   return options_;
 }
 
-const ansimproj::Simulation::SimulationTime &ansimproj::Simulation::time() const {
+const flut::Simulation::SimulationTime &flut::Simulation::time() const {
   return time_;
 }

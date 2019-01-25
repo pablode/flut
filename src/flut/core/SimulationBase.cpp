@@ -6,7 +6,7 @@
 
 using namespace ::gl;
 
-ansimproj::core::SimulationBase::SimulationBase() {
+flut::core::SimulationBase::SimulationBase() {
   glGetIntegerv(GL_MAJOR_VERSION, &versionMajor_);
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
@@ -45,9 +45,9 @@ ansimproj::core::SimulationBase::SimulationBase() {
   glDepthMask(GL_TRUE);
 }
 
-ansimproj::core::SimulationBase::~SimulationBase() {}
+flut::core::SimulationBase::~SimulationBase() {}
 
-void ansimproj::core::SimulationBase::glDebugOutput(GLenum source, GLenum type, GLuint id,
+void flut::core::SimulationBase::glDebugOutput(GLenum source, GLenum type, GLuint id,
   GLenum severity, GLsizei length, const GLchar *message, const void *userParam) {
 
   const char* sourceStr = "Unknown";
@@ -97,7 +97,7 @@ void ansimproj::core::SimulationBase::glDebugOutput(GLenum source, GLenum type, 
   }
 }
 
-GLuint ansimproj::core::SimulationBase::createVertFragShader(
+GLuint flut::core::SimulationBase::createVertFragShader(
   const std::vector<char> &vertSource, const std::vector<char> &fragSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -165,11 +165,11 @@ GLuint ansimproj::core::SimulationBase::createVertFragShader(
   return handle;
 }
 
-void ansimproj::core::SimulationBase::deleteShader(const GLuint &handle) const {
+void flut::core::SimulationBase::deleteShader(const GLuint &handle) const {
   glDeleteProgram(handle);
 }
 
-GLuint ansimproj::core::SimulationBase::createComputeShader(
+GLuint flut::core::SimulationBase::createComputeShader(
   const std::vector<char> &shaderSource) const {
   GLuint handle = glCreateProgram();
   if (!handle) {
@@ -216,7 +216,7 @@ GLuint ansimproj::core::SimulationBase::createComputeShader(
   return handle;
 }
 
-GLuint ansimproj::core::SimulationBase::createBuffer(
+GLuint flut::core::SimulationBase::createBuffer(
   const std::vector<float> &data, bool dynamic) const {
   GLuint handle;
   glCreateBuffers(1, &handle);
@@ -229,7 +229,7 @@ GLuint ansimproj::core::SimulationBase::createBuffer(
   return handle;
 }
 
-GLuint ansimproj::core::SimulationBase::createBuffer(
+GLuint flut::core::SimulationBase::createBuffer(
   const std::vector<GLuint> &data, bool dynamic) const {
   GLuint handle;
   glCreateBuffers(1, &handle);
@@ -242,7 +242,7 @@ GLuint ansimproj::core::SimulationBase::createBuffer(
   return handle;
 }
 
-GLuint ansimproj::core::SimulationBase::createFullFBO(
+GLuint flut::core::SimulationBase::createFullFBO(
   const GLuint &depthTexture, std::vector<GLuint> colorTextures) const {
   GLuint handle;
   glCreateFramebuffers(1, &handle);
@@ -290,7 +290,7 @@ GLuint ansimproj::core::SimulationBase::createFullFBO(
   }
 }
 
-GLuint ansimproj::core::SimulationBase::createFlatFBO(const GLuint &colorTexture) const {
+GLuint flut::core::SimulationBase::createFlatFBO(const GLuint &colorTexture) const {
   GLuint handle;
   glCreateFramebuffers(1, &handle);
   if (!handle) {
@@ -334,17 +334,17 @@ GLuint ansimproj::core::SimulationBase::createFlatFBO(const GLuint &colorTexture
   }
 }
 
-GLuint ansimproj::core::SimulationBase::createR32FColorTexture(
+GLuint flut::core::SimulationBase::createR32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   return createColorTexture(GL_R32F, width, height);
 }
 
-GLuint ansimproj::core::SimulationBase::createRGB32FColorTexture(
+GLuint flut::core::SimulationBase::createRGB32FColorTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   return createColorTexture(GL_RGB32F, width, height);
 }
 
-GLuint ansimproj::core::SimulationBase::createColorTexture(GLenum internalFormat, const std::uint32_t &width, const std::uint32_t &height) const {
+GLuint flut::core::SimulationBase::createColorTexture(GLenum internalFormat, const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glCreateTextures(GL_TEXTURE_2D, 1, &handle);
   if (!handle) {
@@ -356,7 +356,7 @@ GLuint ansimproj::core::SimulationBase::createColorTexture(GLenum internalFormat
   return handle;
 }
 
-GLuint ansimproj::core::SimulationBase::createDepthTexture(
+GLuint flut::core::SimulationBase::createDepthTexture(
   const std::uint32_t &width, const std::uint32_t &height) const {
   GLuint handle;
   glCreateTextures(GL_TEXTURE_2D, 1, &handle);
@@ -369,24 +369,24 @@ GLuint ansimproj::core::SimulationBase::createDepthTexture(
   return handle;
 }
 
-GLuint64 ansimproj::core::SimulationBase::makeTextureResident(GLuint &handle) const {
+GLuint64 flut::core::SimulationBase::makeTextureResident(GLuint &handle) const {
   GLuint64 bindlessHandle = glGetTextureHandleARB(handle);
   glMakeTextureHandleResidentARB(bindlessHandle);
   return bindlessHandle;
 }
 
-void ansimproj::core::SimulationBase::makeTextureNonResident(GLuint64 &bindlessHandle) const {
+void flut::core::SimulationBase::makeTextureNonResident(GLuint64 &bindlessHandle) const {
   glMakeTextureHandleNonResidentARB(bindlessHandle);
 }
 
-void ansimproj::core::SimulationBase::deleteTexture(const GLuint &handle) const {
+void flut::core::SimulationBase::deleteTexture(const GLuint &handle) const {
   glDeleteTextures(1, &handle);
 }
 
-void ansimproj::core::SimulationBase::deleteFBO(const GLuint &handle) const {
+void flut::core::SimulationBase::deleteFBO(const GLuint &handle) const {
   glDeleteFramebuffers(1, &handle);
 }
 
-void ansimproj::core::SimulationBase::deleteBuffer(const GLuint &handle) const {
+void flut::core::SimulationBase::deleteBuffer(const GLuint &handle) const {
   glDeleteBuffers(1, &handle);
 }

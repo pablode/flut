@@ -7,7 +7,7 @@
 #include "Camera.hpp"
 #include "Utils.hpp"
 
-namespace ansimproj {
+namespace flut {
   namespace core {
 
     class SimulationBase {

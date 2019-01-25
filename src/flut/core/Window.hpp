@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 
-namespace ansimproj {
+namespace flut {
   namespace core {
 
     class Window {

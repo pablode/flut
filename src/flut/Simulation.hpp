@@ -4,7 +4,7 @@
 
 #include "core/SimulationBase.hpp"
 
-namespace ansimproj {
+namespace flut {
 
   class Simulation : public core::SimulationBase {
 

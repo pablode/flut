@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <fstream>
 
-namespace ansimproj {
+namespace flut {
   namespace core {
 
     class Utils {

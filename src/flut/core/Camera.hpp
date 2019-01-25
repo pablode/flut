@@ -4,7 +4,7 @@
 
 #include "Window.hpp"
 
-namespace ansimproj {
+namespace flut {
   namespace core {
     class Camera {
 
