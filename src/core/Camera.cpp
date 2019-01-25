@@ -1,7 +1,6 @@
 #include "core/Camera.hpp"
 #include "core/Window.hpp"
 
-#define _USE_MATH_DEFINES
 #include <Eigen/Geometry>
 #include <iostream>
 #include <math.h>

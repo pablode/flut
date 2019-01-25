@@ -25,6 +25,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 elseif(MSVC)
   target_compile_options(ansimproj PRIVATE /MP)
   target_compile_options(ansimproj PRIVATE /Wall)
+  target_compile_options(ansimproj PRIVATE /D_USE_MATH_DEFINES)
+  target_compile_options(ansimproj PRIVATE /DNOMINMAX)
 endif()
 
 target_compile_definitions(
