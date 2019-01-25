@@ -1,8 +1,8 @@
 #include "Simulation.hpp"
 #include "core/Camera.hpp"
 #include "core/Window.hpp"
-#include "imgui/imgui.h"
 
+#include <imgui/imgui.h>
 #include <chrono>
 #include <fstream>
 #include <iostream>

@@ -1,7 +1,7 @@
-#include "core/Window.hpp"
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_sdl_glbinding.h"
+#include "Window.hpp"
 
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_sdl_glbinding.h>
 #include <glbinding/Binding.h>
 #include <stdexcept>
 #include <cstdio>

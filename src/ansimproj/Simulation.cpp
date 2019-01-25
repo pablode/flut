@@ -1,11 +1,10 @@
 #include "Simulation.hpp"
 
-#include <cmath>
-
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 using namespace ::gl;
 

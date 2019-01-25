@@ -4,8 +4,8 @@
 #include <glbinding/gl/gl.h>
 #include <vector>
 
-#include "core/Camera.hpp"
-#include "core/Utils.hpp"
+#include "Camera.hpp"
+#include "Utils.hpp"
 
 namespace ansimproj {
   namespace core {

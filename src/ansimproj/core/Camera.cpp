@@ -1,5 +1,5 @@
-#include "core/Camera.hpp"
-#include "core/Window.hpp"
+#include "Camera.hpp"
+#include "Window.hpp"
 
 #include <Eigen/Geometry>
 #include <iostream>

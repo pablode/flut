@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "core/Window.hpp"
+#include "Window.hpp"
 
 namespace ansimproj {
   namespace core {

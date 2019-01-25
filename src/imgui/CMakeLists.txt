@@ -16,14 +16,12 @@ add_library(imgui STATIC ${IMGUI_SRCS})
 
 target_link_libraries(
   imgui PUBLIC
-  ${SDL2_LIBRARY}
-  ${OPENGL_LIBRARIES}
-  ${glbinding_LIBRARIES}
+  SDL2::SDL2
+  OpenGL::GL
+  glbinding::glbinding
 )
 
 target_include_directories(
-  imgui PUBLIC
-  ${SDL2_INCLUDE_DIR}
-  ${OPENGL_INCLUDE_DIR}
-  ${glbinding_INCLUDE_DIR}
+  imgui PRIVATE
+  ${PROJECT_SOURCE_DIR}/src
 )
