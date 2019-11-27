@@ -408,3 +408,7 @@ __pycache__/
 ### VisualStudio Patch ###
 # By default, sensitive information, such as encrypted password
 # should be stored in the .pubxml.user file.
+
+### MacOS ###
+
+.DS_Store
