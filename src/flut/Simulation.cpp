@@ -356,7 +356,8 @@ void Simulation::render(const Camera& camera, float dt)
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 
-  if (options_.shadingMode == 1) {
+  if (options_.shadingMode == 1)
+  {
     // 4.2 Curvature Flow
     glDisable(GL_DEPTH_TEST);
     glBindVertexArray(vao3_);
@@ -501,7 +502,9 @@ const Simulation::SimulationTimes& Simulation::times() const
 void Simulation::loadFileText(const std::string& filePath, std::vector<char>& text) const
 {
   std::ifstream file{filePath, std::ios_base::in | std::ios_base::binary};
-  assert(file.is_open());
+  if (!file.is_open()) {
+    throw std::runtime_error("Unable to open file: " + filePath);
+  }
   file.seekg(0, std::ios_base::end);
   text.resize(file.tellg());
   file.seekg(0, std::ios_base::beg);
