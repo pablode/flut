@@ -6,14 +6,24 @@
 #include <stdexcept>
 #include <cstdio>
 
-flut::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t height)
-  : shouldClose_{false} {
+using namespace flut;
+using namespace flut::core;
+
+Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
+  : shouldClose_{false}
+{
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
     throw std::runtime_error(SDL_GetError());
   }
 
-  window_ = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width,
-    height, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  window_ = SDL_CreateWindow(
+    title,
+    SDL_WINDOWPOS_CENTERED,
+    SDL_WINDOWPOS_CENTERED,
+    width,
+    height,
+    SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+  );
   if (!window_) {
     throw std::runtime_error(SDL_GetError());
   }
@@ -40,91 +50,104 @@ flut::core::Window::Window(std::string title, std::uint32_t width, std::uint32_t
   ImGui_ImplSdlGlBinding_NewFrame(window_);
 }
 
-flut::core::Window::~Window() {
+Window::~Window()
+{
   ImGui_ImplSdlGlBinding_Shutdown();
   SDL_GL_DeleteContext(context_);
   SDL_DestroyWindow(window_);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-void flut::core::Window::pollEvents() {
+void Window::pollEvents()
+{
   SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    if (!ImGui_ImplSdlGlBinding_ProcessEvent(&event)) {
-      switch (event.type) {
-      case SDL_QUIT:
-        shouldClose_ = true;
-        break;
-      case SDL_WINDOWEVENT: {
-        switch (event.window.event) {
-        case SDL_WINDOWEVENT_RESIZED:
-        case SDL_WINDOWEVENT_SIZE_CHANGED: {
-          const auto width = static_cast<std::uint32_t>(event.window.data1);
-          const auto height = static_cast<std::uint32_t>(event.window.data2);
-          if (resizeCallback_) {
-            resizeCallback_(width, height);
-          }
-        } break;
-        default:
-          break;
-        }
-        break;
+
+  while (SDL_PollEvent(&event))
+  {
+    if (ImGui_ImplSdlGlBinding_ProcessEvent(&event)) {
+      continue;
+    }
+
+    if (event.type == SDL_QUIT) {
+      shouldClose_ = true;
+      continue;
+    }
+    if (event.type != SDL_WINDOWEVENT) {
+      continue;
+    }
+
+    switch (event.window.event)
+    {
+    case SDL_WINDOWEVENT_RESIZED:
+    case SDL_WINDOWEVENT_SIZE_CHANGED:
+      const auto width = static_cast<std::uint32_t>(event.window.data1);
+      const auto height = static_cast<std::uint32_t>(event.window.data2);
+      if (resizeCallback_) {
+        resizeCallback_(width, height);
       }
-      default:
-        break;
-      }
+      break;
     }
   }
 }
 
-bool flut::core::Window::shouldClose() {
+bool Window::shouldClose()
+{
   return shouldClose_;
 }
 
-void flut::core::Window::swap() {
+void Window::swap()
+{
   ImGui::Render();
   SDL_GL_SwapWindow(window_);
   ImGui_ImplSdlGlBinding_NewFrame(window_);
 }
 
-std::uint32_t flut::core::Window::width() const {
+std::uint32_t Window::width() const
+{
   int width;
   SDL_GL_GetDrawableSize(window_, &width, nullptr);
   return static_cast<std::uint32_t>(width);
 }
 
-std::uint32_t flut::core::Window::height() const {
+std::uint32_t Window::height() const
+{
   int height;
   SDL_GL_GetDrawableSize(window_, nullptr, &height);
   return static_cast<std::uint32_t>(height);
 }
 
-std::int32_t flut::core::Window::mouseX() const {
+std::int32_t Window::mouseX() const
+{
   int x;
   SDL_GetMouseState(&x, nullptr);
   return x;
 }
 
-std::int32_t flut::core::Window::mouseY() const {
+std::int32_t Window::mouseY() const
+{
   int y;
   SDL_GetMouseState(nullptr, &y);
   return y;
 }
 
-bool flut::core::Window::mouseDown() const {
-  return static_cast<bool>(SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT));
+bool Window::mouseDown() const
+{
+  return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
 }
 
-bool flut::core::Window::keyUp() const {
+bool Window::keyUp() const
+{
   const auto& states = SDL_GetKeyboardState(nullptr);
-  return static_cast<bool>(states[SDL_SCANCODE_W]);
+  return states[SDL_SCANCODE_W] != 0;
 }
 
-bool flut::core::Window::keyDown() const {
+bool Window::keyDown() const
+{
   const auto& states = SDL_GetKeyboardState(nullptr);
-  return static_cast<bool>(states[SDL_SCANCODE_S]);
+  return states[SDL_SCANCODE_S] != 0;
 }
 
-void flut::core::Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback) {
+void Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback)
+{
   resizeCallback_ = callback;
 }

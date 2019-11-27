@@ -4,37 +4,27 @@
 
 #include "core/SimulationBase.hpp"
 
-namespace flut {
-
-  class Simulation : public core::SimulationBase {
-
+namespace flut
+{
+  class Simulation : public core::SimulationBase
+  {
   public:
-    struct SimulationOptions {
-      SimulationOptions()
-        : gravity{0.0f, -9.81f, 0.0f}
-        , deltaTimeMod{1.2f}
-        , colorMode{0}
-        , shadingMode{1} {}
-      float gravity[3];
-      float deltaTimeMod;
-      std::int32_t colorMode;
-      std::int32_t shadingMode;
+    struct SimulationOptions
+    {
+      float gravity[3] = {0.0f, -9.81f, 0.0f};
+      float deltaTimeMod = 1.2f;
+      std::int32_t colorMode = 0;
+      std::int32_t shadingMode = 1;
     };
 
-    struct SimulationTime {
-      SimulationTime()
-        : gridInsertMs{0.0f}
-        , gridSortMs{0.0f}
-        , gridIndexingMs{0.0f}
-        , densityComputationMs{0.0f}
-        , forceUpdateMs{0.0f}
-        , renderingMs{0.0f} {}
-      float gridInsertMs;
-      float gridSortMs;
-      float gridIndexingMs;
-      float densityComputationMs;
-      float forceUpdateMs;
-      float renderingMs;
+    struct SimulationTimes
+    {
+      float gridInsertMs = 0.0f;
+      float gridSortMs = 0.0f;
+      float gridIndexingMs = 0.0f;
+      float densityComputationMs = 0.0f;
+      float forceUpdateMs = 0.0f;
+      float renderingMs = 0.0f;
     };
 
   public:
@@ -57,32 +47,34 @@ namespace flut {
     constexpr static std::uint32_t SMOOTH_ITERATIONS = 30;
 
   public:
-    Simulation(const std::uint32_t &width, const std::uint32_t &height);
+    Simulation(std::uint32_t width, std::uint32_t height);
 
-    ~Simulation();
+    ~Simulation() override;
 
     void preset1();
 
-    void render(const core::Camera &camera, float dt) override;
+    void render(const core::Camera& camera, float dt) override;
 
     void resize(std::uint32_t width, std::uint32_t height);
 
-    SimulationOptions &options();
+    SimulationOptions& options();
 
-    const SimulationTime &time() const;
+    const SimulationTimes& times() const;
 
   private:
-    ::gl::GLuint createParticleVAO(const ::gl::GLuint &vboPos, const ::gl::GLuint &vboCol) const;
+    ::gl::GLuint createParticleVAO(::gl::GLuint vboPos, ::gl::GLuint vboCol) const;
 
-    ::gl::GLuint createBBoxVAO(const ::gl::GLuint &vertices, const ::gl::GLuint &indices) const;
+    ::gl::GLuint createBBoxVAO(::gl::GLuint vertices, ::gl::GLuint indices) const;
 
     void deleteVAO(::gl::GLuint handle);
+
+    void loadFileText(const std::string& filePath, std::vector<char>& text) const;
 
   private:
     std::uint32_t width_;
     std::uint32_t height_;
     std::uint64_t frame_;
-    SimulationTime time_;
+    SimulationTimes time_;
     SimulationOptions options_;
     float weightConstViscosity_;
     float weightConstPressure_;

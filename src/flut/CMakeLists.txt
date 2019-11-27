@@ -5,7 +5,6 @@ add_executable(
   core/Camera.hpp
   core/SimulationBase.cpp
   core/SimulationBase.hpp
-  core/Utils.hpp
   core/Window.cpp
   core/Window.hpp
   Simulation.cpp

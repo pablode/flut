@@ -3,12 +3,15 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <iostream>
+#include <fstream>
 #include <limits>
 #include <cmath>
 
 using namespace ::gl;
+using namespace flut;
+using namespace flut::core;
 
-flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &height)
+Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   : SimulationBase()
   , width_(width)
   , height_(height)
@@ -24,29 +27,33 @@ flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &he
   , bufVelocity2_{0}
   , bufDensity_{0}
   , vao1_{0}
-  , vao2_{0} {
-
+  , vao2_{0}
+{
   // Shaders
-  auto shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridInsert.comp");
-  programGridInsert_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridSort.comp");
-  programGridSort_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridIndexing.comp");
-  programGridIndexing_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/densityComputation.comp");
-  programDensityComputation_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/forceUpdate.comp");
-  programForceUpdate_ = createComputeShader(shaderSource);
-  auto vert = core::Utils::loadFileText(RESOURCES_DIR "/renderGeometry.vert");
-  auto frag = core::Utils::loadFileText(RESOURCES_DIR "/renderGeometry.frag");
-  programRenderGeometry_ = createVertFragShader(vert, frag);
-  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderFlat.frag");
-  programRenderFlat_ = createVertFragShader(vert, frag);
-  vert = core::Utils::loadFileText(RESOURCES_DIR "/renderBoundingBox.vert");
-  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderCurvature.frag");
-  programRenderCurvature_ = createVertFragShader(vert, frag);
-  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderShading.frag");
-  programRenderShading_ = createVertFragShader(vert, frag);
+  std::vector<char> compSource;
+  loadFileText(RESOURCES_DIR "/gridInsert.comp", compSource);
+  programGridInsert_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/gridSort.comp", compSource);
+  programGridSort_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/gridIndexing.comp", compSource);
+  programGridIndexing_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/densityComputation.comp", compSource);
+  programDensityComputation_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/forceUpdate.comp", compSource);
+  programForceUpdate_ = createComputeShader(compSource);
+
+  std::vector<char> vertSource;
+  std::vector<char> fragSource;
+  loadFileText(RESOURCES_DIR "/renderGeometry.vert", vertSource);
+  loadFileText(RESOURCES_DIR "/renderGeometry.frag", fragSource);
+  programRenderGeometry_ = createVertFragShader(vertSource, fragSource);
+  loadFileText(RESOURCES_DIR "/renderFlat.frag", fragSource);
+  programRenderFlat_ = createVertFragShader(vertSource, fragSource);
+  loadFileText(RESOURCES_DIR "/renderBoundingBox.vert", vertSource);
+  loadFileText(RESOURCES_DIR "/renderCurvature.frag", fragSource);
+  programRenderCurvature_ = createVertFragShader(vertSource, fragSource);
+  loadFileText(RESOURCES_DIR "/renderShading.frag", fragSource);
+  programRenderShading_ = createVertFragShader(vertSource, fragSource);
 
   // FBOs and Textures
   texDepth_ = createDepthTexture(width, height);
@@ -67,7 +74,7 @@ flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &he
   weightConstDefault_ = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(RANGE, 9)));
 
   // Bounding Box
-  const std::vector<Eigen::Vector3f> bboxVertices {
+  const std::vector<Eigen::Vector3f> bboxVertices{
     GRID_ORIGIN + Eigen::Vector3f{0.0f, 0.0f, GRID_LEN(2)},
     GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), 0.0f, GRID_LEN(2)},
     GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), GRID_LEN(1), GRID_LEN(2)},
@@ -78,6 +85,7 @@ flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &he
     GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_LEN(1), 0.0f},
   };
   std::vector<float> bboxVertexData;
+  bboxVertexData.reserve(bboxVertices.size() * 3);
   for (const auto& vertex : bboxVertices) {
     bboxVertexData.push_back(vertex(0));
     bboxVertexData.push_back(vertex(1));
@@ -95,18 +103,21 @@ flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &he
   };
   // clang-format on
   bufBBoxIndices_ = createBuffer(bboxIndices, false);
+  vao3_ = createBBoxVAO(bufBBoxVertices_, bufBBoxIndices_);
 
   // Buffers
   preset1();
 
   // Other
-  vao3_ = createBBoxVAO(bufBBoxVertices_, bufBBoxIndices_);
   glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[0][0]);
   glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+  resize(width_, height_);
 }
 
-flut::Simulation::~Simulation() {
+Simulation::~Simulation()
+{
   glDeleteQueries(6, &timerQueries_[0][0]);
   glDeleteQueries(6, &timerQueries_[1][0]);
   deleteFBO(fbo1_);
@@ -145,7 +156,8 @@ flut::Simulation::~Simulation() {
   deleteVAO(vao3_);
 }
 
-void flut::Simulation::preset1() {
+void Simulation::preset1()
+{
   if (bufGridUnsorted_)
     deleteBuffer(bufGridUnsorted_);
   if (bufGridSorted_)
@@ -212,12 +224,13 @@ void flut::Simulation::preset1() {
   vao2_ = createParticleVAO(bufPosition2_, bufColor_);
 }
 
-void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
+void Simulation::render(const Camera& camera, float dt)
+{
   constexpr auto localSize = 128;
   static_assert(PARTICLE_COUNT % localSize == 0, "Invalid particle count.");
   const std::uint32_t numWorkGroups = PARTICLE_COUNT / localSize;
-  auto &lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
-  auto &query = timerQueries_[swapFrame_ ? 1 : 0];
+  auto& lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
+  auto& query = timerQueries_[swapFrame_ ? 1 : 0];
   swapFrame_ = !swapFrame_;
   ++frame_;
 
@@ -236,7 +249,6 @@ void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
   glEndQuery(GL_TIME_ELAPSED);
 
   // 1.2 Sort Particle/Voxel mappings
-  // TODO: replace bitonic mergesort with counting sort
   glBeginQuery(GL_TIME_ELAPSED, query[1]);
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridSorted_);
@@ -323,9 +335,9 @@ void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   const float pointRadius = options_.shadingMode ? RANGE * 1.5f : RANGE / 2.0f;
   const float pointScale = 650.0f;
-  const auto &view = camera.view();
-  const auto &projection = camera.projection();
-  const auto &invProjection = camera.invProjection();
+  const auto& view = camera.view();
+  const auto& projection = camera.projection();
+  const auto& invProjection = camera.invProjection();
   const Eigen::Matrix4f mvp = projection * view;
   glProgramUniformMatrix4fv(renderProgram, 0, 1, GL_FALSE, mvp.data());
   glProgramUniformMatrix4fv(renderProgram, 1, 1, GL_FALSE, view.data());
@@ -343,8 +355,8 @@ void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, swapFrame_ ? bufVelocity2_ : bufVelocity1_);
   glBindVertexArray(swapFrame_ ? vao2_ : vao1_);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
-  if (options_.shadingMode == 1) {
 
+  if (options_.shadingMode == 1) {
     // 4.2 Curvature Flow
     glDisable(GL_DEPTH_TEST);
     glBindVertexArray(vao3_);
@@ -402,7 +414,8 @@ void flut::Simulation::render(const flut::core::Camera &camera, float dt) {
   }
 }
 
-GLuint flut::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &vboCol) const {
+GLuint Simulation::createParticleVAO(GLuint vboPos, GLuint vboCol) const
+{
   GLuint handle;
   glCreateVertexArrays(1, &handle);
   if (!handle) {
@@ -421,7 +434,8 @@ GLuint flut::Simulation::createParticleVAO(const GLuint &vboPos, const GLuint &v
   return handle;
 }
 
-GLuint flut::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &indices) const {
+GLuint Simulation::createBBoxVAO(GLuint vertices, GLuint indices) const
+{
   GLuint handle;
   glCreateVertexArrays(1, &handle);
   if (!handle) {
@@ -440,11 +454,13 @@ GLuint flut::Simulation::createBBoxVAO(const GLuint &vertices, const GLuint &ind
   return handle;
 }
 
-void flut::Simulation::deleteVAO(GLuint handle) {
+void Simulation::deleteVAO(GLuint handle)
+{
   glDeleteVertexArrays(1, &handle);
 }
 
-void flut::Simulation::resize(std::uint32_t width, std::uint32_t height) {
+void Simulation::resize(std::uint32_t width, std::uint32_t height)
+{
   glViewport(0, 0, width, height);
   height_ = height;
   width_ = width;
@@ -472,10 +488,22 @@ void flut::Simulation::resize(std::uint32_t width, std::uint32_t height) {
   fbo3_ = createFlatFBO(texTemp2_);
 }
 
-flut::Simulation::SimulationOptions &flut::Simulation::options() {
+Simulation::SimulationOptions& Simulation::options()
+{
   return options_;
 }
 
-const flut::Simulation::SimulationTime &flut::Simulation::time() const {
+const Simulation::SimulationTimes& Simulation::times() const
+{
   return time_;
+}
+
+void Simulation::loadFileText(const std::string& filePath, std::vector<char>& text) const
+{
+  std::ifstream file{filePath, std::ios_base::in | std::ios_base::binary};
+  assert(file.is_open());
+  file.seekg(0, std::ios_base::end);
+  text.resize(file.tellg());
+  file.seekg(0, std::ios_base::beg);
+  file.read(text.data(), text.size());
 }

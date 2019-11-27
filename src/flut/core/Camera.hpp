@@ -4,10 +4,12 @@
 
 #include "Window.hpp"
 
-namespace flut {
-  namespace core {
-    class Camera {
-
+namespace flut
+{
+  namespace core
+  {
+    class Camera
+    {
     private:
       constexpr static float FOV = static_cast<float>(60.0f * M_PI / 180.0f);
       constexpr static float SENSITIVITY = 0.005f;
@@ -15,7 +17,7 @@ namespace flut {
       constexpr static float FAR_PLANE = 25.0f;
 
     public:
-      Camera(Window &window);
+      Camera(const Window& window);
 
       ~Camera();
 
@@ -33,7 +35,7 @@ namespace flut {
       void recalcProjection();
 
     private:
-      Window &window_;
+      const Window& window_;
       std::uint32_t width_;
       std::uint32_t height_;
       Eigen::Matrix4f view_;

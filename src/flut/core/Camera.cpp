@@ -5,8 +5,12 @@
 #include <iostream>
 #include <math.h>
 
-flut::core::Camera::Camera(Window &window)
-  : window_(window) {
+using namespace flut;
+using namespace flut::core;
+
+Camera::Camera(const Window& window)
+  : window_(window)
+{
   width_ = window.width();
   height_ = window.height();
   radius_ = 2.25f;
@@ -24,11 +28,12 @@ flut::core::Camera::Camera(Window &window)
   recalcProjection();
 }
 
-flut::core::Camera::~Camera() {}
+Camera::~Camera() {}
 
-void flut::core::Camera::update(float dt) {
-  const auto &mouseX = window_.mouseX();
-  const auto &mouseY = window_.mouseY();
+void Camera::update(float dt)
+{
+  const auto& mouseX = window_.mouseX();
+  const auto& mouseY = window_.mouseY();
   bool recalcPos = false;
 
   if (window_.mouseDown()) {
@@ -36,16 +41,20 @@ void flut::core::Camera::update(float dt) {
     const float deltaY = (mouseY - oldMouseY_) * SENSITIVITY;
 
     theta_ -= deltaY;
-    if (theta_ < 0.01f)
+    if (theta_ < 0.01f) {
       theta_ = 0.01f;
-    else if (theta_ > M_PI - 0.01f)
+    }
+    else if (theta_ > M_PI - 0.01f) {
       theta_ = static_cast<float>(M_PI - 0.01f);
+    }
 
     phi_ -= deltaX;
-    if (phi_ < 0.0f)
+    if (phi_ < 0.0f) {
       phi_ += 2 * M_PI;
-    else if (phi_ > 2 * M_PI)
+    }
+    else if (phi_ > 2 * M_PI) {
       phi_ -= 2 * M_PI;
+    }
 
     recalcPos = true;
   }
@@ -76,10 +85,11 @@ void flut::core::Camera::update(float dt) {
   }
 }
 
-void flut::core::Camera::recalcView() {
-  Eigen::Vector3f f = (center_ - position_).normalized();
-  Eigen::Vector3f s = f.cross(up_).normalized();
-  Eigen::Vector3f u = s.cross(f).normalized();
+void Camera::recalcView()
+{
+  const Eigen::Vector3f f = (center_ - position_).normalized();
+  const Eigen::Vector3f s = f.cross(up_).normalized();
+  const Eigen::Vector3f u = s.cross(f).normalized();
   view_(0, 0) = s.x();
   view_(0, 1) = s.y();
   view_(0, 2) = s.z();
@@ -94,7 +104,8 @@ void flut::core::Camera::recalcView() {
   view_(2, 3) = f.dot(position_);
 }
 
-void flut::core::Camera::recalcProjection() {
+void Camera::recalcProjection()
+{
   const float aspect = static_cast<float>(width_) / height_;
   const float theta = static_cast<float>(FOV * 0.5);
   const float range = FAR_PLANE - NEAR_PLANE;
@@ -107,14 +118,17 @@ void flut::core::Camera::recalcProjection() {
   invProjection_ = projection_.inverse();
 }
 
-Eigen::Matrix4f flut::core::Camera::view() const {
+Eigen::Matrix4f Camera::view() const
+{
   return view_;
 }
 
-Eigen::Matrix4f flut::core::Camera::projection() const {
+Eigen::Matrix4f Camera::projection() const
+{
   return projection_;
 }
 
-Eigen::Matrix4f flut::core::Camera::invProjection() const {
+Eigen::Matrix4f Camera::invProjection() const
+{
   return invProjection_;
 }

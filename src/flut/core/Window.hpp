@@ -4,13 +4,14 @@
 #include <functional>
 #include <string>
 
-namespace flut {
-  namespace core {
-
-    class Window {
-
+namespace flut
+{
+  namespace core
+  {
+    class Window
+    {
     public:
-      Window(std::string title, std::uint32_t width, std::uint32_t height);
+      Window(const char* title, std::uint32_t width, std::uint32_t height);
 
       ~Window();
 
@@ -39,7 +40,7 @@ namespace flut {
 
     private:
       bool shouldClose_;
-      SDL_Window *window_;
+      SDL_Window* window_;
       SDL_GLContext context_;
       std::function<void(std::uint32_t, std::uint32_t)> resizeCallback_;
     };
