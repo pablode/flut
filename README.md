@@ -1,24 +1,27 @@
 ## flut
 
-GPU-based fluid simulation and rendering. Utilizes OpenGL 4.3 with Compute Shaders, Eigen and SDL2 to perform _smoothed-particle hydrodynamics_ (SPH) in a parallel manner. Based on work from Harada et. al.
+GPU-based fluid simulation and rendering using OpenGL 4.6 compute shaders, DSA and bindless textures. Fluid behaviour is simulated using _smoothed-particle hydrodynamics_ (SPH) as described by Müller et al. [1]. The GPU simulation pipeline roughly follows the work of Harada et al. [2]. After particle simulation, a screen-space rendering technique is performed to suggest a fluid-like continuous surface [3].  
+  
+[1] Particle-Based Fluid Simulation for Interactive Applications, Müller et al. 2003  
+[2] Smoothed Particle Hydrodynamics on GPUs, Harada et al. 2007  
+[3] Screen Space Fluid Rendering with Curvature Flow, van der Laan et al. 2009  
 
-##### Pipeline Overview
+#### Simulation Pipeline Overview
 
 ![overview](pipeline.png)
 
-##### Dependency setup
+#### Build
 
-On Linux, you can install the corresponding packages instead of building all dependencies yourself (assuming they're not outdated): `sudo pacman -S git gcc cmake eigen glbinding sdl2`.
-If problems occur, build them yourself:
-```bash
-mkdir -p 3rdparty/temp
-cd 3rdparty/temp
-cmake ..
-make help
-make <TARGET>
-```
+This project uses CMake for generating buildsystem files and Git submodules for dependency tracking. Make sure you `git clone` with the `--recursive` flag or execute `git submodule update --init --recursive` after a non-recursive clone.  
+Then, invoke CMake for your buildsystem of choice and build the `flut` target.  
+Example: `mkdir -p build && cd build && cmake .. -G Ninja && ninja flut`.
 
-##### Build Instructions
+#### Future Improvements
 
-Use _CMake_ to generate buildsystem files.
-`mkdir -p build && cd build && cmake .. -G Ninja && ninja`
+- using prefix sums for grid construction is much faster than a sorting-based approach
+- memory coherence can be improved by interleaving grouped particle data instead of individual buffers
+- group-shared memory can be used to speed up neighborhood search significantly (4x4x4 groups)
+- shader code is highly unoptimized and performance can be drastically improved
+  - apply loop-unrolling, reduce divergence by avoiding branches, apply neighborhood-search micro-optimizations
+- replace curvature flow with ray marching for better visualization (distance-independent, volumetric effects)
+- extensions like NV_command_list could improve performance even more
