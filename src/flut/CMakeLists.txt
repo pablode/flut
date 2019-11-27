@@ -1,4 +1,5 @@
-set(FLUT_SRCS
+add_executable(
+  flut WIN32
   main.cpp
   core/Camera.cpp
   core/Camera.hpp
@@ -11,12 +12,9 @@ set(FLUT_SRCS
   Simulation.hpp
 )
 
-add_executable(flut WIN32 ${FLUT_SRCS})
-
 if(CMAKE_COMPILER_IS_GNUCXX)
   target_compile_options(flut PRIVATE -Wall)
   target_compile_options(flut PRIVATE -Wextra)
-  target_compile_options(flut PRIVATE -Werror)
   target_compile_options(flut PRIVATE -Wno-unused-parameter)
   target_compile_options(flut PRIVATE -Wno-reorder)
   target_compile_options(flut PRIVATE -Wno-error=int-in-bool-context)
@@ -29,20 +27,20 @@ endif()
 
 target_compile_definitions(
   flut PRIVATE
-  RESOURCES_PATH="${RESOURCES_PATH}"
+  RESOURCES_DIR="${FLUT_RESOURCES_DIR}"
 )
 
 target_link_libraries(
   flut PRIVATE
   imgui
-  SDL2::SDL2
-  SDL2::SDL2main
-  Eigen::Eigen
-  glbinding::glbinding
+  SDL2
+  SDL2main
+  eigen
+  glbinding
   OpenGL::GL
 )
 
 target_include_directories(
   flut PRIVATE
-  ${PROJECT_SOURCE_DIR}/src
+  ${FLUT_SOURCE_DIR}
 )

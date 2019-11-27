@@ -1,4 +1,5 @@
-set(IMGUI_SRCS
+add_library(
+  imgui STATIC
   imconfig.h
   imgui.cpp
   imgui.h
@@ -12,16 +13,14 @@ set(IMGUI_SRCS
   stb_truetype.h
 )
 
-add_library(imgui STATIC ${IMGUI_SRCS})
-
 target_link_libraries(
   imgui PUBLIC
-  SDL2::SDL2
+  SDL2
   OpenGL::GL
-  glbinding::glbinding
+  glbinding
 )
 
 target_include_directories(
   imgui PRIVATE
-  ${PROJECT_SOURCE_DIR}/src
+  ${FLUT_SOURCE_DIR}
 )

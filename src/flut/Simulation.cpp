@@ -27,25 +27,25 @@ flut::Simulation::Simulation(const std::uint32_t &width, const std::uint32_t &he
   , vao2_{0} {
 
   // Shaders
-  auto shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridInsert.comp");
+  auto shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridInsert.comp");
   programGridInsert_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridSort.comp");
+  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridSort.comp");
   programGridSort_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/gridIndexing.comp");
+  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/gridIndexing.comp");
   programGridIndexing_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/densityComputation.comp");
+  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/densityComputation.comp");
   programDensityComputation_ = createComputeShader(shaderSource);
-  shaderSource = core::Utils::loadFileText(RESOURCES_PATH "/forceUpdate.comp");
+  shaderSource = core::Utils::loadFileText(RESOURCES_DIR "/forceUpdate.comp");
   programForceUpdate_ = createComputeShader(shaderSource);
-  auto vert = core::Utils::loadFileText(RESOURCES_PATH "/renderGeometry.vert");
-  auto frag = core::Utils::loadFileText(RESOURCES_PATH "/renderGeometry.frag");
+  auto vert = core::Utils::loadFileText(RESOURCES_DIR "/renderGeometry.vert");
+  auto frag = core::Utils::loadFileText(RESOURCES_DIR "/renderGeometry.frag");
   programRenderGeometry_ = createVertFragShader(vert, frag);
-  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderFlat.frag");
+  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderFlat.frag");
   programRenderFlat_ = createVertFragShader(vert, frag);
-  vert = core::Utils::loadFileText(RESOURCES_PATH "/renderBoundingBox.vert");
-  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderCurvature.frag");
+  vert = core::Utils::loadFileText(RESOURCES_DIR "/renderBoundingBox.vert");
+  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderCurvature.frag");
   programRenderCurvature_ = createVertFragShader(vert, frag);
-  frag = core::Utils::loadFileText(RESOURCES_PATH "/renderShading.frag");
+  frag = core::Utils::loadFileText(RESOURCES_DIR "/renderShading.frag");
   programRenderShading_ = createVertFragShader(vert, frag);
 
   // FBOs and Textures
