@@ -35,11 +35,6 @@ target_link_libraries(
   SDL2
   SDL2main
   eigen
-  glbinding
+  glad
   OpenGL::GL
-)
-
-target_include_directories(
-  flut PRIVATE
-  ${FLUT_SOURCE_DIR}
 )

@@ -2,7 +2,7 @@
 #include "core/Camera.hpp"
 #include "core/Window.hpp"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 #include <chrono>
 #include <fstream>
 #include <iostream>

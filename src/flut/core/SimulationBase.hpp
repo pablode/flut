@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <glbinding/gl/gl.h>
+#include <glad/glad.h>
 #include <vector>
 
 #include "Camera.hpp"
@@ -18,49 +18,49 @@ namespace flut
       virtual ~SimulationBase();
 
     private:
-      static void glDebugOutput(::gl::GLenum source, ::gl::GLenum type, ::gl::GLuint id, ::gl::GLenum severity,
-        ::gl::GLsizei length, const ::gl::GLchar* message, const void* userParam);
+      static void glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity,
+        GLsizei length, const GLchar* message, const void* userParam);
 
     public:
       virtual void render(const Camera& camera, float dt) = 0;
 
     protected:
-      ::gl::GLuint createVertFragShader(const std::vector<char>& vertSource, const std::vector<char>& fragSource) const;
+      GLuint createVertFragShader(const std::vector<char>& vertSource, const std::vector<char>& fragSource) const;
 
-      ::gl::GLuint createComputeShader(const std::vector<char>& shaderSource) const;
+      GLuint createComputeShader(const std::vector<char>& shaderSource) const;
 
-      ::gl::GLuint createBuffer(const std::vector<float>& data, bool dynamic) const;
+      GLuint createBuffer(const std::vector<float>& data, bool dynamic) const;
 
-      ::gl::GLuint createBuffer(const std::vector<::gl::GLuint>& data, bool dynamic) const;
+      GLuint createBuffer(const std::vector<GLuint>& data, bool dynamic) const;
 
-      ::gl::GLuint createFullFBO(::gl::GLuint depthTexture, std::vector<::gl::GLuint> colorTextures) const;
+      GLuint createFullFBO(GLuint depthTexture, std::vector<GLuint> colorTextures) const;
 
-      ::gl::GLuint createFlatFBO(::gl::GLuint colorTexture) const;
+      GLuint createFlatFBO(GLuint colorTexture) const;
 
-      ::gl::GLuint createRGB32FColorTexture(std::uint32_t width, std::uint32_t height) const;
+      GLuint createRGB32FColorTexture(std::uint32_t width, std::uint32_t height) const;
 
-      ::gl::GLuint createR32FColorTexture(std::uint32_t width, std::uint32_t height) const;
+      GLuint createR32FColorTexture(std::uint32_t width, std::uint32_t height) const;
 
-      ::gl::GLuint createDepthTexture(std::uint32_t width, std::uint32_t height) const;
+      GLuint createDepthTexture(std::uint32_t width, std::uint32_t height) const;
 
-      ::gl::GLuint64 makeTextureResident(::gl::GLuint handle) const;
+      GLuint64 makeTextureResident(GLuint handle) const;
 
-      void makeTextureNonResident(::gl::GLuint64 bindlessHandle) const;
+      void makeTextureNonResident(GLuint64 bindlessHandle) const;
 
-      void deleteShader(::gl::GLuint handle) const;
+      void deleteShader(GLuint handle) const;
 
-      void deleteBuffer(::gl::GLuint handle) const;
+      void deleteBuffer(GLuint handle) const;
 
-      void deleteFBO(::gl::GLuint handle) const;
+      void deleteFBO(GLuint handle) const;
 
-      void deleteTexture(::gl::GLuint handle) const;
-
-    private:
-      ::gl::GLuint createColorTexture(::gl::GLenum internalFormat, std::uint32_t width, std::uint32_t height) const;
+      void deleteTexture(GLuint handle) const;
 
     private:
-      ::gl::GLint versionMajor_;
-      ::gl::GLint versionMinor_;
+      GLuint createColorTexture(GLenum internalFormat, std::uint32_t width, std::uint32_t height) const;
+
+    private:
+      GLint versionMajor_;
+      GLint versionMinor_;
     };
   }
 }

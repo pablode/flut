@@ -4,6 +4,3 @@
 [submodule "extern/eigen"]
 	path = extern/eigen
 	url = https://github.com/eigenteam/eigen-git-mirror.git
-[submodule "extern/glbinding"]
-	path = extern/glbinding
-	url = https://github.com/cginternals/glbinding.git

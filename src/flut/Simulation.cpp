@@ -7,7 +7,6 @@
 #include <limits>
 #include <cmath>
 
-using namespace ::gl;
 using namespace flut;
 using namespace flut::core;
 

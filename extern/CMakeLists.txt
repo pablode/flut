@@ -1,6 +1,5 @@
+set(EIGEN_TEST_CXX11 OFF)
 set(BUILD_TESTING OFF)
 add_subdirectory(eigen)
-set(OPTION_BUILD_TOOLS OFF)
-set(OPTION_BUILD_EXAMPLES OFF)
-add_subdirectory(glbinding)
+add_subdirectory(glad)
 add_subdirectory(sdl2)

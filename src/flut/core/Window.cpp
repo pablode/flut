@@ -1,8 +1,8 @@
 #include "Window.hpp"
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_sdl_glbinding.h>
-#include <glbinding/Binding.h>
+#include <imgui.h>
+#include <imgui_impl_sdl_glad.h>
+#include <glad/glad.h>
 #include <stdexcept>
 #include <cstdio>
 
@@ -40,19 +40,28 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
   if (!context_) {
     throw std::runtime_error(SDL_GetError());
   }
-  const auto vsyncSucc = SDL_GL_SetSwapInterval(1);
-  if (vsyncSucc != 0) {
+
+  if (SDL_GL_SetSwapInterval(1)) {
     std::printf("Warning: Unable to activate VSync.\n");
   }
 
-  glbinding::Binding::initialize();
-  ImGui_ImplSdlGlBinding_Init(window_);
-  ImGui_ImplSdlGlBinding_NewFrame(window_);
+  if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
+    throw std::runtime_error("Unable to initialize Glad.");
+  }
+
+  if (GLVersion.major < 4 || (GLVersion.major == 4 && GLVersion.minor < 6)) {
+    throw std::runtime_error("OpenGL 4.6 required.");
+  }
+
+  std::printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);
+
+  ImGui_ImplSdlGlad_Init(window_);
+  ImGui_ImplSdlGlad_NewFrame(window_);
 }
 
 Window::~Window()
 {
-  ImGui_ImplSdlGlBinding_Shutdown();
+  ImGui_ImplSdlGlad_Shutdown();
   SDL_GL_DeleteContext(context_);
   SDL_DestroyWindow(window_);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -64,7 +73,7 @@ void Window::pollEvents()
 
   while (SDL_PollEvent(&event))
   {
-    if (ImGui_ImplSdlGlBinding_ProcessEvent(&event)) {
+    if (ImGui_ImplSdlGlad_ProcessEvent(&event)) {
       continue;
     }
 
@@ -99,7 +108,7 @@ void Window::swap()
 {
   ImGui::Render();
   SDL_GL_SwapWindow(window_);
-  ImGui_ImplSdlGlBinding_NewFrame(window_);
+  ImGui_ImplSdlGlad_NewFrame(window_);
 }
 
 std::uint32_t Window::width() const

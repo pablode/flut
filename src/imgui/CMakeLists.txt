@@ -1,26 +1,29 @@
 add_library(
   imgui STATIC
-  imconfig.h
-  imgui.cpp
-  imgui.h
-  imgui_demo.cpp
-  imgui_draw.cpp
-  imgui_impl_sdl_glbinding.cpp
-  imgui_impl_sdl_glbinding.h
-  imgui_internal.h
-  stb_rect_pack.h
-  stb_textedit.h
-  stb_truetype.h
+  include/imgui.h
+  include/imconfig.h
+  include/imgui_impl_sdl_glad.h
+  src/imgui.cpp
+  src/imgui_demo.cpp
+  src/imgui_draw.cpp
+  src/imgui_impl_sdl_glad.cpp
+  src/imgui_internal.h
+  src/stb_rect_pack.h
+  src/stb_textedit.h
+  src/stb_truetype.h
 )
 
 target_link_libraries(
   imgui PUBLIC
   SDL2
   OpenGL::GL
-  glbinding
+  glad
 )
 
 target_include_directories(
-  imgui PRIVATE
-  ${FLUT_SOURCE_DIR}
+  imgui
+  PUBLIC
+  include
+  PRIVATE
+  src
 )

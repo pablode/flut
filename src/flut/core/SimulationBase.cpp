@@ -1,10 +1,8 @@
 #include "SimulationBase.hpp"
 
-#include <glbinding/Binding.h>
-#include <glbinding/ContextInfo.h>
+#include <glad/glad.h>
 #include <iostream>
 
-using namespace ::gl;
 using namespace flut;
 using namespace flut::core;
 
@@ -14,32 +12,32 @@ SimulationBase::SimulationBase()
   glGetIntegerv(GL_MINOR_VERSION, &versionMinor_);
 
 #ifndef NDEBUG
-  ContextFlagMask flags;
-  glGetIntegerv(GL_CONTEXT_FLAGS, (GLint*)&flags);
-  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE_BIT) {
+  GLint flags;
+  glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(&glDebugOutput, nullptr);
+    glDebugMessageCallback((GLDEBUGPROC) &glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     std::printf("Debug output enabled.\n");
   } else {
     std::printf("Debug output not available (context flag not set).\n");
   }
-  glbinding::setCallbackMaskExcept(glbinding::CallbackMask::After, {"glGetError"});
-  glbinding::setAfterCallback([](const glbinding::FunctionCall&) {
-    auto error = glGetError();
-    if (error != GL_NO_ERROR) {
+
+  glad_set_post_callback((GLADcallback) [](const char* name, void* funcptr, int len_args, ...) {
+    if (!strcmp(name, "glGetError")) {
+      return;
+    }
+    GLenum errorCode = glGetError();
+    if (errorCode != GL_NO_ERROR) {
       do {
-        const auto errorInt = static_cast<std::uint32_t>(error);
-        std::printf("GL/ERROR: 0x%04x\n", errorInt);
-      } while ((error = glGetError()) != GL_NO_ERROR);
-      throw std::runtime_error{"OpenGL Error(s) occured."};
+        std::printf("GL/ERROR: 0x%04x in %s\n", errorCode, name);
+      } while ((errorCode = glGetError()) != GL_NO_ERROR);
     }
   });
 #endif
 
-  const auto extensions = glbinding::ContextInfo::extensions();
-  if (!extensions.count(GLextension::GL_ARB_bindless_texture)) {
+  if (!GLAD_GL_ARB_bindless_texture) {
     throw std::runtime_error{"ARB_bindless_texture extension is required."};
   }
 
@@ -114,7 +112,7 @@ GLuint SimulationBase::createVertFragShader(
   glShaderSource(vertHandle, 1, &vertShaderPtr, &vertSize);
   glCompileShader(vertHandle);
   GLint logLength;
-  GLboolean result = GL_FALSE;
+  GLint result = GL_FALSE;
   glGetShaderiv(vertHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
@@ -187,7 +185,7 @@ GLuint SimulationBase::createComputeShader(const std::vector<char>& shaderSource
   glShaderSource(sourceHandle, 1, &sourceShaderPtr, &sourceSize);
   glCompileShader(sourceHandle);
   GLint logLength;
-  GLboolean result = GL_FALSE;
+  GLint result = GL_FALSE;
   glGetShaderiv(sourceHandle, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE) {
     glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);
