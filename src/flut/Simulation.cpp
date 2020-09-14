@@ -14,6 +14,8 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   : SimulationBase()
   , width_(width)
   , height_(height)
+  , newWidth_(width)
+  , newHeight_(height)
   , swapFrame_{false}
   , frame_{0}
   , bufColor_{0}
@@ -111,8 +113,6 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[0][0]);
   glCreateQueries(GL_TIME_ELAPSED, 6, &timerQueries_[1][0]);
   glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
-  resize(width_, height_);
 }
 
 Simulation::~Simulation()
@@ -232,6 +232,37 @@ void Simulation::render(const Camera& camera, float dt)
   auto& query = timerQueries_[swapFrame_ ? 1 : 0];
   swapFrame_ = !swapFrame_;
   ++frame_;
+
+  // Resize window if needed.
+  if (width_ != newWidth_ || height_ != newHeight_)
+  {
+    width_ = newWidth_;
+    height_ = newHeight_;
+    deleteFBO(fbo1_);
+    deleteFBO(fbo2_);
+    deleteFBO(fbo3_);
+    makeTextureNonResident(texDepthHandle_);
+    deleteTexture(texDepth_);
+    makeTextureNonResident(texColorHandle_);
+    deleteTexture(texColor_);
+    makeTextureNonResident(texTemp1Handle_);
+    deleteTexture(texTemp1_);
+    makeTextureNonResident(texTemp2Handle_);
+    deleteTexture(texTemp2_);
+    texDepth_ = createDepthTexture(width_, height_);
+    texDepthHandle_ = makeTextureResident(texDepth_);
+    texColor_ = createRGB32FColorTexture(width_, height_);
+    texColorHandle_ = makeTextureResident(texColor_);
+    texTemp1_ = createR32FColorTexture(width_, height_);
+    texTemp1Handle_ = makeTextureResident(texTemp1_);
+    texTemp2_ = createR32FColorTexture(width_, height_);
+    texTemp2Handle_ = makeTextureResident(texTemp2_);
+    fbo1_ = createFullFBO(texDepth_, {texColor_});
+    fbo2_ = createFlatFBO(texTemp1_);
+    fbo3_ = createFlatFBO(texTemp2_);
+  }
+
+  glViewport(0, 0, width_, height_);
 
   // 1.1 Generate Particle/Voxel mappings
   glBeginQuery(GL_TIME_ELAPSED, query[0]);
@@ -461,31 +492,8 @@ void Simulation::deleteVAO(GLuint handle)
 
 void Simulation::resize(std::uint32_t width, std::uint32_t height)
 {
-  glViewport(0, 0, width, height);
-  height_ = height;
-  width_ = width;
-  deleteFBO(fbo1_);
-  deleteFBO(fbo2_);
-  deleteFBO(fbo3_);
-  makeTextureNonResident(texDepthHandle_);
-  deleteTexture(texDepth_);
-  makeTextureNonResident(texColorHandle_);
-  deleteTexture(texColor_);
-  makeTextureNonResident(texTemp1Handle_);
-  deleteTexture(texTemp1_);
-  makeTextureNonResident(texTemp2Handle_);
-  deleteTexture(texTemp2_);
-  texDepth_ = createDepthTexture(width, height);
-  texDepthHandle_ = makeTextureResident(texDepth_);
-  texColor_ = createRGB32FColorTexture(width, height);
-  texColorHandle_ = makeTextureResident(texColor_);
-  texTemp1_ = createR32FColorTexture(width, height);
-  texTemp1Handle_ = makeTextureResident(texTemp1_);
-  texTemp2_ = createR32FColorTexture(width, height);
-  texTemp2Handle_ = makeTextureResident(texTemp2_);
-  fbo1_ = createFullFBO(texDepth_, {texColor_});
-  fbo2_ = createFlatFBO(texTemp1_);
-  fbo3_ = createFlatFBO(texTemp2_);
+  newWidth_ = width;
+  newHeight_ = height;
 }
 
 Simulation::SimulationOptions& Simulation::options()

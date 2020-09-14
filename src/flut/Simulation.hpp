@@ -73,6 +73,8 @@ namespace flut
   private:
     std::uint32_t width_;
     std::uint32_t height_;
+    std::uint32_t newWidth_;
+    std::uint32_t newHeight_;
     std::uint64_t frame_;
     SimulationTimes time_;
     SimulationOptions options_;
