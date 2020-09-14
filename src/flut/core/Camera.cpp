@@ -36,7 +36,8 @@ void Camera::update(float dt)
   const auto& mouseY = window_.mouseY();
   bool recalcPos = false;
 
-  if (window_.mouseDown()) {
+  if (window_.mouseDown())
+  {
     const float deltaX = (mouseX - oldMouseX_) * SENSITIVITY;
     const float deltaY = (mouseY - oldMouseY_) * SENSITIVITY;
 
@@ -59,15 +60,19 @@ void Camera::update(float dt)
     recalcPos = true;
   }
 
-  if (window_.keyUp()) {
+  if (window_.keyUp())
+  {
     radius_ = std::max(0.001f, radius_ - 5.0f * dt);
     recalcPos = true;
-  } else if (window_.keyDown()) {
+  }
+  else if (window_.keyDown())
+  {
     radius_ += 5.0f * dt;
     recalcPos = true;
   }
 
-  if (recalcPos) {
+  if (recalcPos)
+  {
     const float x = center_[0] + radius_ * sin(theta_) * sin(phi_);
     const float y = center_[1] + radius_ * cos(theta_);
     const float z = center_[2] + radius_ * sin(theta_) * cos(phi_);
@@ -78,7 +83,8 @@ void Camera::update(float dt)
   oldMouseX_ = mouseX;
   oldMouseY_ = mouseY;
 
-  if (width_ != window_.width() || height_ != window_.height()) {
+  if (width_ != window_.width() || height_ != window_.height())
+  {
     width_ = window_.width();
     height_ = window_.height();
     recalcProjection();

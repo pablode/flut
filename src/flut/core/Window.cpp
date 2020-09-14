@@ -24,6 +24,7 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
     height,
     SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
   );
+
   if (!window_) {
     throw std::runtime_error(SDL_GetError());
   }
@@ -36,7 +37,9 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
 #else
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
+
   context_ = SDL_GL_CreateContext(window_);
+
   if (!context_) {
     throw std::runtime_error(SDL_GetError());
   }
@@ -73,15 +76,18 @@ void Window::pollEvents()
 
   while (SDL_PollEvent(&event))
   {
-    if (ImGui_ImplSdlGlad_ProcessEvent(&event)) {
+    if (ImGui_ImplSdlGlad_ProcessEvent(&event))
+    {
       continue;
     }
 
-    if (event.type == SDL_QUIT) {
+    if (event.type == SDL_QUIT)
+    {
       shouldClose_ = true;
       continue;
     }
-    if (event.type != SDL_WINDOWEVENT) {
+    if (event.type != SDL_WINDOWEVENT)
+    {
       continue;
     }
 

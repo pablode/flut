@@ -18,8 +18,8 @@ namespace flut
       virtual ~SimulationBase();
 
     private:
-      static void glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity,
-        GLsizei length, const GLchar* message, const void* userParam);
+      static void glDebugOutput(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+        const GLchar* message, const void* userParam);
 
     public:
       virtual void render(const Camera& camera, float dt) = 0;

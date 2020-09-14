@@ -14,17 +14,21 @@ SimulationBase::SimulationBase()
 #ifndef NDEBUG
   GLint flags;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE) {
+
+  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != GL_NONE)
+  {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback((GLDEBUGPROC) &glDebugOutput, nullptr);
+    glDebugMessageCallback((GLDEBUGPROC)&glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
     std::printf("Debug output enabled.\n");
-  } else {
+  }
+  else
+  {
     std::printf("Debug output not available (context flag not set).\n");
   }
 
-  glad_set_post_callback((GLADcallback) [](const char* name, void* funcptr, int len_args, ...) {
+  glad_set_post_callback((GLADcallback)[](const char* name, void* funcptr, int len_args, ...) {
     if (!strcmp(name, "glGetError")) {
       return;
     }
@@ -37,7 +41,8 @@ SimulationBase::SimulationBase()
   });
 #endif
 
-  if (!GLAD_GL_ARB_bindless_texture) {
+  if (!GLAD_GL_ARB_bindless_texture)
+  {
     throw std::runtime_error{"ARB_bindless_texture extension is required."};
   }
 
@@ -54,46 +59,62 @@ void SimulationBase::glDebugOutput(
   const char* sourceStr = "Unknown";
   if (source == GL_DEBUG_SOURCE_API) {
     sourceStr = "API";
-  } else if (source == GL_DEBUG_SOURCE_WINDOW_SYSTEM) {
+  }
+  else if (source == GL_DEBUG_SOURCE_WINDOW_SYSTEM) {
     sourceStr = "Window System";
-  } else if (source == GL_DEBUG_SOURCE_SHADER_COMPILER) {
+  }
+  else if (source == GL_DEBUG_SOURCE_SHADER_COMPILER) {
     sourceStr = "Shader Compiler";
-  } else if (source == GL_DEBUG_SOURCE_THIRD_PARTY) {
+  }
+  else if (source == GL_DEBUG_SOURCE_THIRD_PARTY) {
     sourceStr = "Third Party";
-  } else if (source == GL_DEBUG_SOURCE_APPLICATION) {
+  }
+  else if (source == GL_DEBUG_SOURCE_APPLICATION) {
     sourceStr = "Application";
-  } else if (source == GL_DEBUG_SOURCE_OTHER) {
+  }
+  else if (source == GL_DEBUG_SOURCE_OTHER) {
     sourceStr = "Other";
   }
 
   const char* typeStr = "Unknown";
   if (type == GL_DEBUG_TYPE_ERROR) {
     typeStr = "Error";
-  } else if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR) {
+  }
+  else if (type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR) {
     typeStr = "Deprecated Behaviour";
-  } else if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) {
+  }
+  else if (type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR) {
     typeStr = "Undefined Behaviour";
-  } else if (type == GL_DEBUG_TYPE_PORTABILITY) {
+  }
+  else if (type == GL_DEBUG_TYPE_PORTABILITY) {
     typeStr = "Portability";
-  } else if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+  }
+  else if (type == GL_DEBUG_TYPE_PERFORMANCE) {
     typeStr = "Performance";
-  } else if (type == GL_DEBUG_TYPE_MARKER) {
+  }
+  else if (type == GL_DEBUG_TYPE_MARKER) {
     typeStr = "Marker";
-  } else if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
+  }
+  else if (type == GL_DEBUG_TYPE_PUSH_GROUP) {
     typeStr = "Push Group";
-  } else if (type == GL_DEBUG_TYPE_POP_GROUP) {
+  }
+  else if (type == GL_DEBUG_TYPE_POP_GROUP) {
     typeStr = "Pop Group";
-  } else if (type == GL_DEBUG_TYPE_OTHER) {
+  }
+  else if (type == GL_DEBUG_TYPE_OTHER) {
     typeStr = "Other";
   }
 
   if (severity == GL_DEBUG_SEVERITY_HIGH) {
     std::printf("GL/ERROR: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
-  } else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+  }
+  else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
     std::printf("GL/WARNING: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
-  } else if (severity == GL_DEBUG_SEVERITY_LOW) {
+  }
+  else if (severity == GL_DEBUG_SEVERITY_LOW) {
     std::printf("GL/INFO: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
-  } else {
+  }
+  else {
     std::printf("GL/DEBUG: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
   }
 }
@@ -114,16 +135,16 @@ GLuint SimulationBase::createVertFragShader(
   GLint logLength;
   GLint result = GL_FALSE;
   glGetShaderiv(vertHandle, GL_COMPILE_STATUS, &result);
-  if (result == GL_FALSE) {
+  if (result == GL_FALSE)
+  {
     glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      std::vector<char> errorMessage(logLength + 1);
-      glGetShaderInfoLog(vertHandle, logLength, nullptr, &errorMessage.front());
-      std::string message(errorMessage.begin(), errorMessage.end());
-      throw std::runtime_error("Unable to compile shader: " + message);
-    } else {
+    if (logLength == 0) {
       throw std::runtime_error("Unable to compile shader.");
     }
+    std::vector<char> errorMessage(logLength + 1);
+    glGetShaderInfoLog(vertHandle, logLength, nullptr, &errorMessage.front());
+    std::string message(errorMessage.begin(), errorMessage.end());
+    throw std::runtime_error("Unable to compile shader: " + message);
   }
 
   const GLuint fragHandle = glCreateShader(GL_FRAGMENT_SHADER);
@@ -132,32 +153,32 @@ GLuint SimulationBase::createVertFragShader(
   glShaderSource(fragHandle, 1, &fragShaderPtr, &fragSize);
   glCompileShader(fragHandle);
   glGetShaderiv(fragHandle, GL_COMPILE_STATUS, &result);
-  if (result == GL_FALSE) {
+  if (result == GL_FALSE)
+  {
     glGetShaderiv(fragHandle, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      std::vector<char> errorMessage(logLength + 1);
-      glGetShaderInfoLog(fragHandle, logLength, nullptr, &errorMessage.front());
-      std::string message(errorMessage.begin(), errorMessage.end());
-      throw std::runtime_error("Unable to compile shader: " + message);
-    } else {
+    if (logLength == 0) {
       throw std::runtime_error("Unable to compile shader.");
     }
+    std::vector<char> errorMessage(logLength + 1);
+    glGetShaderInfoLog(fragHandle, logLength, nullptr, &errorMessage.front());
+    std::string message(errorMessage.begin(), errorMessage.end());
+    throw std::runtime_error("Unable to compile shader: " + message);
   }
 
   glAttachShader(handle, vertHandle);
   glAttachShader(handle, fragHandle);
   glLinkProgram(handle);
   glGetProgramiv(handle, GL_LINK_STATUS, &result);
-  if (result == GL_FALSE) {
+  if (result == GL_FALSE)
+  {
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      std::vector<char> errorMessage(logLength + 1);
-      glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
-      std::string message(errorMessage.begin(), errorMessage.end());
-      throw std::runtime_error("Unable to link program: " + message);
-    } else {
+    if (logLength == 0) {
       throw std::runtime_error("Unable to link program.");
     }
+    std::vector<char> errorMessage(logLength + 1);
+    glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
+    std::string message(errorMessage.begin(), errorMessage.end());
+    throw std::runtime_error("Unable to link program: " + message);
   }
 
   glDetachShader(handle, vertHandle);
@@ -187,31 +208,31 @@ GLuint SimulationBase::createComputeShader(const std::vector<char>& shaderSource
   GLint logLength;
   GLint result = GL_FALSE;
   glGetShaderiv(sourceHandle, GL_COMPILE_STATUS, &result);
-  if (result == GL_FALSE) {
+  if (result == GL_FALSE)
+  {
     glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      std::vector<char> errorMessage(logLength + 1);
-      glGetShaderInfoLog(sourceHandle, logLength, nullptr, &errorMessage.front());
-      std::string message(errorMessage.begin(), errorMessage.end());
-      throw std::runtime_error("Unable to compile shader: " + message);
-    } else {
+    if (logLength == 0) {
       throw std::runtime_error("Unable to compile shader.");
     }
+    std::vector<char> errorMessage(logLength + 1);
+    glGetShaderInfoLog(sourceHandle, logLength, nullptr, &errorMessage.front());
+    std::string message(errorMessage.begin(), errorMessage.end());
+    throw std::runtime_error("Unable to compile shader: " + message);
   }
 
   glAttachShader(handle, sourceHandle);
   glLinkProgram(handle);
   glGetProgramiv(handle, GL_LINK_STATUS, &result);
-  if (result == GL_FALSE) {
+  if (result == GL_FALSE)
+  {
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
-    if (logLength > 0) {
-      std::vector<char> errorMessage(logLength + 1);
-      glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
-      std::string message(errorMessage.begin(), errorMessage.end());
-      throw std::runtime_error("Unable to link program: " + message);
-    } else {
+    if (logLength == 0) {
       throw std::runtime_error("Unable to link program.");
     }
+    std::vector<char> errorMessage(logLength + 1);
+    glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
+    std::string message(errorMessage.begin(), errorMessage.end());
+    throw std::runtime_error("Unable to link program: " + message);
   }
 
   glDetachShader(handle, sourceHandle);
@@ -261,7 +282,8 @@ GLuint SimulationBase::createFullFBO(GLuint depthTexture, std::vector<GLuint> co
     return handle;
   }
 
-  switch (status) {
+  switch (status)
+  {
   case GL_FRAMEBUFFER_UNDEFINED:
     throw std::runtime_error("Default Framebuffer does not exist!");
   case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
@@ -303,7 +325,8 @@ GLuint SimulationBase::createFlatFBO(GLuint colorTexture) const
     return handle;
   }
 
-  switch (status) {
+  switch (status)
+  {
   case GL_FRAMEBUFFER_UNDEFINED:
     throw std::runtime_error("Default Framebuffer does not exist!");
   case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:

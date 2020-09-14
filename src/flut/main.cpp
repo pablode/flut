@@ -36,7 +36,9 @@ int main(int argc, char* argv[])
     // IO
     window.pollEvents();
     const auto& imguiIO = ImGui::GetIO();
-    if (!imguiIO.WantCaptureMouse && !imguiIO.WantCaptureKeyboard) {
+
+    if (!imguiIO.WantCaptureMouse && !imguiIO.WantCaptureKeyboard)
+    {
       camera.update(deltaTime);
     }
 

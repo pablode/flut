@@ -85,15 +85,17 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     GRID_ORIGIN + Eigen::Vector3f{GRID_LEN(0), GRID_LEN(1), 0.0f},
     GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_LEN(1), 0.0f},
   };
+
   std::vector<float> bboxVertexData;
   bboxVertexData.reserve(bboxVertices.size() * 3);
-  for (const auto& vertex : bboxVertices) {
+  for (const auto& vertex : bboxVertices)
+  {
     bboxVertexData.push_back(vertex(0));
     bboxVertexData.push_back(vertex(1));
     bboxVertexData.push_back(vertex(2));
   }
   bufBBoxVertices_ = createBuffer(bboxVertexData, false);
-  // clang-format off
+
   const std::vector<std::uint32_t> bboxIndices {
     0, 1, 2, 2, 3, 0,
     1, 5, 6, 6, 2, 1,
@@ -102,7 +104,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     4, 5, 1, 1, 0, 4,
     3, 2, 6, 6, 7, 3
   };
-  // clang-format on
+
   bufBBoxIndices_ = createBuffer(bboxIndices, false);
   vao3_ = createBBoxVAO(bufBBoxVertices_, bufBBoxIndices_);
 
@@ -193,7 +195,8 @@ void Simulation::preset1()
   std::vector<float> colData;
   posData.reserve(PARTICLE_COUNT * 3);
   colData.reserve(PARTICLE_COUNT * 3);
-  for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i) {
+  for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i)
+  {
     const float xi = ((std::rand() % 10000) / 10000.0f);
     const float yi = ((std::rand() % 10000) / 10000.0f);
     const float zi = ((std::rand() % 10000) / 10000.0f);
@@ -283,8 +286,10 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(programGridSort_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufGridSorted_);
   constexpr auto N = PARTICLE_COUNT;
-  for (std::uint32_t size = 2; size <= N; size *= 2) {
-    for (std::uint32_t stride = size / 2; stride > 0; stride /= 2) {
+  for (std::uint32_t size = 2; size <= N; size *= 2)
+  {
+    for (std::uint32_t stride = size / 2; stride > 0; stride /= 2)
+    {
       glProgramUniform1ui(programGridSort_, 0, size);
       glProgramUniform1ui(programGridSort_, 1, stride);
       glDispatchCompute(numWorkGroups, 1, 1);
@@ -397,12 +402,12 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform2i(programRenderCurvature_, 3, width_, height_);
     GLuint64 inputDepthTexHandle = texDepthHandle_;
     bool swap = false;
-    for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i) {
+
+    for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
+    {
       glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo3_ : fbo2_);
       glClear(GL_COLOR_BUFFER_BIT);
-
       glProgramUniformHandleui64ARB(programRenderCurvature_, 1, inputDepthTexHandle);
-
       glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
       inputDepthTexHandle = swap ? texTemp2Handle_ : texTemp1Handle_;
       swap = !swap;
@@ -428,7 +433,8 @@ void Simulation::render(const Camera& camera, float dt)
   glEndQuery(GL_TIME_ELAPSED);
 
   // Fetch GPU Timer Queries
-  if (frame_ > 1) {
+  if (frame_ > 1)
+  {
     GLuint64 elapsedTime = 0;
     glGetQueryObjectui64v(lastQuery[0], GL_QUERY_RESULT, &elapsedTime);
     time_.gridInsertMs = elapsedTime / 1000000.0f;
