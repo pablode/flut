@@ -226,8 +226,8 @@ GLuint SimulationBase::createBuffer(const std::vector<float>& data, bool dynamic
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
-  const auto size = data.size();
-  glNamedBufferData(handle, size * sizeof(float), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  const auto size = data.size() * sizeof(float);
+  glNamedBufferStorage(handle, size, data.data(), dynamic ? GL_DYNAMIC_STORAGE_BIT : 0);
   return handle;
 }
 
@@ -238,8 +238,8 @@ GLuint SimulationBase::createBuffer(const std::vector<GLuint>& data, bool dynami
   if (!handle) {
     throw std::runtime_error("Unable to create buffer.");
   }
-  const auto size = data.size();
-  glNamedBufferData(handle, size * sizeof(GLuint), data.data(), dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+  const auto size = data.size() * sizeof(float);
+  glNamedBufferStorage(handle, size, data.data(), dynamic ? GL_DYNAMIC_STORAGE_BIT : 0);
   return handle;
 }
 
