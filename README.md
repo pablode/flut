@@ -19,7 +19,7 @@ Example:
 ```sh
 mkdir -p build && cd build
 cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release
-cmake --build . -j 8 --target flut && ./bin/flut
+cmake --build . -j 8 --target flut --config Release && ./bin/flut
 ```
 
 #### Future Improvements
