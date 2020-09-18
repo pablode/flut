@@ -19,14 +19,14 @@ Example:
 ```sh
 mkdir -p build && cd build
 cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release
-cmake --build . --target flut && ./bin/flut
+cmake --build . -j 8 --target flut && ./bin/flut
 ```
 
 #### Future Improvements
 
-- Use prefix-sum based grid construction instead of sorting
-- Interleave particle data (copy if necessary)
-- Use 4x4x4 neighborhood lookups
-- Utilize groupshared memory (with large workgroups)
-- Optimize shader code: loop-unrolling, reduce branches, micro-optimizations
-- Replace curvature flow with ray marching
+- Update README and pics to reflect new uniform grid building
+- Better boundary handling with density contribution
+- NxNxN workgroups with shared mem caching for neighborhood searches
+- Replace curvature flow with better visualization method
+- Implement surface tension forces
+- Use coarse 3d velocity texture with HW filtering

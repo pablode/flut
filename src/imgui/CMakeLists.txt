@@ -14,7 +14,7 @@ add_library(
 )
 
 target_link_libraries(
-  imgui PUBLIC
+  imgui PRIVATE
   SDL2
   OpenGL::GL
   glad
