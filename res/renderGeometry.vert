@@ -70,7 +70,7 @@ void main()
     const vec3 particlePos = particles[p].position;
     const vec3 normPos = (particlePos - gridOrigin) / gridSize;
     const ivec3 voxelCoord = ivec3(normPos * (1.0f - GRID_EPS) * gridRes);
-    fragColor = gridRes / vec3(voxelCoord);
+    fragColor = vec3(voxelCoord) / gridRes;
   }
 
   fragPos = (view * vec4(vertPos, 1.0)).xyz;
