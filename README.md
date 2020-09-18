@@ -31,6 +31,10 @@ cmake --build . -j 8 --target flut --config Release && ./bin/flut
 - Implement surface tension forces
 - Use coarse 3d velocity texture with HW filtering
 
+### Acknowledgements
+
+Special thanks to Sebastian Aaltonen for his detailed description of Claybook's SPH implementation.
+
 ### License
 
 ```
