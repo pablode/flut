@@ -1,0 +1,41 @@
+#version 460 core
+
+#extension GL_ARB_bindless_texture: require
+
+layout(local_size_x = 32) in;
+
+struct Particle
+{
+  vec3 position;
+  float density;
+  vec3 color;
+  float pressure;
+  vec3 velocity;
+  float padding;
+};
+
+layout(binding = 0, std430) restrict readonly buffer particleBuf1
+{
+  Particle particles[];
+};
+
+layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
+layout(location = 1) uniform vec3 invCellSize;
+layout(location = 2) uniform vec3 gridOrigin;
+layout(location = 3) uniform uint particleCount;
+
+void main()
+{
+  const uint particleId = gl_GlobalInvocationID.x;
+
+  if (particleId >= particleCount)
+  {
+    return;
+  }
+
+  const vec3 particlePos = particles[particleId].position;
+
+  const ivec3 voxelCoord = ivec3(invCellSize * (particlePos - gridOrigin));
+
+  imageAtomicAdd(grid, voxelCoord, 1);
+}

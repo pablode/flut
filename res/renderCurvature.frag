@@ -1,6 +1,6 @@
 #version 430 core
 
-#extension ARB_bindless_texture : require
+#extension GL_ARB_bindless_texture : require
 
 /// Pipeline stage 4 (2).
 /// Depth buffer smoothing using Curvature Flow. This pass is applied

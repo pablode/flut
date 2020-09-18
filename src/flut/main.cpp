@@ -10,8 +10,8 @@
 
 int main(int argc, char* argv[])
 {
-  constexpr std::uint32_t WIDTH = 800;
-  constexpr std::uint32_t HEIGHT = 600;
+  constexpr std::uint32_t WIDTH = 1200;
+  constexpr std::uint32_t HEIGHT = 800;
 
   flut::core::Window window{"flut", WIDTH, HEIGHT};
   flut::core::Camera camera{window};
@@ -49,19 +49,18 @@ int main(int argc, char* argv[])
     ImGui::SetNextWindowPos({50, 50});
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
-    const float frameTime = times.gridInsertMs + times.gridSortMs + times.gridIndexingMs + times.densityComputationMs +
-      times.forceUpdateMs + times.renderingMs;
+    const float frameTime = times.gridBuildMs + times.simStep1Ms + times.simStep2Ms + times.renderMs;
     ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
     ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES(0), simulation.GRID_RES(1), simulation.GRID_RES(2));
     ImGui::Text("Frame: %.2fms (%.2fms)", frameTime, deltaTime * 1000.0f);
 
-    ImGui::Text("GrIns   GrSort  GrIdx   DensCom  ForceUp  Render");
-    ImGui::Text("%.2fms  %.2fms  %.2fms  %.2fms   %.2fms   %.2fms", times.gridInsertMs, times.gridSortMs,
-      times.gridIndexingMs, times.densityComputationMs, times.forceUpdateMs, times.renderingMs);
+    ImGui::Text("GridBuild   SimStep1   SimStep2   Render");
+    ImGui::Text("%.2fms      %.2fms     %.2fms     %.2fms",
+                times.gridBuildMs, times.simStep1Ms, times.simStep2Ms, times.renderMs);
 
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
 
-    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
+    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -5.0f, 5.0f, nullptr, 1.0f);
 
     const bool preset1ButtonPressed = ImGui::Button("Preset 1");
     if (!wasPreset1ButtonPressed && preset1ButtonPressed) {

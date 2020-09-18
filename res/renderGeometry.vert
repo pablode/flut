@@ -1,25 +1,33 @@
 #version 430 core
 
-/// Pipeline stage 4 (1).
-/// Determine point color, size and position.
-
-const float EPS = 0.001;
-const float OFF_DENSITY = 750.0;
-const float MAX_DENSITY = 1250.0;
+#define FLOAT_MIN 1.175494351e-38
+const float EPS = 0.000001;
+const float MAX_DENSITY = 50.0;
 
 layout (location = 0) in vec3 vertPos;
 layout (location = 1) in vec3 vertColor;
 
-layout (std430, binding = 0) buffer positionBuf2 { float position2[]; };
-layout (std430, binding = 1) buffer densityBuf { float density[]; };
-layout (std430, binding = 2) buffer velocityBuf { float velocity[]; };
+struct Particle
+{
+  vec3 position;
+  float density;
+  vec3 color;
+  float pressure;
+  vec3 velocity;
+  float padding;
+};
+
+layout(binding = 0, std430) restrict buffer particleBuf
+{
+  Particle particles[];
+};
 
 layout (location = 0) uniform mat4 modelViewProj;
 layout (location = 1) uniform mat4 view;
 layout (location = 2) uniform mat4 projection;
-layout (location = 3) uniform vec3 gridLength;
+layout (location = 3) uniform vec3 gridSize;
 layout (location = 4) uniform vec3 gridOrigin;
-layout (location = 5) uniform uvec3 gridResolution;
+layout (location = 5) uniform ivec3 gridRes;
 layout (location = 6) uniform uint particleCount;
 layout (location = 7) uniform float pointRadius;
 layout (location = 8) uniform float pointScale;
@@ -29,53 +37,46 @@ layout (location = 10) uniform int shadingMode;
 out vec3 fragPos;
 out vec3 fragColor;
 
-uvec3 computeCellIds(vec3 pos) {
-  return uvec3((gridResolution * (1.0 - EPS) * (pos - gridOrigin)) / gridLength);
-}
+void main()
+{
+  const int p = gl_VertexID;
 
-vec3 voxelColor(uint particleCount, uint p) {
-  vec3 pos = vec3(position2[p * 3 + 0],
-    position2[p * 3 + 1], position2[p * 3 + 2]);
-  uvec3 cellIds = computeCellIds(pos);
-  return vec3(cellIds) / gridResolution;
-}
-
-void main() {
-
-  // 0: Initial
-  // 1: Velocity
-  // 2: Density
-  // 3: Uniform Grid
-  int p = gl_VertexID;
-  if (colorMode == 0) {
+  if (colorMode == 0)
+  {
     fragColor = vertColor;
-  } else if (colorMode == 1) {
-    vec3 velo = abs(vec3(velocity[p * 3 + 0],
-      velocity[p * 3 + 1], velocity[p * 3 + 2]));
-    if (isinf(velo.x) || isnan(velo.x)
-        || isinf(velo.y) || isnan(velo.y)
-        || isinf(velo.z) || isnan(velo.z)
-        || velo == vec3(0.0)) {
-      fragColor = vec3(0.0);
-    } else {
-      float w = max(velo.x, max(velo.y, velo.z));
-      fragColor = (velo / w);
-    }
-  } else if (colorMode == 2) {
-    vec3 velo = abs(vec3(velocity[p * 3 + 0],
-      velocity[p * 3 + 1], velocity[p * 3 + 2]));
-    float speed = length(velo);
+  }
+  else if (colorMode == 1)
+  {
+    const vec3 velocity = abs(particles[p].velocity);
+    const float w = max(max(FLOAT_MIN, velocity.x), max(velocity.y, velocity.z));
+    const bool invalid = any(isnan(velocity)) || any(isinf(velocity));
+    fragColor = mix(velocity / w, vec3(1.0, 0.0, 0.0), float(invalid));
+  }
+  else if (colorMode == 2)
+  {
+    const vec3 velocity = particles[p].velocity;
+    const float speed = length(velocity);
     fragColor = vec3(speed, speed, 0.0);
-  } else if (colorMode == 3) {
-    float d = max(0.0, (density[p] - OFF_DENSITY) / MAX_DENSITY);
-    fragColor = vec3(d, d, 1.0);
-    if (density[p] <= 0.0 || isinf(density[p]) || isnan(density[p])) fragColor = vec3(1.0, 0.0, 0.0);
-  } else if (colorMode == 4) {
-    fragColor = voxelColor(particleCount, p);
+  }
+  else if (colorMode == 3)
+  {
+    const float density = particles[p].density;
+    const float norm = density / MAX_DENSITY;
+    const bool invalid = (density <= 0.0) || any(isnan(density)) || any(isinf(density));
+    fragColor = mix(vec3(0.0, norm, 0.0), vec3(1.0, 0.0, 0.0), float(invalid));
+  }
+  else if (colorMode == 4)
+  {
+    const vec3 particlePos = particles[p].position;
+    const vec3 normPos = (particlePos - gridOrigin) / gridSize;
+    const ivec3 voxelCoord = ivec3(normPos * (1.0f - EPS) * gridRes);
+    fragColor = gridRes / vec3(voxelCoord);
   }
 
   fragPos = (view * vec4(vertPos, 1.0)).xyz;
-  float dist = length(fragPos);
+
+  const float dist = max(length(fragPos), FLOAT_MIN);
+
   gl_PointSize = pointRadius * (pointScale / dist);
   gl_Position = modelViewProj * vec4(vertPos, 1.0);
 }
