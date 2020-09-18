@@ -10,7 +10,7 @@ GPU-based fluid simulation and rendering using OpenGL 4.6 compute shaders, DSA a
 
 ![overview](pipeline.png)
 
-#### Build
+### Build
 
 This project uses CMake for generating buildsystem files and Git submodules for dependency tracking. Make sure you `git clone` with the `--recursive` flag or execute `git submodule update --init --recursive` after a non-recursive clone.  
 Then, invoke CMake for your buildsystem of choice and build the `flut` target.  
@@ -22,7 +22,7 @@ cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=Release
 cmake --build . -j 8 --target flut --config Release && ./bin/flut
 ```
 
-#### Future Improvements
+### Future Improvements
 
 - Update README and pics to reflect new uniform grid building
 - Better boundary handling with density contribution
@@ -30,3 +30,24 @@ cmake --build . -j 8 --target flut --config Release && ./bin/flut
 - Replace curvature flow with better visualization method
 - Implement surface tension forces
 - Use coarse 3d velocity texture with HW filtering
+
+### License
+
+```
+
+    Copyright (C) 2020 Pablo Delgado Krämer
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+```
