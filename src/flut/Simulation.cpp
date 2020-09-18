@@ -1,7 +1,6 @@
 #include "Simulation.hpp"
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <fstream>
 #include <limits>
@@ -64,24 +63,24 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   weightConstKernel_ = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
 
   // Bounding Box
-  const std::vector<Eigen::Vector3f> bboxVertices{
-    GRID_ORIGIN + Eigen::Vector3f{0.0f, 0.0f, GRID_SIZE(2)},
-    GRID_ORIGIN + Eigen::Vector3f{GRID_SIZE(0), 0.0f, GRID_SIZE(2)},
-    GRID_ORIGIN + Eigen::Vector3f{GRID_SIZE(0), GRID_SIZE(1), GRID_SIZE(2)},
-    GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_SIZE(1), GRID_SIZE(2)},
-    GRID_ORIGIN + Eigen::Vector3f{0.0f, 0.0f, 0.0f},
-    GRID_ORIGIN + Eigen::Vector3f{GRID_SIZE(0), 0.0f, 0.0f},
-    GRID_ORIGIN + Eigen::Vector3f{GRID_SIZE(0), GRID_SIZE(1), 0.0f},
-    GRID_ORIGIN + Eigen::Vector3f{0.0f, GRID_SIZE(1), 0.0f},
+  const std::vector<glm::vec3> bboxVertices{
+    GRID_ORIGIN + glm::vec3{       0.0f,        0.0f, GRID_SIZE.z},
+    GRID_ORIGIN + glm::vec3{GRID_SIZE.x,        0.0f, GRID_SIZE.z},
+    GRID_ORIGIN + glm::vec3{GRID_SIZE.x, GRID_SIZE.y, GRID_SIZE.z},
+    GRID_ORIGIN + glm::vec3{       0.0f, GRID_SIZE.y, GRID_SIZE.z},
+    GRID_ORIGIN + glm::vec3{       0.0f,        0.0f,        0.0f},
+    GRID_ORIGIN + glm::vec3{GRID_SIZE.x,        0.0f,        0.0f},
+    GRID_ORIGIN + glm::vec3{GRID_SIZE.x, GRID_SIZE.y,        0.0f},
+    GRID_ORIGIN + glm::vec3{       0.0f, GRID_SIZE.y,        0.0f},
   };
 
   std::vector<float> bboxVertexData;
   bboxVertexData.reserve(bboxVertices.size() * 3);
   for (const auto& vertex : bboxVertices)
   {
-    bboxVertexData.push_back(vertex(0));
-    bboxVertexData.push_back(vertex(1));
-    bboxVertexData.push_back(vertex(2));
+    bboxVertexData.push_back(vertex.x);
+    bboxVertexData.push_back(vertex.y);
+    bboxVertexData.push_back(vertex.z);
   }
   bufBBoxVertices_ = createBuffer(bboxVertexData, false);
 
@@ -99,7 +98,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 
   // Uniform Grid
   glCreateTextures(GL_TEXTURE_3D, 1, &texGrid_);
-  glTextureStorage3D(texGrid_, 1, GL_R32UI, GRID_RES(0), GRID_RES(1), GRID_RES(2));
+  glTextureStorage3D(texGrid_, 1, GL_R32UI, GRID_RES.x, GRID_RES.y, GRID_RES.z);
   texGridImgHandle_ = glGetImageHandleARB(texGrid_, 0, GL_FALSE, 0, GL_R32UI);
   glMakeImageHandleResidentARB(texGridImgHandle_, GL_READ_WRITE);
 
@@ -184,12 +183,12 @@ void Simulation::preset1()
   for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i)
   {
     Particle& p = particles[i];
-    const float x = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE(0) * 0.5);
-    const float y = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE(1) * 0.5);
-    const float z = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE(2) * 0.5);
-    p.position_x = GRID_ORIGIN(0) + GRID_SIZE(0) * 0.25f + x;
-    p.position_y = GRID_ORIGIN(1) + GRID_SIZE(1) * 0.25f + y;
-    p.position_z = GRID_ORIGIN(2) + GRID_SIZE(2) * 0.25f + z;
+    const float x = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE.x * 0.5);
+    const float y = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE.y * 0.5);
+    const float z = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE.z * 0.5);
+    p.position_x = GRID_ORIGIN.x + GRID_SIZE.x * 0.25f + x;
+    p.position_y = GRID_ORIGIN.y + GRID_SIZE.y * 0.25f + y;
+    p.position_z = GRID_ORIGIN.z + GRID_SIZE.z * 0.25f + z;
     p.density = 0.0f;
     p.color_r = 0.0f;
     p.color_g = 0.0f;
@@ -248,11 +247,7 @@ void Simulation::render(const Camera& camera, float dt)
     fbo3_ = createFlatFBO(texTemp2_);
   }
 
-  const Eigen::Vector3f invCellSize = Eigen::Vector3f{
-    GRID_RES(0) * (1.0f - 0.000001f) / GRID_SIZE(0),
-    GRID_RES(1) * (1.0f - 0.000001f) / GRID_SIZE(1),
-    GRID_RES(2) * (1.0f - 0.000001f) / GRID_SIZE(2)
-  };
+  const glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.000001f) / GRID_SIZE;
 
   glViewport(0, 0, width_, height_);
 
@@ -265,8 +260,8 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(programBuildGrid1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
   glProgramUniformHandleui64ARB(programBuildGrid1_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programBuildGrid1_, 1, 1, invCellSize.data());
-  glProgramUniform3fv(programBuildGrid1_, 2, 1, GRID_ORIGIN.data());
+  glProgramUniform3fv(programBuildGrid1_, 1, 1, glm::value_ptr(invCellSize));
+  glProgramUniform3fv(programBuildGrid1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
   glProgramUniform1ui(programBuildGrid1_, 3, PARTICLE_COUNT);
   glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -278,11 +273,11 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(programBuildGrid2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufCounters_);
   glProgramUniformHandleui64ARB(programBuildGrid2_, 0, texGridImgHandle_);
-  glProgramUniform3iv(programBuildGrid2_, 1, 1, GRID_RES.data());
+  glProgramUniform3iv(programBuildGrid2_, 1, 1, glm::value_ptr(GRID_RES));
   glDispatchCompute(
-    (GRID_RES(0) / 4) + 1,
-    (GRID_RES(1) / 4) + 1,
-    (GRID_RES(2) / 4) + 1
+    (GRID_RES.x + 4 - 1) / 4 * 4,
+    (GRID_RES.y + 4 - 1) / 4 * 4,
+    (GRID_RES.z + 4 - 1) / 4 * 4
   );
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -290,8 +285,8 @@ void Simulation::render(const Camera& camera, float dt)
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
   glProgramUniformHandleui64ARB(programBuildGrid3_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programBuildGrid3_, 1, 1, invCellSize.data());
-  glProgramUniform3fv(programBuildGrid3_, 2, 1, GRID_ORIGIN.data());
+  glProgramUniform3fv(programBuildGrid3_, 1, 1, glm::value_ptr(invCellSize));
+  glProgramUniform3fv(programBuildGrid3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
   glProgramUniform1ui(programBuildGrid3_, 3, PARTICLE_COUNT);
   glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
@@ -302,9 +297,9 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(programSimStep1_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
   glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programSimStep1_, 1, 1, invCellSize.data());
-  glProgramUniform3fv(programSimStep1_, 2, 1, GRID_ORIGIN.data());
-  glProgramUniform3iv(programSimStep1_, 3, 1, GRID_RES.data());
+  glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
+  glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+  glProgramUniform3iv(programSimStep1_, 3, 1, glm::value_ptr(GRID_RES));
   glProgramUniform1ui(programSimStep1_, 4, PARTICLE_COUNT);
   glProgramUniform1f(programSimStep1_, 5, MASS);
   glProgramUniform1f(programSimStep1_, 6, KERNEL_RADIUS);
@@ -321,12 +316,12 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(programSimStep2_);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
   glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programSimStep2_, 1, 1, invCellSize.data());
+  glProgramUniform3fv(programSimStep2_, 1, 1, glm::value_ptr(invCellSize));
   glProgramUniform1f(programSimStep2_, 2, DT * options_.deltaTimeMod);
-  glProgramUniform3fv(programSimStep2_, 3, 1, GRID_SIZE.data());
-  glProgramUniform3fv(programSimStep2_, 4, 1, GRID_ORIGIN.data());
+  glProgramUniform3fv(programSimStep2_, 3, 1, glm::value_ptr(GRID_SIZE));
+  glProgramUniform3fv(programSimStep2_, 4, 1, glm::value_ptr(GRID_ORIGIN));
   glProgramUniform1ui(programSimStep2_, 5, PARTICLE_COUNT);
-  glProgramUniform3iv(programSimStep2_, 6, 1, GRID_RES.data());
+  glProgramUniform3iv(programSimStep2_, 6, 1, glm::value_ptr(GRID_RES));
   glProgramUniform3fv(programSimStep2_, 7, 1, &options_.gravity[0]);
   glProgramUniform1f(programSimStep2_, 8, MASS);
   glProgramUniform1f(programSimStep2_, 9, KERNEL_RADIUS);
@@ -355,14 +350,14 @@ void Simulation::render(const Camera& camera, float dt)
   const auto& view = camera.view();
   const auto& projection = camera.projection();
   const auto& invProjection = camera.invProjection();
-  const Eigen::Matrix4f mvp = projection * view;
+  const glm::mat4 mvp = projection * view;
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-  glProgramUniformMatrix4fv(renderProgram, 0, 1, GL_FALSE, mvp.data());
-  glProgramUniformMatrix4fv(renderProgram, 1, 1, GL_FALSE, view.data());
-  glProgramUniformMatrix4fv(renderProgram, 2, 1, GL_FALSE, projection.data());
-  glProgramUniform3fv(renderProgram, 3, 1, GRID_SIZE.data());
-  glProgramUniform3fv(renderProgram, 4, 1, GRID_ORIGIN.data());
-  glProgramUniform3iv(renderProgram, 5, 1, GRID_RES.data());
+  glProgramUniformMatrix4fv(renderProgram, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(renderProgram, 1, 1, GL_FALSE, glm::value_ptr(view));
+  glProgramUniformMatrix4fv(renderProgram, 2, 1, GL_FALSE, glm::value_ptr(projection));
+  glProgramUniform3fv(renderProgram, 3, 1, glm::value_ptr(GRID_SIZE));
+  glProgramUniform3fv(renderProgram, 4, 1, glm::value_ptr(GRID_ORIGIN));
+  glProgramUniform3iv(renderProgram, 5, 1, glm::value_ptr(GRID_RES));
   glProgramUniform1ui(renderProgram, 6, PARTICLE_COUNT);
   glProgramUniform1f(renderProgram, 7, pointRadius);
   glProgramUniform1f(renderProgram, 8, pointScale);
@@ -377,8 +372,8 @@ void Simulation::render(const Camera& camera, float dt)
     glDisable(GL_DEPTH_TEST);
     glBindVertexArray(vao3_);
     glUseProgram(programRenderCurvature_);
-    glProgramUniformMatrix4fv(programRenderCurvature_, 0, 1, GL_FALSE, mvp.data());
-    glProgramUniformMatrix4fv(programRenderCurvature_, 2, 1, GL_FALSE, projection.data());
+    glProgramUniformMatrix4fv(programRenderCurvature_, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+    glProgramUniformMatrix4fv(programRenderCurvature_, 2, 1, GL_FALSE, glm::value_ptr(projection));
     glProgramUniform2i(programRenderCurvature_, 3, width_, height_);
     GLuint64 inputDepthTexHandle = texDepthHandle_;
     bool swap = false;
@@ -399,13 +394,13 @@ void Simulation::render(const Camera& camera, float dt)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(programRenderShading_);
-    glProgramUniformMatrix4fv(programRenderShading_, 0, 1, GL_FALSE, mvp.data());
+    glProgramUniformMatrix4fv(programRenderShading_, 0, 1, GL_FALSE, glm::value_ptr(mvp));
     glProgramUniformHandleui64ARB(programRenderShading_, 1, inputDepthTexHandle);
     glProgramUniformHandleui64ARB(programRenderShading_, 2, texColorHandle_);
     glProgramUniform1ui(programRenderShading_, 3, width_);
     glProgramUniform1ui(programRenderShading_, 4, height_);
-    glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, invProjection.data());
-    glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, view.data());
+    glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, glm::value_ptr(invProjection));
+    glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, glm::value_ptr(view));
 
     glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
     glEnable(GL_DEPTH_TEST);

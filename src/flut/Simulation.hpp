@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Core>
+#include <glm/glm.hpp>
 
 #include "core/SimulationBase.hpp"
 
@@ -39,16 +39,10 @@ namespace flut
   public:
     constexpr static std::uint32_t PARTICLE_COUNT = 8000;
 
-    const Eigen::Matrix<float, 3, 1> GRID_SIZE = Eigen::Vector3f{ 10.0f, 6.0f, 2.0f };
-    const Eigen::Matrix<float, 3, 1> GRID_ORIGIN = GRID_SIZE * -0.5f;
-
-    const Eigen::Matrix<std::int32_t, 3, 1> GRID_RES = {
-      (std::int32_t) ((GRID_SIZE(0) / CELL_RADIUS) + 1.0f),
-      (std::int32_t) ((GRID_SIZE(1) / CELL_RADIUS) + 1.0f),
-      (std::int32_t) ((GRID_SIZE(2) / CELL_RADIUS) + 1.0f)
-    };
-
-    const std::uint32_t GRID_VOXEL_COUNT = GRID_RES(0) * GRID_RES(1) * GRID_RES(2);
+    const glm::vec3 GRID_SIZE = { 10.0f, 6.0f, 2.0f };
+    const glm::vec3 GRID_ORIGIN = GRID_SIZE * -0.5f;
+    const glm::ivec3 GRID_RES = glm::ivec3((GRID_SIZE / CELL_RADIUS) + 1.0f);
+    const std::uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;
 
   private:
     constexpr static std::uint32_t SMOOTH_ITERATIONS = 30;

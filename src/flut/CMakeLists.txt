@@ -11,17 +11,17 @@ add_executable(
   Simulation.hpp
 )
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(MSVC)
+  target_compile_options(flut PRIVATE /MP)
+  target_compile_options(flut PRIVATE /Wall)
+  target_compile_options(flut PRIVATE /D_USE_MATH_DEFINES)
+  target_compile_options(flut PRIVATE /DNOMINMAX)
+else()
   target_compile_options(flut PRIVATE -Wall)
   target_compile_options(flut PRIVATE -Wextra)
   target_compile_options(flut PRIVATE -Wno-unused-parameter)
   target_compile_options(flut PRIVATE -Wno-reorder)
   target_compile_options(flut PRIVATE -Wno-error=int-in-bool-context)
-elseif(MSVC)
-  target_compile_options(flut PRIVATE /MP)
-  target_compile_options(flut PRIVATE /Wall)
-  target_compile_options(flut PRIVATE /D_USE_MATH_DEFINES)
-  target_compile_options(flut PRIVATE /DNOMINMAX)
 endif()
 
 target_compile_definitions(
@@ -34,7 +34,7 @@ target_link_libraries(
   imgui
   SDL2
   SDL2main
-  eigen
+  glm
   glad
   OpenGL::GL
 )

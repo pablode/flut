@@ -1,7 +1,7 @@
 #include "Camera.hpp"
 #include "Window.hpp"
 
-#include <Eigen/Geometry>
+#include <algorithm>
 #include <iostream>
 #include <math.h>
 
@@ -21,9 +21,9 @@ Camera::Camera(const Window& window)
   position_ = {0.0f, 0.0f, radius_};
   oldMouseX_ = window_.mouseX();
   oldMouseY_ = window_.mouseY();
-  projection_.setZero();
-  invProjection_.setZero();
-  view_.setIdentity();
+  projection_ = glm::mat4();
+  invProjection_ = glm::mat4();
+  view_ = glm::mat4(1);
   recalcView();
   recalcProjection();
 }
@@ -93,21 +93,21 @@ void Camera::update(float dt)
 
 void Camera::recalcView()
 {
-  const Eigen::Vector3f f = (center_ - position_).normalized();
-  const Eigen::Vector3f s = f.cross(up_).normalized();
-  const Eigen::Vector3f u = s.cross(f).normalized();
-  view_(0, 0) = s.x();
-  view_(0, 1) = s.y();
-  view_(0, 2) = s.z();
-  view_(0, 3) = -s.dot(position_);
-  view_(1, 0) = u.x();
-  view_(1, 1) = u.y();
-  view_(1, 2) = u.z();
-  view_(1, 3) = -u.dot(position_);
-  view_(2, 0) = -f.x();
-  view_(2, 1) = -f.y();
-  view_(2, 2) = -f.z();
-  view_(2, 3) = f.dot(position_);
+  const glm::vec3 f = glm::normalize(center_ - position_);
+  const glm::vec3 s = glm::normalize(glm::cross(f, up_));
+  const glm::vec3 u = glm::normalize(glm::cross(s, f));
+  view_[0][0] = s.x;
+  view_[1][0] = s.y;
+  view_[2][0] = s.z;
+  view_[3][0] = -glm::dot(s, position_);
+  view_[0][1] = u.x;
+  view_[1][1] = u.y;
+  view_[2][1] = u.z;
+  view_[3][1] = -glm::dot(u, position_);
+  view_[0][2] = -f.x;
+  view_[1][2] = -f.y;
+  view_[2][2] = -f.z;
+  view_[3][2] = glm::dot(f, position_);
 }
 
 void Camera::recalcProjection()
@@ -116,25 +116,25 @@ void Camera::recalcProjection()
   const float theta = static_cast<float>(FOV * 0.5);
   const float range = FAR_PLANE - NEAR_PLANE;
   const float invtan = 1.0f / std::tan(theta);
-  projection_(0, 0) = invtan / aspect;
-  projection_(1, 1) = invtan;
-  projection_(2, 2) = -(NEAR_PLANE + FAR_PLANE) / range;
-  projection_(3, 2) = -1.0f;
-  projection_(2, 3) = -(2.0f * NEAR_PLANE * FAR_PLANE) / range;
-  invProjection_ = projection_.inverse();
+  projection_[0][0] = invtan / aspect;
+  projection_[1][1] = invtan;
+  projection_[2][2] = -(NEAR_PLANE + FAR_PLANE) / range;
+  projection_[2][3] = -1.0f;
+  projection_[3][2] = -(2.0f * NEAR_PLANE * FAR_PLANE) / range;
+  invProjection_ = glm::inverse(projection_);
 }
 
-Eigen::Matrix4f Camera::view() const
+glm::mat4 Camera::view() const
 {
   return view_;
 }
 
-Eigen::Matrix4f Camera::projection() const
+glm::mat4 Camera::projection() const
 {
   return projection_;
 }
 
-Eigen::Matrix4f Camera::invProjection() const
+glm::mat4 Camera::invProjection() const
 {
   return invProjection_;
 }

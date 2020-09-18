@@ -1,5 +1,3 @@
-set(EIGEN_TEST_CXX11 OFF)
-set(BUILD_TESTING OFF)
-add_subdirectory(eigen)
+add_subdirectory(glm)
 add_subdirectory(glad)
 add_subdirectory(sdl2)

@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     const float frameTime = times.gridBuildMs + times.simStep1Ms + times.simStep2Ms + times.renderMs;
     ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
-    ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES(0), simulation.GRID_RES(1), simulation.GRID_RES(2));
+    ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES.x, simulation.GRID_RES.y, simulation.GRID_RES.z);
     ImGui::Text("Frame: %.2fms (%.2fms)", frameTime, deltaTime * 1000.0f);
 
     ImGui::Text("GridBuild   SimStep1   SimStep2   Render");

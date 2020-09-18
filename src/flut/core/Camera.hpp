@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Core>
+#include <glm/glm.hpp>
 
 #include "Window.hpp"
 
@@ -23,11 +23,11 @@ namespace flut
 
       void update(float dt);
 
-      Eigen::Matrix4f view() const;
+      glm::mat4 view() const;
 
-      Eigen::Matrix4f projection() const;
+      glm::mat4 projection() const;
 
-      Eigen::Matrix4f invProjection() const;
+      glm::mat4 invProjection() const;
 
     private:
       void recalcView();
@@ -38,12 +38,12 @@ namespace flut
       const Window& window_;
       std::uint32_t width_;
       std::uint32_t height_;
-      Eigen::Matrix4f view_;
-      Eigen::Matrix4f projection_;
-      Eigen::Matrix4f invProjection_;
-      Eigen::Vector3f position_;
-      Eigen::Vector3f center_;
-      Eigen::Vector3f up_;
+      glm::mat4 view_;
+      glm::mat4 projection_;
+      glm::mat4 invProjection_;
+      glm::vec3 position_;
+      glm::vec3 center_;
+      glm::vec3 up_;
       std::int32_t oldMouseX_;
       std::int32_t oldMouseY_;
       float radius_;
