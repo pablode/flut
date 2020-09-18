@@ -1,7 +1,7 @@
-#version 430 core
+#version 460 core
 
-#define FLOAT_MIN 1.175494351e-38
-const float EPS = 0.000001;
+const float FLOAT_MIN = 1.175494351e-38;
+const float GRID_EPS = 0.000001;
 const float MAX_DENSITY = 50.0;
 
 layout (location = 0) in vec3 vertPos;
@@ -17,12 +17,12 @@ struct Particle
   float padding;
 };
 
-layout(binding = 0, std430) restrict buffer particleBuf
+layout(binding = 0, std430) restrict readonly buffer particleBuf
 {
   Particle particles[];
 };
 
-layout (location = 0) uniform mat4 modelViewProj;
+layout (location = 0) uniform mat4 MVP;
 layout (location = 1) uniform mat4 view;
 layout (location = 2) uniform mat4 projection;
 layout (location = 3) uniform vec3 gridSize;
@@ -69,7 +69,7 @@ void main()
   {
     const vec3 particlePos = particles[p].position;
     const vec3 normPos = (particlePos - gridOrigin) / gridSize;
-    const ivec3 voxelCoord = ivec3(normPos * (1.0f - EPS) * gridRes);
+    const ivec3 voxelCoord = ivec3(normPos * (1.0f - GRID_EPS) * gridRes);
     fragColor = gridRes / vec3(voxelCoord);
   }
 
@@ -78,5 +78,5 @@ void main()
   const float dist = max(length(fragPos), FLOAT_MIN);
 
   gl_PointSize = pointRadius * (pointScale / dist);
-  gl_Position = modelViewProj * vec4(vertPos, 1.0);
+  gl_Position = MVP * vec4(vertPos, 1.0);
 }
