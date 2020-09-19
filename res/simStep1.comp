@@ -44,7 +44,7 @@ void main()
 
   const ivec3 voxelId = ivec3(invCellSize * (particle.position - gridOrigin));
 
-  float density = 0.0;
+  float density = mass * pow(re * re, 3) * weightConst;
 
   ivec3 i;
 
@@ -70,6 +70,11 @@ void main()
         for (uint p = 0; p < voxelParticleCount; ++p)
         {
           const uint otherParticleId = voxelParticleOffset + p;
+
+          if (particleId == otherParticleId)
+          {
+            continue;
+          }
 
           const vec3 otherParticlePos = particles[otherParticleId].position;
 
