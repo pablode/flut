@@ -17,6 +17,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   , newHeight_(height)
   , swapFrame_{false}
   , frame_{0}
+  , ipF_{1}
 {
   // Shaders
   std::vector<char> compSource;
@@ -213,10 +214,10 @@ void Simulation::preset1()
 
 void Simulation::render(const Camera& camera, float dt)
 {
-  auto& lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
-  auto& query = timerQueries_[swapFrame_ ? 1 : 0];
-  swapFrame_ = !swapFrame_;
   ++frame_;
+
+  GLuint* lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
+  GLuint* query = timerQueries_[swapFrame_ ? 1 : 0];
 
   // Resize window if needed.
   if (width_ != newWidth_ || height_ != newHeight_)
@@ -247,90 +248,121 @@ void Simulation::render(const Camera& camera, float dt)
     fbo3_ = createFlatFBO(texTemp2_);
   }
 
-  const glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.000001f) / GRID_SIZE;
+  const glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.001f) / GRID_SIZE;
 
   glViewport(0, 0, width_, height_);
 
-  // 1. Build Voxel Grid
-  glBeginQuery(GL_TIME_ELAPSED, query[0]);
-  const std::uint32_t fClearValue = 0;
-  glClearTexImage(texGrid_, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &fClearValue);
-  glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
+  time_.gridBuildMs = 0.0f;
+  time_.simStep1Ms = 0.0f;
+  time_.simStep2Ms = 0.0f;
+  time_.renderMs = 0.0f;
 
-  glUseProgram(programBuildGrid1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
-  glProgramUniformHandleui64ARB(programBuildGrid1_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programBuildGrid1_, 1, 1, glm::value_ptr(invCellSize));
-  glProgramUniform3fv(programBuildGrid1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-  glProgramUniform1ui(programBuildGrid1_, 3, PARTICLE_COUNT);
-  glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
-  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+  if (frame_ > 1)
+  {
+    GLuint64 elapsedTime = 0;
+    glGetQueryObjectui64v(lastQuery[3], GL_QUERY_RESULT, &elapsedTime);
+    time_.renderMs = elapsedTime / 1000000.0f;
+  }
 
-  const std::uint32_t uiClearValue = 0;
-  glClearNamedBufferData(bufCounters_, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &uiClearValue);
-  glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+  for (std::uint32_t f = 0; f < ipF_; f++)
+  {
+    if (frame_ > 1)
+    {
+      GLuint64 elapsedTime = 0;
+      glGetQueryObjectui64v(lastQuery[0], GL_QUERY_RESULT, &elapsedTime);
+      time_.gridBuildMs += elapsedTime / 1000000.0f;
+      glGetQueryObjectui64v(lastQuery[1], GL_QUERY_RESULT, &elapsedTime);
+      time_.simStep1Ms += elapsedTime / 1000000.0f;
+      glGetQueryObjectui64v(lastQuery[2], GL_QUERY_RESULT, &elapsedTime);
+      time_.simStep2Ms += elapsedTime / 1000000.0f;
+    }
 
-  glUseProgram(programBuildGrid2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufCounters_);
-  glProgramUniformHandleui64ARB(programBuildGrid2_, 0, texGridImgHandle_);
-  glProgramUniform3iv(programBuildGrid2_, 1, 1, glm::value_ptr(GRID_RES));
-  glDispatchCompute(
-    (GRID_RES.x + 4 - 1) / 4 * 4,
-    (GRID_RES.y + 4 - 1) / 4 * 4,
-    (GRID_RES.z + 4 - 1) / 4 * 4
-  );
-  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    // 1. Build Voxel Grid
+    glBeginQuery(GL_TIME_ELAPSED, query[0]);
+    const std::uint32_t fClearValue = 0;
+    glClearTexImage(texGrid_, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &fClearValue);
+    glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
 
-  glUseProgram(programBuildGrid3_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
-  glProgramUniformHandleui64ARB(programBuildGrid3_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programBuildGrid3_, 1, 1, glm::value_ptr(invCellSize));
-  glProgramUniform3fv(programBuildGrid3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-  glProgramUniform1ui(programBuildGrid3_, 3, PARTICLE_COUNT);
-  glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
-  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
-  glEndQuery(GL_TIME_ELAPSED);
+    glUseProgram(programBuildGrid1_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
+    glProgramUniformHandleui64ARB(programBuildGrid1_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programBuildGrid1_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programBuildGrid1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programBuildGrid1_, 3, PARTICLE_COUNT);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-  // 2. Simulation Step 1: Compute particle density and pressure
-  glBeginQuery(GL_TIME_ELAPSED, query[1]);
-  glUseProgram(programSimStep1_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-  glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
-  glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-  glProgramUniform3iv(programSimStep1_, 3, 1, glm::value_ptr(GRID_RES));
-  glProgramUniform1ui(programSimStep1_, 4, PARTICLE_COUNT);
-  glProgramUniform1f(programSimStep1_, 5, MASS);
-  glProgramUniform1f(programSimStep1_, 6, KERNEL_RADIUS);
-  glProgramUniform1f(programSimStep1_, 7, weightConstKernel_);
-  glProgramUniform1f(programSimStep1_, 8, STIFFNESS);
-  glProgramUniform1f(programSimStep1_, 9, REST_DENSITY);
-  glProgramUniform1f(programSimStep1_, 10, REST_PRESSURE);
-  glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
-  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-  glEndQuery(GL_TIME_ELAPSED);
+    const std::uint32_t uiClearValue = 0;
+    glClearNamedBufferData(bufCounters_, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &uiClearValue);
+    glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
-  // 3. Simulation Step 2: Update force, integrate velocity and position, handle boundaries
-  glBeginQuery(GL_TIME_ELAPSED, query[2]);
-  glUseProgram(programSimStep2_);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-  glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
-  glProgramUniform3fv(programSimStep2_, 1, 1, glm::value_ptr(invCellSize));
-  glProgramUniform1f(programSimStep2_, 2, DT * options_.deltaTimeMod);
-  glProgramUniform3fv(programSimStep2_, 3, 1, glm::value_ptr(GRID_SIZE));
-  glProgramUniform3fv(programSimStep2_, 4, 1, glm::value_ptr(GRID_ORIGIN));
-  glProgramUniform1ui(programSimStep2_, 5, PARTICLE_COUNT);
-  glProgramUniform3iv(programSimStep2_, 6, 1, glm::value_ptr(GRID_RES));
-  glProgramUniform3fv(programSimStep2_, 7, 1, &options_.gravity[0]);
-  glProgramUniform1f(programSimStep2_, 8, MASS);
-  glProgramUniform1f(programSimStep2_, 9, KERNEL_RADIUS);
-  glProgramUniform1f(programSimStep2_, 10, VIS_COEFF);
-  glProgramUniform1f(programSimStep2_, 11, weightConstViscosity_);
-  glProgramUniform1f(programSimStep2_, 12, weightConstPressure_);
-  glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
-  glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-  glEndQuery(GL_TIME_ELAPSED);
+    glUseProgram(programBuildGrid2_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufCounters_);
+    glProgramUniformHandleui64ARB(programBuildGrid2_, 0, texGridImgHandle_);
+    glProgramUniform3iv(programBuildGrid2_, 1, 1, glm::value_ptr(GRID_RES));
+    glDispatchCompute(
+      (GRID_RES.x + 4 - 1) / 4 * 4,
+      (GRID_RES.y + 4 - 1) / 4 * 4,
+      (GRID_RES.z + 4 - 1) / 4 * 4
+    );
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    glUseProgram(programBuildGrid3_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
+    glProgramUniformHandleui64ARB(programBuildGrid3_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programBuildGrid3_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programBuildGrid3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programBuildGrid3_, 3, PARTICLE_COUNT);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+    glEndQuery(GL_TIME_ELAPSED);
+
+    // 2. Simulation Step 1: Compute particle density and pressure
+    glBeginQuery(GL_TIME_ELAPSED, query[1]);
+    glUseProgram(programSimStep1_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
+    glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform3iv(programSimStep1_, 3, 1, glm::value_ptr(GRID_RES));
+    glProgramUniform1ui(programSimStep1_, 4, PARTICLE_COUNT);
+    glProgramUniform1f(programSimStep1_, 5, MASS);
+    glProgramUniform1f(programSimStep1_, 6, KERNEL_RADIUS);
+    glProgramUniform1f(programSimStep1_, 7, weightConstKernel_);
+    glProgramUniform1f(programSimStep1_, 8, STIFFNESS);
+    glProgramUniform1f(programSimStep1_, 9, REST_DENSITY);
+    glProgramUniform1f(programSimStep1_, 10, REST_PRESSURE);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glEndQuery(GL_TIME_ELAPSED);
+
+    // 3. Simulation Step 2: Update force, integrate velocity and position, handle boundaries
+    glBeginQuery(GL_TIME_ELAPSED, query[2]);
+    glUseProgram(programSimStep2_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
+    glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programSimStep2_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform1f(programSimStep2_, 2, DT * options_.deltaTimeMod);
+    glProgramUniform3fv(programSimStep2_, 3, 1, glm::value_ptr(GRID_SIZE));
+    glProgramUniform3fv(programSimStep2_, 4, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programSimStep2_, 5, PARTICLE_COUNT);
+    glProgramUniform3iv(programSimStep2_, 6, 1, glm::value_ptr(GRID_RES));
+    glProgramUniform3fv(programSimStep2_, 7, 1, &options_.gravity[0]);
+    glProgramUniform1f(programSimStep2_, 8, MASS);
+    glProgramUniform1f(programSimStep2_, 9, KERNEL_RADIUS);
+    glProgramUniform1f(programSimStep2_, 10, VIS_COEFF);
+    glProgramUniform1f(programSimStep2_, 11, weightConstViscosity_);
+    glProgramUniform1f(programSimStep2_, 12, weightConstPressure_);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    glEndQuery(GL_TIME_ELAPSED);
+
+    swapFrame_ = !swapFrame_;
+
+    lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
+    query = timerQueries_[swapFrame_ ? 1 : 0];
+  }
 
   // 4.1 Geometry Pass (or flat)
   GLuint renderProgram;
@@ -406,20 +438,6 @@ void Simulation::render(const Camera& camera, float dt)
     glEnable(GL_DEPTH_TEST);
   }
   glEndQuery(GL_TIME_ELAPSED);
-
-  // Fetch GPU Timer Queries
-  if (frame_ > 1)
-  {
-    GLuint64 elapsedTime = 0;
-    glGetQueryObjectui64v(lastQuery[0], GL_QUERY_RESULT, &elapsedTime);
-    time_.gridBuildMs = elapsedTime / 1000000.0f;
-    glGetQueryObjectui64v(lastQuery[1], GL_QUERY_RESULT, &elapsedTime);
-    time_.simStep1Ms= elapsedTime / 1000000.0f;
-    glGetQueryObjectui64v(lastQuery[2], GL_QUERY_RESULT, &elapsedTime);
-    time_.simStep2Ms= elapsedTime / 1000000.0f;
-    glGetQueryObjectui64v(lastQuery[3], GL_QUERY_RESULT, &elapsedTime);
-    time_.renderMs= elapsedTime / 1000000.0f;
-  }
 }
 
 GLuint Simulation::createParticleVAO(GLuint ssbo) const
@@ -481,6 +499,11 @@ Simulation::SimulationOptions& Simulation::options()
 const Simulation::SimulationTimes& Simulation::times() const
 {
   return time_;
+}
+
+void flut::Simulation::setIntegrationsPerFrame(std::uint32_t ipF)
+{
+  ipF_ = ipF;
 }
 
 void Simulation::loadFileText(const std::string& filePath, std::vector<char>& text) const

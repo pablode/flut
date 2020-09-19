@@ -25,9 +25,9 @@ namespace flut
       float renderMs = 0.0f;
     };
 
-  private:
-    constexpr static float DT = 0.003f;
-    constexpr static float STIFFNESS = 30.0f;
+  public:
+    constexpr static float DT = 0.001f;
+    constexpr static float STIFFNESS = 300.0;
     constexpr static float MASS = 0.02f;
     constexpr static float PARTICLE_RADIUS = 0.0457f;
     constexpr static float KERNEL_RADIUS = PARTICLE_RADIUS * 4.0f;
@@ -35,8 +35,6 @@ namespace flut
     constexpr static float VIS_COEFF = 3.5f;
     constexpr static float REST_DENSITY = 998.27f;
     constexpr static float REST_PRESSURE = 0.0f;
-
-  public:
     constexpr static std::uint32_t PARTICLE_COUNT = 8000;
 
     const glm::vec3 GRID_SIZE = { 10.0f, 6.0f, 2.0f };
@@ -62,6 +60,8 @@ namespace flut
 
     const SimulationTimes& times() const;
 
+    void setIntegrationsPerFrame(std::uint32_t ipF);
+
   private:
     GLuint createParticleVAO(GLuint ssbo) const;
 
@@ -79,6 +79,7 @@ namespace flut
     std::uint64_t frame_;
     SimulationTimes time_;
     SimulationOptions options_;
+    std::uint32_t ipF_;
     float weightConstViscosity_;
     float weightConstPressure_;
     float weightConstKernel_;

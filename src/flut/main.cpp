@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
   using clock = std::chrono::high_resolution_clock;
   auto lastTime = clock::now();
 
+  int ipF = 5;
+
   while (!window.shouldClose())
   {
     const std::chrono::duration<float> timeSpan{clock::now() - lastTime};
@@ -43,6 +45,8 @@ int main(int argc, char* argv[])
     }
 
     // Simulation / Render
+    simulation.setIntegrationsPerFrame(ipF);
+
     simulation.render(camera, deltaTime);
 
     // UI
@@ -51,6 +55,7 @@ int main(int argc, char* argv[])
 
     const float frameTime = times.gridBuildMs + times.simStep1Ms + times.simStep2Ms + times.renderMs;
     ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
+    ImGui::Text("Delta-time: %f", simulation.DT * options.deltaTimeMod);
     ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES.x, simulation.GRID_RES.y, simulation.GRID_RES.z);
     ImGui::Text("Frame: %.2fms (%.2fms)", frameTime, deltaTime * 1000.0f);
 
@@ -58,9 +63,11 @@ int main(int argc, char* argv[])
     ImGui::Text("%.2fms      %.2fms     %.2fms     %.2fms",
                 times.gridBuildMs, times.simStep1Ms, times.simStep2Ms, times.renderMs);
 
-    ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 5.0f, nullptr, 2.0f);
+    ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 2.0f, nullptr, 1.0f);
 
-    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -5.0f, 5.0f, nullptr, 1.0f);
+    ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, 20);
+
+    ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
 
     const bool preset1ButtonPressed = ImGui::Button("Preset 1");
     if (!wasPreset1ButtonPressed && preset1ButtonPressed) {
