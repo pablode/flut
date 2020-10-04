@@ -157,14 +157,10 @@ struct Particle
   float position_y;
   float position_z;
   float density;
-  float color_r;
-  float color_g;
-  float color_b;
-  float pressure;
   float velocity_x;
   float velocity_y;
   float velocity_z;
-  float padding;
+  float pressure;
 };
 
 void Simulation::preset1()
@@ -191,14 +187,10 @@ void Simulation::preset1()
     p.position_y = GRID_ORIGIN.y + GRID_SIZE.y * 0.25f + y;
     p.position_z = GRID_ORIGIN.z + GRID_SIZE.z * 0.25f + z;
     p.density = 0.0f;
-    p.color_r = 0.0f;
-    p.color_g = 0.0f;
-    p.color_b = 1.0f;
-    p.pressure = 0.0f;
     p.velocity_x = 0.0f;
     p.velocity_y = 0.0f;
     p.velocity_z = 0.0f;
-    p.padding = 0.0f;
+    p.pressure = 0.0f;
   }
 
   glCreateBuffers(1, &bufParticles1_);
@@ -452,11 +444,6 @@ GLuint Simulation::createParticleVAO(GLuint ssbo) const
   glVertexArrayVertexBuffer(handle, 0, ssbo, 0, sizeof(Particle));
   glVertexArrayAttribBinding(handle, 0, 0);
   glVertexArrayAttribFormat(handle, 0, 3, GL_FLOAT, GL_FALSE, 0);
-
-  glEnableVertexArrayAttrib(handle, 1);
-  glVertexArrayVertexBuffer(handle, 1, ssbo, 16, sizeof(Particle));
-  glVertexArrayAttribBinding(handle, 1, 1);
-  glVertexArrayAttribFormat(handle, 1, 3, GL_FLOAT, GL_FALSE, 0);
   return handle;
 }
 

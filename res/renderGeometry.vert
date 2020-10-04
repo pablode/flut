@@ -3,18 +3,16 @@
 const float FLOAT_MIN = 1.175494351e-38;
 const float GRID_EPS = 0.000001;
 const float MAX_DENSITY = 50.0;
+const vec3 PARTICLE_COLOR = vec3(0.0, 0.0, 0.6);
 
 layout (location = 0) in vec3 vertPos;
-layout (location = 1) in vec3 vertColor;
 
 struct Particle
 {
   vec3 position;
   float density;
-  vec3 color;
-  float pressure;
   vec3 velocity;
-  float padding;
+  float pressure;
 };
 
 layout(binding = 0, std430) restrict readonly buffer particleBuf
@@ -43,7 +41,7 @@ void main()
 
   if (colorMode == 0)
   {
-    fragColor = vertColor;
+    fragColor = PARTICLE_COLOR;
   }
   else if (colorMode == 1)
   {

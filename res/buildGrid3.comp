@@ -8,10 +8,8 @@ struct Particle
 {
   vec3 position;
   float density;
-  vec3 color;
-  float pressure;
   vec3 velocity;
-  float padding;
+  float pressure;
 };
 
 layout(binding = 0, std430) restrict readonly buffer particleBuf1
