@@ -31,6 +31,18 @@ layout(binding = 0, std430) restrict buffer particleBuf
   Particle particles[];
 };
 
+const ivec3 NEIGHBORHOOD_LUT[27] = {
+  ivec3(-1, -1, -1), ivec3(0, -1, -1), ivec3(1, -1, -1),
+  ivec3(-1, -1,  0), ivec3(0, -1,  0), ivec3(1, -1,  0),
+  ivec3(-1, -1,  1), ivec3(0, -1,  1), ivec3(1, -1,  1),
+  ivec3(-1,  0, -1), ivec3(0,  0, -1), ivec3(1,  0, -1),
+  ivec3(-1,  0,  0), ivec3(0,  0,  0), ivec3(1,  0,  0),
+  ivec3(-1,  0,  1), ivec3(0,  0,  1), ivec3(1,  0,  1),
+  ivec3(-1,  1, -1), ivec3(0,  1, -1), ivec3(1,  1, -1),
+  ivec3(-1,  1,  0), ivec3(0,  1,  0), ivec3(1,  1,  0),
+  ivec3(-1,  1,  1), ivec3(0,  1,  1), ivec3(1,  1,  1)
+};
+
 void main()
 {
   const uint particleId = gl_GlobalInvocationID.x;
@@ -46,52 +58,45 @@ void main()
 
   float density = mass * pow(re * re, 3) * weightConst;
 
-  ivec3 i;
-
-  for (i.x = -1; i.x <= 1; i.x++)
+  #pragma unroll 1
+  for (uint i = 0; i < 27; ++i)
   {
-    for (i.y = -1; i.y <= 1; i.y++)
+    const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[i];
+
+    if (any(lessThan(newVoxelId, ivec3(0))) ||
+        any(greaterThanEqual(newVoxelId, gridRes)))
     {
-      for (i.z = -1; i.z <= 1; i.z++)
+      continue;
+    }
+
+    const uint voxelValue = imageLoad(grid, newVoxelId).r;
+
+    const uint voxelParticleOffset = (voxelValue >> 8);
+    const uint voxelParticleCount = (voxelValue & 0xFF);
+
+    for (uint p = 0; p < voxelParticleCount; ++p)
+    {
+      const uint otherParticleId = voxelParticleOffset + p;
+
+      if (particleId == otherParticleId)
       {
-        const ivec3 newVoxelId = voxelId + i;
-
-        if (any(lessThan(newVoxelId, ivec3(0))) ||
-            any(greaterThanEqual(newVoxelId, gridRes)))
-        {
-          continue;
-        }
-
-        const uint voxelValue = imageLoad(grid, newVoxelId).r;
-
-        const uint voxelParticleOffset = (voxelValue >> 8);
-        const uint voxelParticleCount = (voxelValue & 0xFF);
-
-        for (uint p = 0; p < voxelParticleCount; ++p)
-        {
-          const uint otherParticleId = voxelParticleOffset + p;
-
-          if (particleId == otherParticleId)
-          {
-            continue;
-          }
-
-          const vec3 otherParticlePos = particles[otherParticleId].position;
-
-          const vec3 r = particle.position - otherParticlePos;
-
-          const float rLen = length(r);
-
-          if (rLen >= re)
-          {
-            continue;
-          }
-
-          const float weight = pow(re * re - rLen * rLen, 3) * weightConst;
-
-          density += mass * weight;
-        }
+        continue;
       }
+
+      const vec3 otherParticlePos = particles[otherParticleId].position;
+
+      const vec3 r = particle.position - otherParticlePos;
+
+      const float rLen = length(r);
+
+      if (rLen >= re)
+      {
+        continue;
+      }
+
+      const float weight = pow(re * re - rLen * rLen, 3) * weightConst;
+
+      density += mass * weight;
     }
   }
 
