@@ -12,7 +12,7 @@ struct Particle
   float pressure;
 };
 
-layout(binding = 0, std430) restrict readonly buffer particleBuf1
+layout(binding = 0, std430) restrict buffer particleBuf1
 {
   Particle particles[];
 };
@@ -21,6 +21,10 @@ layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
 layout(location = 1) uniform vec3 invCellSize;
 layout(location = 2) uniform vec3 gridOrigin;
 layout(location = 3) uniform uint particleCount;
+layout(location = 4) uniform vec3 gridSize;
+layout(location = 5) uniform float dt;
+
+const float SAFE_BOUNDS = 0.001;
 
 void main()
 {
@@ -31,9 +35,26 @@ void main()
     return;
   }
 
-  const vec3 particlePos = particles[particleId].position;
+  const Particle particle = particles[particleId];
 
-  const ivec3 voxelCoord = ivec3(invCellSize * (particlePos - gridOrigin));
+  vec3 newVelo = particle.velocity;
+  vec3 newPos = particle.position + newVelo * dt;
+
+  const float wallDamping = 0.5;
+  const vec3 boundsL = gridOrigin + SAFE_BOUNDS;
+  const vec3 boundsH = gridOrigin + gridSize - SAFE_BOUNDS;
+
+  if (newPos.x < boundsL.x) { newVelo.x *= -wallDamping; newPos.x = boundsL.x; }
+  if (newPos.x > boundsH.x) { newVelo.x *= -wallDamping; newPos.x = boundsH.x; }
+  if (newPos.y < boundsL.y) { newVelo.y *= -wallDamping; newPos.y = boundsL.y; }
+  if (newPos.y > boundsH.y) { newVelo.y *= -wallDamping; newPos.y = boundsH.y; }
+  if (newPos.z < boundsL.z) { newVelo.z *= -wallDamping; newPos.z = boundsL.z; }
+  if (newPos.z > boundsH.z) { newVelo.z *= -wallDamping; newPos.z = boundsH.z; }
+
+  particles[particleId].velocity = newVelo;
+  particles[particleId].position = newPos;
+
+  const ivec3 voxelCoord = ivec3(invCellSize * (newPos - gridOrigin));
 
   imageAtomicAdd(grid, voxelCoord, 1);
 }

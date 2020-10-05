@@ -43,7 +43,11 @@ namespace flut
 
       GLuint createDepthTexture(std::uint32_t width, std::uint32_t height) const;
 
+      GLuint64 makeImageResident(GLuint handle) const;
+
       GLuint64 makeTextureResident(GLuint handle) const;
+
+      void makeImageNonResident(GLuint64 bindlessHandle) const;
 
       void makeTextureNonResident(GLuint64 bindlessHandle) const;
 

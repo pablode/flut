@@ -19,27 +19,30 @@ namespace flut
 
     struct SimulationTimes
     {
-      float gridBuildMs = 0.0f;
       float simStep1Ms = 0.0f;
       float simStep2Ms = 0.0f;
+      float simStep3Ms = 0.0f;
+      float simStep4Ms = 0.0f;
+      float simStep5Ms = 0.0f;
+      float simStep6Ms = 0.0f;
       float renderMs = 0.0f;
     };
 
   public:
-    constexpr static float DT = 0.001f;
-    constexpr static float STIFFNESS = 300.0;
+    constexpr static float DT = 0.0012f;
+    constexpr static float STIFFNESS = 250.0;
     constexpr static float MASS = 0.02f;
     constexpr static float PARTICLE_RADIUS = 0.0457f;
     constexpr static float KERNEL_RADIUS = PARTICLE_RADIUS * 4.0f;
-    constexpr static float CELL_RADIUS = PARTICLE_RADIUS * 4.0f;
-    constexpr static float VIS_COEFF = 3.5f;
+    constexpr static float CELL_SIZE = PARTICLE_RADIUS * 4.0f;
+    constexpr static float VIS_COEFF = 0.035f;
     constexpr static float REST_DENSITY = 998.27f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static std::uint32_t PARTICLE_COUNT = 8000;
+    constexpr static std::uint32_t PARTICLE_COUNT = 50000;
 
-    const glm::vec3 GRID_SIZE = { 10.0f, 6.0f, 2.0f };
+    const glm::vec3 GRID_SIZE = glm::vec3{ 10.0f, 6.0f, 2.0f } * glm::vec3{ 2.0f };
     const glm::vec3 GRID_ORIGIN = GRID_SIZE * -0.5f;
-    const glm::ivec3 GRID_RES = glm::ivec3((GRID_SIZE / CELL_RADIUS) + 1.0f);
+    const glm::ivec3 GRID_RES = glm::ivec3((GRID_SIZE / CELL_SIZE) + 1.0f);
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;
 
   private:
@@ -83,10 +86,11 @@ namespace flut
     float weightConstViscosity_;
     float weightConstPressure_;
     float weightConstKernel_;
-    GLuint timerQueries_[2][4];
+    GLuint timerQueries_[2][7];
     GLuint programBuildGrid1_;
     GLuint programBuildGrid2_;
     GLuint programBuildGrid3_;
+    GLuint programWriteVelocity_;
     GLuint programSimStep1_;
     GLuint programSimStep2_;
     GLuint programRenderGeometry_;
@@ -100,6 +104,9 @@ namespace flut
     GLuint bufCounters_;
     GLuint texGrid_;
     GLuint64 texGridImgHandle_;
+    GLuint texVelocity_;
+    GLuint64 texVelocityHandle_;
+    GLuint64 texVelocityImgHandle_;
     GLuint vao1_;
     GLuint vao2_;
     GLuint vao3_;

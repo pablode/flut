@@ -389,11 +389,23 @@ GLuint SimulationBase::createDepthTexture(std::uint32_t width, std::uint32_t hei
   return handle;
 }
 
+GLuint64 SimulationBase::makeImageResident(GLuint handle) const
+{
+  GLuint64 bindlessHandle = glGetTextureHandleARB(handle);
+  glMakeImageHandleResidentARB(bindlessHandle, GL_READ_WRITE);
+  return bindlessHandle;
+}
+
 GLuint64 SimulationBase::makeTextureResident(GLuint handle) const
 {
   GLuint64 bindlessHandle = glGetTextureHandleARB(handle);
   glMakeTextureHandleResidentARB(bindlessHandle);
   return bindlessHandle;
+}
+
+void SimulationBase::makeImageNonResident(GLuint64 bindlessHandle) const
+{
+  glMakeImageHandleNonResidentARB(bindlessHandle);
 }
 
 void SimulationBase::makeTextureNonResident(GLuint64 bindlessHandle) const
