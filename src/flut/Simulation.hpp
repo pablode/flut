@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "core/SimulationBase.hpp"
+#include "SimulationBase.hpp"
 
 namespace flut
 {

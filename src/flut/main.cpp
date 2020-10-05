@@ -1,6 +1,6 @@
 #include "Simulation.hpp"
-#include "core/Camera.hpp"
-#include "core/Window.hpp"
+#include "Camera.hpp"
+#include "Window.hpp"
 
 #include <imgui.h>
 #include <chrono>

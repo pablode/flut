@@ -1,14 +1,14 @@
 add_executable(
   flut WIN32
   main.cpp
-  core/Camera.cpp
-  core/Camera.hpp
-  core/SimulationBase.cpp
-  core/SimulationBase.hpp
-  core/Window.cpp
-  core/Window.hpp
+  Camera.cpp
+  Camera.hpp
   Simulation.cpp
   Simulation.hpp
+  SimulationBase.cpp
+  SimulationBase.hpp
+  Window.cpp
+  Window.hpp
 )
 
 if(MSVC)
