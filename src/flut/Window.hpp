@@ -6,43 +6,40 @@
 
 namespace flut
 {
-  namespace core
+  class Window
   {
-    class Window
-    {
-    public:
-      Window(const char* title, std::uint32_t width, std::uint32_t height);
+  public:
+    Window(const char* title, std::uint32_t width, std::uint32_t height);
 
-      ~Window();
+    ~Window();
 
-    public:
-      void pollEvents();
+  public:
+    void pollEvents();
 
-      bool shouldClose();
+    bool shouldClose();
 
-      void swap();
+    void swap();
 
-      std::uint32_t width() const;
+    std::uint32_t width() const;
 
-      std::uint32_t height() const;
+    std::uint32_t height() const;
 
-      std::int32_t mouseX() const;
+    std::int32_t mouseX() const;
 
-      std::int32_t mouseY() const;
+    std::int32_t mouseY() const;
 
-      bool mouseDown() const;
+    bool mouseDown() const;
 
-      bool keyUp() const;
+    bool keyUp() const;
 
-      bool keyDown() const;
+    bool keyDown() const;
 
-      void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
+    void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
 
-    private:
-      bool shouldClose_;
-      SDL_Window* window_;
-      SDL_GLContext context_;
-      std::function<void(std::uint32_t, std::uint32_t)> resizeCallback_;
-    };
-  }
+  private:
+    bool shouldClose_;
+    SDL_Window* window_;
+    SDL_GLContext context_;
+    std::function<void(std::uint32_t, std::uint32_t)> resizeCallback_;
+  };
 }

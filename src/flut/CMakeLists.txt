@@ -3,10 +3,10 @@ add_executable(
   main.cpp
   Camera.cpp
   Camera.hpp
+  GlHelper.cpp
+  GlHelper.hpp
   Simulation.cpp
   Simulation.hpp
-  SimulationBase.cpp
-  SimulationBase.hpp
   Window.cpp
   Window.hpp
 )

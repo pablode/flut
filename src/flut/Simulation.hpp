@@ -1,12 +1,14 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glad/glad.h>
+#include <cstdint>
 
-#include "SimulationBase.hpp"
+#include "Camera.hpp"
 
 namespace flut
 {
-  class Simulation : public core::SimulationBase
+  class Simulation
   {
   public:
     struct SimulationOptions
@@ -51,11 +53,10 @@ namespace flut
   public:
     Simulation(std::uint32_t width, std::uint32_t height);
 
-    ~Simulation() override;
+    ~Simulation();
 
-    void preset1();
-
-    void render(const core::Camera& camera, float dt) override;
+  public:
+    void render(const Camera& camera, float dt);
 
     void resize(std::uint32_t width, std::uint32_t height);
 
@@ -66,13 +67,9 @@ namespace flut
     void setIntegrationsPerFrame(std::uint32_t ipF);
 
   private:
-    GLuint createParticleVAO(GLuint ssbo) const;
+    void createFrameObjects();
 
-    GLuint createBBoxVAO(GLuint vertices, GLuint indices) const;
-
-    void deleteVAO(GLuint handle);
-
-    void loadFileText(const std::string& filePath, std::vector<char>& text) const;
+    void deleteFrameObjects();
 
   private:
     std::uint32_t width_;
@@ -82,7 +79,7 @@ namespace flut
     std::uint64_t frame_;
     SimulationTimes time_;
     SimulationOptions options_;
-    std::uint32_t ipF_;
+    std::uint32_t integrationsPerFrame_;
     float weightConstViscosity_;
     float weightConstPressure_;
     float weightConstKernel_;

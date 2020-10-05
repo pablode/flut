@@ -13,15 +13,14 @@ int main(int argc, char* argv[])
   constexpr std::uint32_t WIDTH = 1200;
   constexpr std::uint32_t HEIGHT = 800;
 
-  flut::core::Window window{"flut", WIDTH, HEIGHT};
-  flut::core::Camera camera{window};
+  flut::Window window{"flut", WIDTH, HEIGHT};
+  flut::Camera camera{window};
   flut::Simulation simulation{WIDTH, HEIGHT};
 
   window.resize([&](std::uint32_t width, std::uint32_t height) {
     simulation.resize(width, height);
   });
 
-  bool wasPreset1ButtonPressed = false;
   auto& options = simulation.options();
   auto& times = simulation.times();
   using clock = std::chrono::high_resolution_clock;
@@ -70,12 +69,6 @@ int main(int argc, char* argv[])
     ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, 20);
 
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
-
-    const bool preset1ButtonPressed = ImGui::Button("Preset 1");
-    if (!wasPreset1ButtonPressed && preset1ButtonPressed) {
-      simulation.preset1();
-    }
-    wasPreset1ButtonPressed = preset1ButtonPressed;
 
     ImGui::Text("Particle Color:");
     ImGui::RadioButton("Initial", &options.colorMode, 0);

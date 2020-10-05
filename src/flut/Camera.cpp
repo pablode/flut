@@ -6,7 +6,6 @@
 #include <math.h>
 
 using namespace flut;
-using namespace flut::core;
 
 Camera::Camera(const Window& window)
   : window_(window)

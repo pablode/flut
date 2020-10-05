@@ -7,7 +7,6 @@
 #include <cstdio>
 
 using namespace flut;
-using namespace flut::core;
 
 Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
   : shouldClose_{false}
@@ -54,6 +53,10 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
 
   if (GLVersion.major < 4 || (GLVersion.major == 4 && GLVersion.minor < 6)) {
     throw std::runtime_error("OpenGL 4.6 required.");
+  }
+
+  if (!GLAD_GL_ARB_bindless_texture) {
+    throw std::runtime_error("GL_ARB_bindless_texture extension is required.");
   }
 
   std::printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);

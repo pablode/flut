@@ -6,49 +6,46 @@
 
 namespace flut
 {
-  namespace core
+  class Camera
   {
-    class Camera
-    {
-    private:
-      constexpr static float FOV = static_cast<float>(60.0f * M_PI / 180.0f);
-      constexpr static float SENSITIVITY = 0.005f;
-      constexpr static float NEAR_PLANE = 0.01f;
-      constexpr static float FAR_PLANE = 25.0f;
+  private:
+    constexpr static float FOV = static_cast<float>(60.0f * M_PI / 180.0f);
+    constexpr static float SENSITIVITY = 0.005f;
+    constexpr static float NEAR_PLANE = 0.01f;
+    constexpr static float FAR_PLANE = 25.0f;
 
-    public:
-      Camera(const Window& window);
+  public:
+    Camera(const Window& window);
 
-      ~Camera();
+    ~Camera();
 
-      void update(float dt);
+    void update(float dt);
 
-      glm::mat4 view() const;
+    glm::mat4 view() const;
 
-      glm::mat4 projection() const;
+    glm::mat4 projection() const;
 
-      glm::mat4 invProjection() const;
+    glm::mat4 invProjection() const;
 
-    private:
-      void recalcView();
+  private:
+    void recalcView();
 
-      void recalcProjection();
+    void recalcProjection();
 
-    private:
-      const Window& window_;
-      std::uint32_t width_;
-      std::uint32_t height_;
-      glm::mat4 view_;
-      glm::mat4 projection_;
-      glm::mat4 invProjection_;
-      glm::vec3 position_;
-      glm::vec3 center_;
-      glm::vec3 up_;
-      std::int32_t oldMouseX_;
-      std::int32_t oldMouseY_;
-      float radius_;
-      float theta_;
-      float phi_;
-    };
-  }
+  private:
+    const Window& window_;
+    std::uint32_t width_;
+    std::uint32_t height_;
+    glm::mat4 view_;
+    glm::mat4 projection_;
+    glm::mat4 invProjection_;
+    glm::vec3 position_;
+    glm::vec3 center_;
+    glm::vec3 up_;
+    std::int32_t oldMouseX_;
+    std::int32_t oldMouseY_;
+    float radius_;
+    float theta_;
+    float phi_;
+  };
 }
