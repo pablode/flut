@@ -2,121 +2,49 @@
 
 #extension GL_ARB_bindless_texture: require
 
-layout (local_size_x = 32) in;
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
-layout(location = 0, r32ui, bindless_image) uniform restrict readonly uimage3D grid;
-layout(location = 1, bindless_sampler) uniform sampler3D velocity;
-layout(location = 2) uniform vec3 invCellSize;
-layout(location = 3) uniform float dt;
-layout(location = 4) uniform vec3 gridSize;
-layout(location = 5) uniform vec3 gridOrigin;
-layout(location = 6) uniform uint particleCount;
-layout(location = 7) uniform ivec3 gridRes;
-layout(location = 8) uniform vec3 gravity;
-layout(location = 9) uniform float mass;
-layout(location = 10) uniform float re;
-layout(location = 11) uniform float visCoeff;
-layout(location = 12) uniform float weightConstVis;
-layout(location = 13) uniform float weightConstPress;
-
-struct Particle
+layout(binding = 0) restrict buffer counters
 {
-  vec3 position;
-  float density;
-  vec3 velocity;
-  float pressure;
+  uint globalParticleCount;
 };
 
-layout(binding = 0, std430) restrict buffer particleBuf
-{
-  Particle particles[];
-};
+layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
+layout(location = 1) uniform ivec3 gridRes;
 
-const ivec3 NEIGHBORHOOD_LUT[27] = {
-  ivec3(-1, -1, -1), ivec3(0, -1, -1), ivec3(1, -1, -1),
-  ivec3(-1, -1,  0), ivec3(0, -1,  0), ivec3(1, -1,  0),
-  ivec3(-1, -1,  1), ivec3(0, -1,  1), ivec3(1, -1,  1),
-  ivec3(-1,  0, -1), ivec3(0,  0, -1), ivec3(1,  0, -1),
-  ivec3(-1,  0,  0), ivec3(0,  0,  0), ivec3(1,  0,  0),
-  ivec3(-1,  0,  1), ivec3(0,  0,  1), ivec3(1,  0,  1),
-  ivec3(-1,  1, -1), ivec3(0,  1, -1), ivec3(1,  1, -1),
-  ivec3(-1,  1,  0), ivec3(0,  1,  0), ivec3(1,  1,  0),
-  ivec3(-1,  1,  1), ivec3(0,  1,  1), ivec3(1,  1,  1)
-};
+shared uint localParticleCount;
+shared uint globalParticleBaseOffset;
 
 void main()
 {
-  const uint particleId = gl_GlobalInvocationID.x;
+  const ivec3 voxelId = ivec3(gl_GlobalInvocationID);
 
-  if (particleId >= particleCount)
+  if (any(greaterThanEqual(voxelId, gridRes)))
   {
     return;
   }
 
-  const Particle particle = particles[particleId];
-
-  const ivec3 voxelId = ivec3(invCellSize * (particle.position - gridOrigin));
-
-  vec3 forcePressure = vec3(0.0);
-  vec3 forceViscosity = vec3(0.0);
-
-  #pragma unroll 1
-  for (uint i = 0; i < 27; ++i)
+  if (gl_LocalInvocationIndex == 0)
   {
-    const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[i];
-
-    if (any(lessThan(newVoxelId, ivec3(0))) ||
-        any(greaterThanEqual(newVoxelId, gridRes)))
-    {
-      continue;
-    }
-
-    const uint voxelValue = imageLoad(grid, newVoxelId).r;
-
-    const uint voxelParticleOffset = (voxelValue >> 8);
-    const uint voxelParticleCount = (voxelValue & 0xFF);
-
-    for (uint p = 0; p < voxelParticleCount; ++p)
-    {
-      const uint otherParticleId = voxelParticleOffset + p;
-
-      const Particle otherParticle = particles[otherParticleId];
-
-      const vec3 r = particle.position - otherParticle.position;
-
-      const float rLen = length(r);
-
-      if (rLen >= re)
-      {
-        continue;
-      }
-
-      vec3 weightPressure = vec3(0.0);
-
-      if (rLen > 0.0)
-      {
-        weightPressure = weightConstPress * pow(re - rLen, 3) * (r / rLen);
-      }
-
-      const float pressure = particle.pressure + otherParticle.pressure;
-
-      forcePressure += (mass * pressure * weightPressure) / (2.0 * otherParticle.density);
-
-      const float weightVis = weightConstVis * (re - rLen);
-
-      const vec3 filteredVelocity = texture(velocity, (otherParticle.position - gridOrigin) / gridSize).xyz;
-
-      const vec3 velocityDiff = filteredVelocity - particle.velocity;
-
-      forceViscosity += (mass * velocityDiff * weightVis) / otherParticle.density;
-    }
+    localParticleCount = 0;
   }
 
-  const vec3 forceGravity = gravity * particle.density;
+  barrier();
 
-  const vec3 force = (forceViscosity * visCoeff) - forcePressure + forceGravity;
+  const uint voxelParticleCount = imageLoad(grid, voxelId).x;
 
-  const vec3 acceleration = force / particle.density;
+  const uint localParticleOffset = atomicAdd(localParticleCount, voxelParticleCount);
 
-  particles[particleId].velocity += acceleration * dt;
+  barrier();
+
+  if (gl_LocalInvocationIndex == 0)
+  {
+    globalParticleBaseOffset = atomicAdd(globalParticleCount, localParticleCount);
+  }
+
+  barrier();
+
+  const uint globalParticleOffset = globalParticleBaseOffset + localParticleOffset;
+
+  imageStore(grid, voxelId, uvec4(globalParticleOffset << 8));
 }

@@ -1,0 +1,108 @@
+#version 460 core
+
+#extension GL_ARB_bindless_texture: require
+
+layout(local_size_x = 32) in;
+
+layout(location = 0, r32ui, bindless_image) uniform restrict readonly uimage3D grid;
+layout(location = 1) uniform vec3 invCellSize;
+layout(location = 2) uniform vec3 gridOrigin;
+layout(location = 3) uniform ivec3 gridRes;
+layout(location = 4) uniform uint particleCount;
+layout(location = 5) uniform float mass;
+layout(location = 6) uniform float re;
+layout(location = 7) uniform float weightConst;
+layout(location = 8) uniform float k;
+layout(location = 9) uniform float restDensity;
+layout(location = 10) uniform float restPressure;
+
+struct Particle
+{
+  vec3 position;
+  float density;
+  vec3 velocity;
+  float pressure;
+};
+
+layout(binding = 0, std430) restrict buffer particleBuf
+{
+  Particle particles[];
+};
+
+const ivec3 NEIGHBORHOOD_LUT[27] = {
+  ivec3(-1, -1, -1), ivec3(0, -1, -1), ivec3(1, -1, -1),
+  ivec3(-1, -1,  0), ivec3(0, -1,  0), ivec3(1, -1,  0),
+  ivec3(-1, -1,  1), ivec3(0, -1,  1), ivec3(1, -1,  1),
+  ivec3(-1,  0, -1), ivec3(0,  0, -1), ivec3(1,  0, -1),
+  ivec3(-1,  0,  0), ivec3(0,  0,  0), ivec3(1,  0,  0),
+  ivec3(-1,  0,  1), ivec3(0,  0,  1), ivec3(1,  0,  1),
+  ivec3(-1,  1, -1), ivec3(0,  1, -1), ivec3(1,  1, -1),
+  ivec3(-1,  1,  0), ivec3(0,  1,  0), ivec3(1,  1,  0),
+  ivec3(-1,  1,  1), ivec3(0,  1,  1), ivec3(1,  1,  1)
+};
+
+void main()
+{
+  const uint particleId = gl_GlobalInvocationID.x;
+
+  if (particleId >= particleCount)
+  {
+    return;
+  }
+
+  Particle particle = particles[particleId];
+
+  const ivec3 voxelId = ivec3(invCellSize * (particle.position - gridOrigin));
+
+  float density = mass * pow(re * re, 3) * weightConst;
+
+  #pragma unroll 1
+  for (uint i = 0; i < 27; ++i)
+  {
+    const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[i];
+
+    if (any(lessThan(newVoxelId, ivec3(0))) ||
+        any(greaterThanEqual(newVoxelId, gridRes)))
+    {
+      continue;
+    }
+
+    const uint voxelValue = imageLoad(grid, newVoxelId).r;
+
+    const uint voxelParticleOffset = (voxelValue >> 8);
+    const uint voxelParticleCount = (voxelValue & 0xFF);
+
+    for (uint p = 0; p < voxelParticleCount; ++p)
+    {
+      const uint otherParticleId = voxelParticleOffset + p;
+
+      if (particleId == otherParticleId)
+      {
+        continue;
+      }
+
+      const vec3 otherParticlePos = particles[otherParticleId].position;
+
+      const vec3 r = particle.position - otherParticlePos;
+
+      const float rLen = length(r);
+
+      if (rLen >= re)
+      {
+        continue;
+      }
+
+      const float weight = pow(re * re - rLen * rLen, 3) * weightConst;
+
+      density += mass * weight;
+    }
+  }
+
+  const float pressure = restPressure + k * (density - restDensity);
+
+  particle.density = density;
+
+  particle.pressure = pressure;
+
+  particles[particleId] = particle;
+}

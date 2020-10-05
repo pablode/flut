@@ -87,12 +87,12 @@ namespace flut
     float weightConstPressure_;
     float weightConstKernel_;
     GLuint timerQueries_[2][7];
-    GLuint programBuildGrid1_;
-    GLuint programBuildGrid2_;
-    GLuint programBuildGrid3_;
-    GLuint programWriteVelocity_;
     GLuint programSimStep1_;
     GLuint programSimStep2_;
+    GLuint programSimStep3_;
+    GLuint programSimStep4_;
+    GLuint programSimStep5_;
+    GLuint programSimStep6_;
     GLuint programRenderGeometry_;
     GLuint programRenderFlat_;
     GLuint programRenderCurvature_;

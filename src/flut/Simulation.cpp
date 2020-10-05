@@ -21,18 +21,18 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 {
   // Shaders
   std::vector<char> compSource;
-  loadFileText(RESOURCES_DIR "/buildGrid1.comp", compSource);
-  programBuildGrid1_ = createComputeShader(compSource);
-  loadFileText(RESOURCES_DIR "/buildGrid2.comp", compSource);
-  programBuildGrid2_ = createComputeShader(compSource);
-  loadFileText(RESOURCES_DIR "/buildGrid3.comp", compSource);
-  programBuildGrid3_ = createComputeShader(compSource);
-  loadFileText(RESOURCES_DIR "/writeVelocity.comp", compSource);
-  programWriteVelocity_ = createComputeShader(compSource);
   loadFileText(RESOURCES_DIR "/simStep1.comp", compSource);
   programSimStep1_ = createComputeShader(compSource);
   loadFileText(RESOURCES_DIR "/simStep2.comp", compSource);
   programSimStep2_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/simStep3.comp", compSource);
+  programSimStep3_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/simStep4.comp", compSource);
+  programSimStep4_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/simStep5.comp", compSource);
+  programSimStep5_ = createComputeShader(compSource);
+  loadFileText(RESOURCES_DIR "/simStep6.comp", compSource);
+  programSimStep6_ = createComputeShader(compSource);
 
   std::vector<char> vertSource;
   std::vector<char> fragSource;
@@ -143,11 +143,11 @@ Simulation::~Simulation()
   deleteTexture(texTemp1_);
   makeTextureNonResident(texTemp2Handle_);
   deleteTexture(texTemp2_);
-  deleteShader(programBuildGrid1_);
-  deleteShader(programBuildGrid2_);
-  deleteShader(programBuildGrid3_);
   deleteShader(programSimStep1_);
   deleteShader(programSimStep2_);
+  deleteShader(programSimStep3_);
+  deleteShader(programSimStep5_);
+  deleteShader(programSimStep6_);
   deleteShader(programRenderFlat_);
   deleteShader(programRenderGeometry_);
   deleteShader(programRenderCurvature_);
@@ -294,33 +294,35 @@ void Simulation::render(const Camera& camera, float dt)
       time_.simStep6Ms += elapsedTime / 1000000.0f;
     }
 
-    // 1. Build Voxel Grid
+    // Step 1: Integrate position, do boundary handling.
+    //         Write particle count to voxel grid.
     glBeginQuery(GL_TIME_ELAPSED, query[0]);
     const std::uint32_t fClearValue = 0;
     glClearTexImage(texGrid_, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &fClearValue);
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
 
-    glUseProgram(programBuildGrid1_);
+    glUseProgram(programSimStep1_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
-    glProgramUniformHandleui64ARB(programBuildGrid1_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programBuildGrid1_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programBuildGrid1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programBuildGrid1_, 3, PARTICLE_COUNT);
-    glProgramUniform3fv(programBuildGrid1_, 4, 1, glm::value_ptr(GRID_SIZE));
-    glProgramUniform1f(programBuildGrid1_, 5, DT * options_.deltaTimeMod);
+    glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programSimStep1_, 3, PARTICLE_COUNT);
+    glProgramUniform3fv(programSimStep1_, 4, 1, glm::value_ptr(GRID_SIZE));
+    glProgramUniform1f(programSimStep1_, 5, DT * options_.deltaTimeMod);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
+    // Step 2: Write global particle array offsets into voxel grid.
     glBeginQuery(GL_TIME_ELAPSED, query[1]);
     const std::uint32_t uiClearValue = 0;
     glClearNamedBufferData(bufCounters_, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &uiClearValue);
     glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
-    glUseProgram(programBuildGrid2_);
+    glUseProgram(programSimStep2_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufCounters_);
-    glProgramUniformHandleui64ARB(programBuildGrid2_, 0, texGridImgHandle_);
-    glProgramUniform3iv(programBuildGrid2_, 1, 1, glm::value_ptr(GRID_RES));
+    glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
+    glProgramUniform3iv(programSimStep2_, 1, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
       (GRID_RES.x + 4 - 1) / 4 * 4,
       (GRID_RES.y + 4 - 1) / 4 * 4,
@@ -329,25 +331,27 @@ void Simulation::render(const Camera& camera, float dt)
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
+    // Step 3: Write particles to new location in second particle buffer.
+    //         Write particle count to voxel grid (again).
     glBeginQuery(GL_TIME_ELAPSED, query[2]);
-    glUseProgram(programBuildGrid3_);
+    glUseProgram(programSimStep3_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
-    glProgramUniformHandleui64ARB(programBuildGrid3_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programBuildGrid3_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programBuildGrid3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programBuildGrid3_, 3, PARTICLE_COUNT);
+    glProgramUniformHandleui64ARB(programSimStep3_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programSimStep3_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programSimStep3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programSimStep3_, 3, PARTICLE_COUNT);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
-    // 1.1 Write Velocity Texture
+    // Step 4: Write average voxel velocities into second 3D-texture.
     glBeginQuery(GL_TIME_ELAPSED, query[3]);
-    glUseProgram(programWriteVelocity_);
+    glUseProgram(programSimStep4_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-    glProgramUniformHandleui64ARB(programWriteVelocity_, 0, texGridImgHandle_);
-    glProgramUniformHandleui64ARB(programWriteVelocity_, 1, texVelocityImgHandle_);
-    glProgramUniform3iv(programWriteVelocity_, 2, 1, glm::value_ptr(GRID_RES));
+    glProgramUniformHandleui64ARB(programSimStep4_, 0, texGridImgHandle_);
+    glProgramUniformHandleui64ARB(programSimStep4_, 1, texVelocityImgHandle_);
+    glProgramUniform3iv(programSimStep4_, 2, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
       (GRID_RES.x / 4) + 1,
       (GRID_RES.y / 4) + 1,
@@ -356,43 +360,44 @@ void Simulation::render(const Camera& camera, float dt)
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
-    // 2. Simulation Step 1: Compute particle density and pressure
+    // Step 5: Compute density and pressure for each particle.
     glBeginQuery(GL_TIME_ELAPSED, query[4]);
-    glUseProgram(programSimStep1_);
+    glUseProgram(programSimStep5_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-    glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform3iv(programSimStep1_, 3, 1, glm::value_ptr(GRID_RES));
-    glProgramUniform1ui(programSimStep1_, 4, PARTICLE_COUNT);
-    glProgramUniform1f(programSimStep1_, 5, MASS);
-    glProgramUniform1f(programSimStep1_, 6, KERNEL_RADIUS);
-    glProgramUniform1f(programSimStep1_, 7, weightConstKernel_);
-    glProgramUniform1f(programSimStep1_, 8, STIFFNESS);
-    glProgramUniform1f(programSimStep1_, 9, REST_DENSITY);
-    glProgramUniform1f(programSimStep1_, 10, REST_PRESSURE);
+    glProgramUniformHandleui64ARB(programSimStep5_, 0, texGridImgHandle_);
+    glProgramUniform3fv(programSimStep5_, 1, 1, glm::value_ptr(invCellSize));
+    glProgramUniform3fv(programSimStep5_, 2, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform3iv(programSimStep5_, 3, 1, glm::value_ptr(GRID_RES));
+    glProgramUniform1ui(programSimStep5_, 4, PARTICLE_COUNT);
+    glProgramUniform1f(programSimStep5_, 5, MASS);
+    glProgramUniform1f(programSimStep5_, 6, KERNEL_RADIUS);
+    glProgramUniform1f(programSimStep5_, 7, weightConstKernel_);
+    glProgramUniform1f(programSimStep5_, 8, STIFFNESS);
+    glProgramUniform1f(programSimStep5_, 9, REST_DENSITY);
+    glProgramUniform1f(programSimStep5_, 10, REST_PRESSURE);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
-    // 3. Simulation Step 2: Update force, integrate velocity and position, handle boundaries
+    // Step 6: Compute pressure and viscosity forces, use them to write new velocity.
+    //         For the old velocity, we use the coarse 3d-texture and do trilinear HW filtering.
     glBeginQuery(GL_TIME_ELAPSED, query[5]);
-    glUseProgram(programSimStep2_);
+    glUseProgram(programSimStep6_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
-    glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
-    glProgramUniformHandleui64ARB(programSimStep2_, 1, texVelocityHandle_);
-    glProgramUniform3fv(programSimStep2_, 2, 1, glm::value_ptr(invCellSize));
-    glProgramUniform1f(programSimStep2_, 3, DT * options_.deltaTimeMod);
-    glProgramUniform3fv(programSimStep2_, 4, 1, glm::value_ptr(GRID_SIZE));
-    glProgramUniform3fv(programSimStep2_, 5, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programSimStep2_, 6, PARTICLE_COUNT);
-    glProgramUniform3iv(programSimStep2_, 7, 1, glm::value_ptr(GRID_RES));
-    glProgramUniform3fv(programSimStep2_, 8, 1, &options_.gravity[0]);
-    glProgramUniform1f(programSimStep2_, 9, MASS);
-    glProgramUniform1f(programSimStep2_, 10, KERNEL_RADIUS);
-    glProgramUniform1f(programSimStep2_, 11, VIS_COEFF);
-    glProgramUniform1f(programSimStep2_, 12, weightConstViscosity_);
-    glProgramUniform1f(programSimStep2_, 13, weightConstPressure_);
+    glProgramUniformHandleui64ARB(programSimStep6_, 0, texGridImgHandle_);
+    glProgramUniformHandleui64ARB(programSimStep6_, 1, texVelocityHandle_);
+    glProgramUniform3fv(programSimStep6_, 2, 1, glm::value_ptr(invCellSize));
+    glProgramUniform1f(programSimStep6_, 3, DT * options_.deltaTimeMod);
+    glProgramUniform3fv(programSimStep6_, 4, 1, glm::value_ptr(GRID_SIZE));
+    glProgramUniform3fv(programSimStep6_, 5, 1, glm::value_ptr(GRID_ORIGIN));
+    glProgramUniform1ui(programSimStep6_, 6, PARTICLE_COUNT);
+    glProgramUniform3iv(programSimStep6_, 7, 1, glm::value_ptr(GRID_RES));
+    glProgramUniform3fv(programSimStep6_, 8, 1, &options_.gravity[0]);
+    glProgramUniform1f(programSimStep6_, 9, MASS);
+    glProgramUniform1f(programSimStep6_, 10, KERNEL_RADIUS);
+    glProgramUniform1f(programSimStep6_, 11, VIS_COEFF);
+    glProgramUniform1f(programSimStep6_, 12, weightConstViscosity_);
+    glProgramUniform1f(programSimStep6_, 13, weightConstPressure_);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -403,7 +408,7 @@ void Simulation::render(const Camera& camera, float dt)
     query = timerQueries_[swapFrame_ ? 1 : 0];
   }
 
-  // 4.1 Geometry Pass (or flat)
+  // Step 7: Render the geometry (points or screen-space spheres).
   GLuint renderProgram;
   glBeginQuery(GL_TIME_ELAPSED, query[6]);
   if (options_.shadingMode == 0) {
@@ -439,7 +444,7 @@ void Simulation::render(const Camera& camera, float dt)
 
   if (options_.shadingMode == 1)
   {
-    // 4.2 Curvature Flow
+    // Step 7.1: Perform curvature flow (mulitple iterations).
     glDisable(GL_DEPTH_TEST);
     glBindVertexArray(vao3_);
     glUseProgram(programRenderCurvature_);
@@ -459,7 +464,7 @@ void Simulation::render(const Camera& camera, float dt)
       swap = !swap;
     }
 
-    // 4.3 Shading Pass
+    // Step 7.2: Do blinn-phong shading.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

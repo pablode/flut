@@ -1,0 +1,50 @@
+#version 460 core
+
+#extension GL_ARB_bindless_texture: require
+
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+
+struct Particle
+{
+  vec3 position;
+  float density;
+  vec3 velocity;
+  float pressure;
+};
+
+layout(binding = 0, std430) restrict readonly buffer particleBuf
+{
+  Particle particles[];
+};
+
+layout(location = 0, r32ui, bindless_image) uniform restrict readonly uimage3D grid;
+layout(location = 1, rgba32f, bindless_image) uniform restrict writeonly image3D velocity;
+layout(location = 2) uniform ivec3 gridRes;
+
+void main()
+{
+  const ivec3 voxelCoord = ivec3(gl_GlobalInvocationID);
+
+  if (any(greaterThanEqual(voxelCoord, gridRes)))
+  {
+    return;
+  }
+
+  const uint voxelValue = imageLoad(grid, voxelCoord).x;
+  const uint particleCount = (voxelValue & 0xFF);
+  const uint particleOffset = (voxelValue >> 8);
+
+  vec3 voxelVelocity = vec3(0.0);
+
+  for (uint i = 0; i < particleCount; i++)
+  {
+    voxelVelocity += particles[particleOffset + i].velocity;
+  }
+
+  if (particleCount > 0)
+  {
+    voxelVelocity /= float(particleCount);
+  }
+
+  imageStore(velocity, voxelCoord, vec4(voxelVelocity, 1.0));
+}
