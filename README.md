@@ -24,12 +24,10 @@ cmake --build . -j 8 --target flut --config Release && ./bin/flut
 
 ### Future Improvements
 
-- Update README and pics to reflect new uniform grid building
+- Update README and pics to reflect new simulation pipeline
 - Better boundary handling with density contribution
-- NxNxN workgroups with shared mem caching for neighborhood searches
 - Replace curvature flow with better visualization method
 - Implement surface tension forces
-- Use coarse 3d velocity texture with HW filtering
 
 ### Acknowledgements
 
