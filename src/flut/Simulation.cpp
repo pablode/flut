@@ -316,7 +316,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1ui(programSimStep1_, 3, PARTICLE_COUNT);
     glProgramUniform3fv(programSimStep1_, 4, 1, glm::value_ptr(GRID_SIZE));
     glProgramUniform1f(programSimStep1_, 5, DT * options_.deltaTimeMod);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
@@ -331,9 +331,9 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
     glProgramUniform3iv(programSimStep2_, 1, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
-      (GRID_RES.x + 4 - 1) / 4 * 4,
-      (GRID_RES.y + 4 - 1) / 4 * 4,
-      (GRID_RES.z + 4 - 1) / 4 * 4
+      (GRID_RES.x + 4 - 1) / 4,
+      (GRID_RES.y + 4 - 1) / 4,
+      (GRID_RES.z + 4 - 1) / 4
     );
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -348,7 +348,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform3fv(programSimStep3_, 1, 1, glm::value_ptr(invCellSize));
     glProgramUniform3fv(programSimStep3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
     glProgramUniform1ui(programSimStep3_, 3, PARTICLE_COUNT);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
@@ -360,9 +360,9 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniformHandleui64ARB(programSimStep4_, 1, texVelocityImgHandle_);
     glProgramUniform3iv(programSimStep4_, 2, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
-      (GRID_RES.x / 4) + 1,
-      (GRID_RES.y / 4) + 1,
-      (GRID_RES.z / 4) + 1
+      (GRID_RES.x + 4 - 1) / 4,
+      (GRID_RES.y + 4 - 1) / 4,
+      (GRID_RES.z + 4 - 1) / 4
     );
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -382,7 +382,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1f(programSimStep5_, 8, STIFFNESS);
     glProgramUniform1f(programSimStep5_, 9, REST_DENSITY);
     glProgramUniform1f(programSimStep5_, 10, REST_PRESSURE);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
@@ -405,7 +405,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1f(programSimStep6_, 11, VIS_COEFF);
     glProgramUniform1f(programSimStep6_, 12, weightConstViscosity_);
     glProgramUniform1f(programSimStep6_, 13, weightConstPressure_);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32 * 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
