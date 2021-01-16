@@ -466,7 +466,7 @@ void Simulation::render(const Camera& camera, float dt)
       glBindFramebuffer(GL_FRAMEBUFFER, swap ? fbo3_ : fbo2_);
       glClear(GL_COLOR_BUFFER_BIT);
       glProgramUniformHandleui64ARB(programRenderCurvature_, 1, inputDepthTexHandle);
-      glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
+      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
       inputDepthTexHandle = swap ? texTemp2Handle_ : texTemp1Handle_;
       swap = !swap;
     }
@@ -485,7 +485,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniformMatrix4fv(programRenderShading_, 5, 1, GL_FALSE, glm::value_ptr(invProjection));
     glProgramUniformMatrix4fv(programRenderShading_, 6, 1, GL_FALSE, glm::value_ptr(view));
 
-    glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     glEnable(GL_DEPTH_TEST);
   }
   glEndQuery(GL_TIME_ELAPSED);
