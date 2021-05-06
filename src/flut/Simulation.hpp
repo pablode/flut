@@ -18,6 +18,7 @@ namespace flut
       float gravity[3] = {0.0f, -9.81f, 0.0f};
       float deltaTimeMod = 1.0f;
       std::int32_t colorMode = 0;
+      float pointScale = 0.5f;
     };
 
     using SimulationTimes = GlQueryRetriever::QueryTimings;
@@ -87,6 +88,7 @@ namespace flut
     GLuint m_bufParticles1;
     GLuint m_bufParticles2;
     GLuint m_bufCounters;
+    GLuint m_bufBillboards;
     GLuint m_texGrid;
     GLuint64 m_texGridImgHandle;
     GLuint m_texVelocity;

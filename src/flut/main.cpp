@@ -81,6 +81,8 @@ int main(int argc, char* argv[])
     ImGui::SameLine();
     ImGui::RadioButton("Uniform Grid", &options.colorMode, 4);
 
+    ImGui::DragFloat("Point scale", &options.pointScale, 0.01f, 0.1f, 2.5f);
+
     ImGui::End();
 
     window.swap();

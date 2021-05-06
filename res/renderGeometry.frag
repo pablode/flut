@@ -1,41 +1,44 @@
-in vec3 fragPos;
-in vec3 fragColor;
+in vec3 color;
+in vec3 centerPos;
+in vec2 uv;
 
 out vec3 finalColor;
 
-layout (location = 0) uniform mat4 MVP;
-layout (location = 1) uniform mat4 view;
-layout (location = 2) uniform mat4 projection;
+layout (location = 0) uniform mat4 VP;
+layout (location = 1) uniform mat4 V;
+layout (location = 2) uniform mat4 P;
 layout (location = 3) uniform vec3 gridSize;
 layout (location = 4) uniform vec3 gridOrigin;
 layout (location = 5) uniform ivec3 gridRes;
 layout (location = 6) uniform uint particleCount;
 layout (location = 7) uniform float pointRadius;
-layout (location = 8) uniform float pointScale;
-layout (location = 9) uniform int colorMode;
+layout (location = 8) uniform int colorMode;
 
-void main()
+#define SPHERE
+#define DEPTH_REPLACEMENT
+
+void main(void)
 {
-  vec3 N;
+  finalColor = color;
 
-  N.xy = gl_PointCoord * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+#ifdef SPHERE
+    vec3 N;
 
-  const float r2 = dot(N.xy, N.xy);
+    N.xy = uv * 2.0 - 1.0;
 
-  if (r2 > 1.0)
-  {
-    // Outside of circle
-    discard;
-  }
+    float r2 = dot(N.xy, N.xy);
 
-  N.z = sqrt(1.0 - r2);
+    if (r2 > 1.0)
+        discard;
 
-  vec4 eyeSpacePos = vec4(fragPos + N * pointRadius, 1.0);
-  const vec4 clipSpacePos = projection * eyeSpacePos;
-  const float ndcDepth = clipSpacePos.z / clipSpacePos.w;
-  const float windowDepth = 0.5 * ndcDepth + 0.5;
+#ifdef DEPTH_REPLACEMENT
+    N.z = sqrt(1.0 - r2);
 
-  gl_FragDepth = windowDepth;
-
-  finalColor = fragColor;
+    vec4 pos_eye_space = vec4(centerPos + N * pointRadius, 1.0);
+    vec4 pos_clip_space = P * pos_eye_space;
+    float depth_ndc = pos_clip_space.z / pos_clip_space.w;
+    float depth_winspace = depth_ndc * 0.5 + 0.5;
+    gl_FragDepth = depth_winspace;
+#endif
+#endif
 }

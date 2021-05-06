@@ -149,6 +149,25 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   m_texVelocityImgHandle = glGetImageHandleARB(m_texVelocity, 0, GL_FALSE, 0, GL_RGBA32F);
   glMakeImageHandleResidentARB(m_texVelocityImgHandle, GL_READ_WRITE);
 
+  // Billboards index buffer
+  {
+    uint32_t billboardIndexCount = 6;
+    uint32_t billboardVertexCount = 4;
+    uint32_t billboardIndices[] = { 0, 1, 2, 2, 1, 3 };
+
+    std::vector<uint32_t> indices(billboardIndexCount * PARTICLE_COUNT);
+
+    for (uint32_t i = 0; i < indices.size(); i++)
+    {
+      uint32_t particleOffset = i / billboardIndexCount;
+      uint32_t particleIndexOffset = i % billboardIndexCount;
+      indices[i] = billboardIndices[particleIndexOffset] + particleOffset * billboardVertexCount;
+    }
+
+    glCreateBuffers(1, &m_bufBillboards);
+    glNamedBufferData(m_bufBillboards, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
+  }
+
   // Initial particles
   std::vector<Particle> particles;
   particles.resize(PARTICLE_COUNT);
@@ -179,15 +198,16 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   glVertexArrayVertexBuffer(m_vao1, 0, m_bufParticles1, 0, sizeof(Particle));
   glVertexArrayAttribBinding(m_vao1, 0, 0);
   glVertexArrayAttribFormat(m_vao1, 0, 3, GL_FLOAT, GL_FALSE, 0);
+  glVertexArrayElementBuffer(m_vao1, m_bufBillboards);
 
   glCreateVertexArrays(1, &m_vao2);
   glEnableVertexArrayAttrib(m_vao2, 0);
   glVertexArrayVertexBuffer(m_vao2, 0, m_bufParticles2, 0, sizeof(Particle));
   glVertexArrayAttribBinding(m_vao2, 0, 0);
   glVertexArrayAttribFormat(m_vao2, 0, 3, GL_FLOAT, GL_FALSE, 0);
+  glVertexArrayElementBuffer(m_vao2, m_bufBillboards);
 
   // Default state
-  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -391,14 +411,13 @@ void Simulation::render(const Camera& camera, float dt)
   glUseProgram(m_programRenderGeometry);
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = PARTICLE_RADIUS * 6.0f;
-  const float pointScale = 650.0f;
+  const float pointRadius = KERNEL_RADIUS * m_options.pointScale;
   const auto& view = camera.view();
   const auto& projection = camera.projection();
   const auto& invProjection = camera.invProjection();
-  const glm::mat4 mvp = projection * view;
+  const glm::mat4 vp = projection * view;
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_swapFrame ? m_bufParticles2 : m_bufParticles1);
-  glProgramUniformMatrix4fv(m_programRenderGeometry, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(m_programRenderGeometry, 0, 1, GL_FALSE, glm::value_ptr(vp));
   glProgramUniformMatrix4fv(m_programRenderGeometry, 1, 1, GL_FALSE, glm::value_ptr(view));
   glProgramUniformMatrix4fv(m_programRenderGeometry, 2, 1, GL_FALSE, glm::value_ptr(projection));
   glProgramUniform3fv(m_programRenderGeometry, 3, 1, glm::value_ptr(GRID_SIZE));
@@ -406,16 +425,16 @@ void Simulation::render(const Camera& camera, float dt)
   glProgramUniform3iv(m_programRenderGeometry, 5, 1, glm::value_ptr(GRID_RES));
   glProgramUniform1ui(m_programRenderGeometry, 6, PARTICLE_COUNT);
   glProgramUniform1f(m_programRenderGeometry, 7, pointRadius);
-  glProgramUniform1f(m_programRenderGeometry, 8, pointScale);
-  glProgramUniform1i(m_programRenderGeometry, 9, m_options.colorMode);
+  glProgramUniform1i(m_programRenderGeometry, 8, m_options.colorMode);
   glBindVertexArray(m_swapFrame ? m_vao2 : m_vao1);
-  glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
+  const uint32_t index_count = 6 * PARTICLE_COUNT;
+  glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
 
   // Step 7.1: Perform curvature flow (multiple iterations).
   glDisable(GL_DEPTH_TEST);
   glBindVertexArray(m_vao3);
   glUseProgram(m_programRenderCurvature);
-  glProgramUniformMatrix4fv(m_programRenderCurvature, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(m_programRenderCurvature, 0, 1, GL_FALSE, glm::value_ptr(vp));
   glProgramUniformMatrix4fv(m_programRenderCurvature, 2, 1, GL_FALSE, glm::value_ptr(projection));
   glProgramUniform2i(m_programRenderCurvature, 3, m_width, m_height);
   GLuint64 inputDepthTexHandle = m_texDepthHandle;
@@ -437,7 +456,7 @@ void Simulation::render(const Camera& camera, float dt)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(m_programRenderShading);
-  glProgramUniformMatrix4fv(m_programRenderShading, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(m_programRenderShading, 0, 1, GL_FALSE, glm::value_ptr(vp));
   glProgramUniformHandleui64ARB(m_programRenderShading, 1, inputDepthTexHandle);
   glProgramUniformHandleui64ARB(m_programRenderShading, 2, m_texColorHandle);
   glProgramUniform1ui(m_programRenderShading, 3, m_width);
