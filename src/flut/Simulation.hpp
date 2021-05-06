@@ -18,7 +18,6 @@ namespace flut
       float gravity[3] = {0.0f, -9.81f, 0.0f};
       float deltaTimeMod = 1.0f;
       std::int32_t colorMode = 0;
-      std::int32_t shadingMode = 1;
     };
 
     using SimulationTimes = GlQueryRetriever::QueryTimings;
@@ -81,7 +80,6 @@ namespace flut
     GLuint m_programSimStep5;
     GLuint m_programSimStep6;
     GLuint m_programRenderGeometry;
-    GLuint m_programRenderFlat;
     GLuint m_programRenderCurvature;
     GLuint m_programRenderShading;
     GLuint m_bufBBoxVertices;

@@ -91,7 +91,6 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     });
 
     m_programRenderGeometry = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderGeometry.frag");
-    m_programRenderFlat = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderFlat.frag");
     m_programRenderCurvature = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderCurvature.frag");
     m_programRenderShading = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderShading.frag");
   }
@@ -268,7 +267,6 @@ Simulation::~Simulation()
   glDeleteProgram(m_programSimStep3);
   glDeleteProgram(m_programSimStep5);
   glDeleteProgram(m_programSimStep6);
-  glDeleteProgram(m_programRenderFlat);
   glDeleteProgram(m_programRenderGeometry);
   glDeleteProgram(m_programRenderCurvature);
   glDeleteProgram(m_programRenderShading);
@@ -387,79 +385,68 @@ void Simulation::render(const Camera& camera, float dt)
     m_queries->incSimIter();
   }
 
-  // Step 7: Render the geometry (points or screen-space spheres).
-  GLuint renderProgram;
+  // Step 7: Render the geometry as screen-space spheres.
   m_queries->beginRenderQuery();
-  if (m_options.shadingMode == 0) {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    renderProgram = m_programRenderFlat;
-  } else {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo1);
-    renderProgram = m_programRenderGeometry;
-  }
-  glUseProgram(renderProgram);
+  glBindFramebuffer(GL_FRAMEBUFFER, m_fbo1);
+  glUseProgram(m_programRenderGeometry);
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  const float pointRadius = m_options.shadingMode ? PARTICLE_RADIUS * 6.0f : PARTICLE_RADIUS * 3.5f;
+  const float pointRadius = PARTICLE_RADIUS * 6.0f;
   const float pointScale = 650.0f;
   const auto& view = camera.view();
   const auto& projection = camera.projection();
   const auto& invProjection = camera.invProjection();
   const glm::mat4 mvp = projection * view;
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_swapFrame ? m_bufParticles2 : m_bufParticles1);
-  glProgramUniformMatrix4fv(renderProgram, 0, 1, GL_FALSE, glm::value_ptr(mvp));
-  glProgramUniformMatrix4fv(renderProgram, 1, 1, GL_FALSE, glm::value_ptr(view));
-  glProgramUniformMatrix4fv(renderProgram, 2, 1, GL_FALSE, glm::value_ptr(projection));
-  glProgramUniform3fv(renderProgram, 3, 1, glm::value_ptr(GRID_SIZE));
-  glProgramUniform3fv(renderProgram, 4, 1, glm::value_ptr(GRID_ORIGIN));
-  glProgramUniform3iv(renderProgram, 5, 1, glm::value_ptr(GRID_RES));
-  glProgramUniform1ui(renderProgram, 6, PARTICLE_COUNT);
-  glProgramUniform1f(renderProgram, 7, pointRadius);
-  glProgramUniform1f(renderProgram, 8, pointScale);
-  glProgramUniform1i(renderProgram, 9, m_options.colorMode);
-  glProgramUniform1i(renderProgram, 10, m_options.shadingMode);
+  glProgramUniformMatrix4fv(m_programRenderGeometry, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(m_programRenderGeometry, 1, 1, GL_FALSE, glm::value_ptr(view));
+  glProgramUniformMatrix4fv(m_programRenderGeometry, 2, 1, GL_FALSE, glm::value_ptr(projection));
+  glProgramUniform3fv(m_programRenderGeometry, 3, 1, glm::value_ptr(GRID_SIZE));
+  glProgramUniform3fv(m_programRenderGeometry, 4, 1, glm::value_ptr(GRID_ORIGIN));
+  glProgramUniform3iv(m_programRenderGeometry, 5, 1, glm::value_ptr(GRID_RES));
+  glProgramUniform1ui(m_programRenderGeometry, 6, PARTICLE_COUNT);
+  glProgramUniform1f(m_programRenderGeometry, 7, pointRadius);
+  glProgramUniform1f(m_programRenderGeometry, 8, pointScale);
+  glProgramUniform1i(m_programRenderGeometry, 9, m_options.colorMode);
   glBindVertexArray(m_swapFrame ? m_vao2 : m_vao1);
   glDrawArrays(GL_POINTS, 0, PARTICLE_COUNT);
 
-  if (m_options.shadingMode == 1)
+  // Step 7.1: Perform curvature flow (multiple iterations).
+  glDisable(GL_DEPTH_TEST);
+  glBindVertexArray(m_vao3);
+  glUseProgram(m_programRenderCurvature);
+  glProgramUniformMatrix4fv(m_programRenderCurvature, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformMatrix4fv(m_programRenderCurvature, 2, 1, GL_FALSE, glm::value_ptr(projection));
+  glProgramUniform2i(m_programRenderCurvature, 3, m_width, m_height);
+  GLuint64 inputDepthTexHandle = m_texDepthHandle;
+  bool swap = false;
+
+  for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
   {
-    // Step 7.1: Perform curvature flow (multiple iterations).
-    glDisable(GL_DEPTH_TEST);
-    glBindVertexArray(m_vao3);
-    glUseProgram(m_programRenderCurvature);
-    glProgramUniformMatrix4fv(m_programRenderCurvature, 0, 1, GL_FALSE, glm::value_ptr(mvp));
-    glProgramUniformMatrix4fv(m_programRenderCurvature, 2, 1, GL_FALSE, glm::value_ptr(projection));
-    glProgramUniform2i(m_programRenderCurvature, 3, m_width, m_height);
-    GLuint64 inputDepthTexHandle = m_texDepthHandle;
-    bool swap = false;
-
-    for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
-    {
-      glBindFramebuffer(GL_FRAMEBUFFER, swap ? m_fbo3 : m_fbo2);
-      glClear(GL_COLOR_BUFFER_BIT);
-      glProgramUniformHandleui64ARB(m_programRenderCurvature, 1, inputDepthTexHandle);
-      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-      inputDepthTexHandle = swap ? m_texTemp2Handle : m_texTemp1Handle;
-      swap = !swap;
-    }
-
-    // Step 7.2: Do blinn-phong shading.
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(m_programRenderShading);
-    glProgramUniformMatrix4fv(m_programRenderShading, 0, 1, GL_FALSE, glm::value_ptr(mvp));
-    glProgramUniformHandleui64ARB(m_programRenderShading, 1, inputDepthTexHandle);
-    glProgramUniformHandleui64ARB(m_programRenderShading, 2, m_texColorHandle);
-    glProgramUniform1ui(m_programRenderShading, 3, m_width);
-    glProgramUniform1ui(m_programRenderShading, 4, m_height);
-    glProgramUniformMatrix4fv(m_programRenderShading, 5, 1, GL_FALSE, glm::value_ptr(invProjection));
-    glProgramUniformMatrix4fv(m_programRenderShading, 6, 1, GL_FALSE, glm::value_ptr(view));
-
+    glBindFramebuffer(GL_FRAMEBUFFER, swap ? m_fbo3 : m_fbo2);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glProgramUniformHandleui64ARB(m_programRenderCurvature, 1, inputDepthTexHandle);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    glEnable(GL_DEPTH_TEST);
+    inputDepthTexHandle = swap ? m_texTemp2Handle : m_texTemp1Handle;
+    swap = !swap;
   }
+
+  // Step 7.2: Do blinn-phong shading.
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glUseProgram(m_programRenderShading);
+  glProgramUniformMatrix4fv(m_programRenderShading, 0, 1, GL_FALSE, glm::value_ptr(mvp));
+  glProgramUniformHandleui64ARB(m_programRenderShading, 1, inputDepthTexHandle);
+  glProgramUniformHandleui64ARB(m_programRenderShading, 2, m_texColorHandle);
+  glProgramUniform1ui(m_programRenderShading, 3, m_width);
+  glProgramUniform1ui(m_programRenderShading, 4, m_height);
+  glProgramUniformMatrix4fv(m_programRenderShading, 5, 1, GL_FALSE, glm::value_ptr(invProjection));
+  glProgramUniformMatrix4fv(m_programRenderShading, 6, 1, GL_FALSE, glm::value_ptr(view));
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+  glEnable(GL_DEPTH_TEST);
+
   m_queries->endQuery();
 
   m_queries->readFinishedQueries(m_time);

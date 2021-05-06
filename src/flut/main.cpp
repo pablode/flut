@@ -81,11 +81,6 @@ int main(int argc, char* argv[])
     ImGui::SameLine();
     ImGui::RadioButton("Uniform Grid", &options.colorMode, 4);
 
-    ImGui::Text("Particle Display:");
-    ImGui::RadioButton("Flat", &options.shadingMode, 0);
-    ImGui::SameLine();
-    ImGui::RadioButton("Fluid", &options.shadingMode, 1);
-
     ImGui::End();
 
     window.swap();

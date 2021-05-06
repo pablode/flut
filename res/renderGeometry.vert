@@ -28,7 +28,6 @@ layout (location = 6) uniform uint particleCount;
 layout (location = 7) uniform float pointRadius;
 layout (location = 8) uniform float pointScale;
 layout (location = 9) uniform int colorMode;
-layout (location = 10) uniform int shadingMode;
 
 out vec3 fragPos;
 out vec3 fragColor;
