@@ -18,7 +18,7 @@ layout(binding = 0, std430) restrict buffer particleBuf1
 layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
 layout(location = 1) uniform float dt;
 
-const float SAFE_BOUNDS = 0.001;
+const float SAFE_BOUNDS = 0.5;
 
 void main()
 {
