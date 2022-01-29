@@ -76,18 +76,13 @@ void main()
     {
       const uint otherParticleId = voxelParticleOffset + p;
 
-      if (particleId == otherParticleId)
-      {
-        continue;
-      }
-
       const vec3 otherParticlePos = particles[otherParticleId].position;
 
       const vec3 r = particle.position - otherParticlePos;
 
       const float rLen = length(r);
 
-      if (rLen >= re)
+      if (rLen >= re || particleId == otherParticleId)
       {
         continue;
       }
