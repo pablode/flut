@@ -13,12 +13,13 @@ void GlHelper::enableDebugHooks()
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback((GLDEBUGPROC) &glDebugOutput, nullptr);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
-    std::printf("Debug output enabled.\n");
+    printf("Debug output enabled.\n");
   }
   else
   {
-    std::printf("Debug output not available (context flag not set).\n");
+    printf("Debug output not available (context flag not set).\n");
   }
+  fflush(stdout);
 
   glad_set_post_callback((GLADcallback)[](const char* name, void* funcptr, int len_args, ...) {
     if (!strcmp(name, "glGetError")) {
@@ -27,7 +28,7 @@ void GlHelper::enableDebugHooks()
     GLenum errorCode = glGetError();
     if (errorCode != GL_NO_ERROR) {
       do {
-        std::printf("GL/ERROR: 0x%04x in %s\n", errorCode, name);
+        fprintf(stderr, "GL/ERROR: 0x%04x in %s\n", errorCode, name);
       } while ((errorCode = glGetError()) != GL_NO_ERROR);
     }
   });
@@ -204,15 +205,17 @@ void GlHelper::glDebugOutput(
   else if (type == GL_DEBUG_TYPE_OTHER) { typeStr = "Other"; }
 
   if (severity == GL_DEBUG_SEVERITY_HIGH) {
-    std::printf("GL/ERROR: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    fprintf(stderr, "GL/ERROR: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
   }
   else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
-    std::printf("GL/WARNING: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    fprintf(stderr, "GL/WARNING: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
   }
   else if (severity == GL_DEBUG_SEVERITY_LOW) {
-    std::printf("GL/INFO: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    printf("GL/INFO: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    fflush(stdout);
   }
   else {
-    std::printf("GL/DEBUG: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    printf("GL/DEBUG: \"%s\" (%s/%s)\n", message, sourceStr, typeStr);
+    fflush(stdout);
   }
 }

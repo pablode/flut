@@ -44,7 +44,7 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
   }
 
   if (SDL_GL_SetSwapInterval(1)) {
-    std::printf("Warning: Unable to activate VSync.\n");
+    printf("Warning: Unable to activate VSync.\n");
   }
 
   if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
@@ -59,7 +59,8 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
     throw std::runtime_error("GL_ARB_bindless_texture extension is required.");
   }
 
-  std::printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);
+  printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);
+  fflush(stdout);
 
   ImGui_ImplSdlGlad_Init(window_);
   ImGui_ImplSdlGlad_NewFrame(window_);
