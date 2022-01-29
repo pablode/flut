@@ -1,6 +1,6 @@
 #version 460 core
 
-#extension ARB_bindless_texture: require
+#extension GL_ARB_bindless_texture: require
 
 const vec3 LIGHT_POS = vec3(0.0, 1.0, 0.0);
 const float AMBIENT_COEFF = 0.3;
