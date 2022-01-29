@@ -382,7 +382,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1f(programSimStep5_, 8, STIFFNESS);
     glProgramUniform1f(programSimStep5_, 9, REST_DENSITY);
     glProgramUniform1f(programSimStep5_, 10, REST_PRESSURE);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 
@@ -405,7 +405,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1f(programSimStep6_, 11, VIS_COEFF);
     glProgramUniform1f(programSimStep6_, 12, weightConstViscosity_);
     glProgramUniform1f(programSimStep6_, 13, weightConstPressure_);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
+    glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
 

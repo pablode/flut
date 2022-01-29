@@ -2,7 +2,7 @@
 
 #extension GL_ARB_bindless_texture: require
 
-layout (local_size_x = 32) in;
+layout (local_size_x = 64) in;
 
 layout(location = 0, r32ui, bindless_image) uniform restrict readonly uimage3D grid;
 layout(location = 1, bindless_sampler) uniform sampler3D velocity;
