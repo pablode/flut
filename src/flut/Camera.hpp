@@ -13,6 +13,7 @@ namespace flut
     constexpr static float SENSITIVITY = 0.005f;
     constexpr static float NEAR_PLANE = 0.01f;
     constexpr static float FAR_PLANE = 1000.0f;
+    constexpr static float INITIAL_RADIUS = 18.0f;
 
   public:
     Camera(const Window& window);

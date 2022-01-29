@@ -40,9 +40,9 @@ namespace flut
     constexpr static float VIS_COEFF = 0.035f;
     constexpr static float REST_DENSITY = 998.27f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static std::uint32_t PARTICLE_COUNT = 50000;
+    constexpr static std::uint32_t PARTICLE_COUNT = 100000;
 
-    const glm::vec3 GRID_SIZE = glm::vec3{ 10.0f, 6.0f, 2.0f } * glm::vec3{ 2.0f };
+    const glm::vec3 GRID_SIZE = glm::vec3{ 11.0f, 8.0f, 2.5f } * glm::vec3{ 2.0f };
     const glm::vec3 GRID_ORIGIN = GRID_SIZE * -0.5f;
     const glm::ivec3 GRID_RES = glm::ivec3((GRID_SIZE / CELL_SIZE) + 1.0f);
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;

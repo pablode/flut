@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
   using clock = std::chrono::high_resolution_clock;
   auto lastTime = clock::now();
 
-  int ipF = 5;
+  int ipF = 8;
 
   while (!window.shouldClose())
   {
