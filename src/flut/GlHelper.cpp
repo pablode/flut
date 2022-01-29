@@ -1,5 +1,6 @@
 #include "GlHelper.hpp"
 
+#include <sstream>
 #include <fstream>
 
 void GlHelper::enableDebugHooks()
@@ -34,19 +35,39 @@ void GlHelper::enableDebugHooks()
   });
 }
 
-void GlHelper::loadFileText(const std::string& filePath, std::vector<char>& text)
+std::string GlHelper::loadFileText(const std::string& filePath)
 {
   std::ifstream file{ filePath, std::ios_base::in | std::ios_base::binary };
   if (!file.is_open()) {
     throw std::runtime_error("Unable to open file: " + filePath);
   }
+
+  std::string text;
   file.seekg(0, std::ios_base::end);
   text.resize(file.tellg());
   file.seekg(0, std::ios_base::beg);
-  file.read(text.data(), text.size());
+  text.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  return text;
 }
 
-GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath)
+std::string GlHelper::preprocessShaderSource(const std::string& text, std::vector<GlHelper::ShaderDefine> defines)
+{
+  std::stringstream ss;
+
+  ss << "#version 460 core\n";
+  ss << "#extension GL_ARB_bindless_texture : require\n";
+
+  for (auto& define : defines)
+  {
+    ss << "#define " << define.name << " " << define.valueStr << "\n";
+  }
+
+  ss << text;
+
+  return ss.str();
+}
+
+GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath, std::vector<ShaderDefine> defines)
 {
   GLuint handle = glCreateProgram();
 
@@ -54,8 +75,8 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
     throw std::runtime_error("Unable to create shader program.");
   }
 
-  std::vector<char> vertSource;
-  loadFileText(vertPath, vertSource);
+  std::string vertSource = loadFileText(vertPath);
+  vertSource = preprocessShaderSource(vertSource, defines);
 
   const GLuint vertHandle = glCreateShader(GL_VERTEX_SHADER);
   const GLint vertSize = vertSource.size();
@@ -79,8 +100,8 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
     throw std::runtime_error("Unable to compile shader: " + message);
   }
 
-  std::vector<char> fragSource;
-  loadFileText(fragPath, fragSource);
+  std::string fragSource = loadFileText(fragPath);
+  fragSource = preprocessShaderSource(fragSource, defines);
 
   const GLuint fragHandle = glCreateShader(GL_FRAGMENT_SHADER);
   const GLint fragSize = fragSource.size();
@@ -127,7 +148,7 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
   return handle;
 }
 
-GLuint GlHelper::createComputeShader(const char* path)
+GLuint GlHelper::createComputeShader(const char* path, std::vector<ShaderDefine> defines)
 {
   const GLuint handle = glCreateProgram();
 
@@ -135,8 +156,8 @@ GLuint GlHelper::createComputeShader(const char* path)
     throw std::runtime_error("Unable to create shader program.");
   }
 
-  std::vector<char> source;
-  loadFileText(path, source);
+  std::string source = loadFileText(path);
+  source = preprocessShaderSource(source, defines);
 
   const GLuint sourceHandle = glCreateShader(GL_COMPUTE_SHADER);
   const GLint sourceSize = source.size();

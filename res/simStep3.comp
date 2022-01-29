@@ -1,5 +1,3 @@
-#version 460 core
-
 #extension GL_ARB_bindless_texture: require
 
 layout(local_size_x = 32) in;
@@ -23,22 +21,19 @@ layout(binding = 1, std430) restrict writeonly buffer particleBuf2
 };
 
 layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
-layout(location = 1) uniform vec3 invCellSize;
-layout(location = 2) uniform vec3 gridOrigin;
-layout(location = 3) uniform uint particleCount;
 
 void main()
 {
   const uint inParticleId = gl_GlobalInvocationID.x;
 
-  if (inParticleId >= particleCount)
+  if (inParticleId >= PARTICLE_COUNT)
   {
     return;
   }
 
   const Particle particle = inParticles[inParticleId];
 
-  const ivec3 voxelCoord = ivec3(invCellSize * (particle.position - gridOrigin));
+  const ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
   const uint voxelValue = imageAtomicAdd(grid, voxelCoord, 1);
 

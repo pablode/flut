@@ -1,5 +1,3 @@
-#version 460 core
-
 layout (location = 0) uniform mat4 MVP;
 
 in vec3 vertPos;

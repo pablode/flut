@@ -1,5 +1,3 @@
-#version 460 core
-
 const float FLOAT_MIN = 1.175494351e-38;
 const float GRID_EPS = 0.000001;
 const float MAX_DENSITY = 50.0;

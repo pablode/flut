@@ -35,22 +35,65 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 #endif
 
   // Shaders
-  programSimStep1_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep1.comp");
-  programSimStep2_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep2.comp");
-  programSimStep3_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep3.comp");
-  programSimStep4_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep4.comp");
-  programSimStep5_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep5.comp");
-  programSimStep6_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep6.comp");
+  {
+    glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.001f) / GRID_SIZE;
 
-  programRenderGeometry_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderGeometry.frag");
-  programRenderFlat_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderFlat.frag");
-  programRenderCurvature_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderCurvature.frag");
-  programRenderShading_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderShading.frag");
+    float viscosityKernelWeightConst = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
+    float pressureKernelWeightConst = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
+    float densityKernelWeightConst = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
 
-  // Precalc weight functions
-  weightConstViscosity_ = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
-  weightConstPressure_ = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
-  weightConstKernel_ = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
+    programSimStep1_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep1.comp", {
+      { "INV_CELL_SIZE",  invCellSize },
+      { "GRID_ORIGIN",    GRID_ORIGIN },
+      { "PARTICLE_COUNT", PARTICLE_COUNT },
+      { "GRID_SIZE",      GRID_SIZE }
+    });
+
+    programSimStep2_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep2.comp", {
+      { "GRID_RES",       GRID_RES }
+    });
+
+    programSimStep3_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep3.comp", {
+      { "INV_CELL_SIZE",  invCellSize },
+      { "GRID_ORIGIN",    GRID_ORIGIN },
+      { "PARTICLE_COUNT", PARTICLE_COUNT }
+    });
+
+    programSimStep4_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep4.comp", {
+      { "GRID_RES",       GRID_RES }
+    });
+
+    programSimStep5_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep5.comp", {
+      { "INV_CELL_SIZE",               invCellSize },
+      { "GRID_ORIGIN",                 GRID_ORIGIN },
+      { "GRID_RES",                    GRID_RES },
+      { "PARTICLE_COUNT",              PARTICLE_COUNT },
+      { "MASS",                        MASS },
+      { "KERNEL_RADIUS",               KERNEL_RADIUS },
+      { "DENSITY_KERNEL_WEIGHT_CONST", densityKernelWeightConst },
+      { "STIFFNESS_K",                 STIFFNESS },
+      { "REST_DENSITY",                REST_DENSITY },
+      { "REST_PRESSURE",               REST_PRESSURE }
+    });
+
+    programSimStep6_ = GlHelper::createComputeShader(RESOURCES_DIR "/simStep6.comp", {
+      { "INV_CELL_SIZE",               invCellSize },
+      { "GRID_SIZE",                   GRID_SIZE },
+      { "GRID_ORIGIN",                 GRID_ORIGIN },
+      { "GRID_RES",                    GRID_RES },
+      { "PARTICLE_COUNT",              PARTICLE_COUNT },
+      { "MASS",                        MASS },
+      { "KERNEL_RADIUS",               KERNEL_RADIUS },
+      { "VIS_COEFF",                   VIS_COEFF },
+      { "VIS_KERNEL_WEIGHT_CONST",     viscosityKernelWeightConst },
+      { "PRESS_KERNEL_WEIGHT_CONST",   pressureKernelWeightConst }
+    });
+
+    programRenderGeometry_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderGeometry.frag");
+    programRenderFlat_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderFlat.frag");
+    programRenderCurvature_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderCurvature.frag");
+    programRenderShading_ = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderShading.frag");
+  }
 
   // Bounding box
   const std::vector<glm::vec3> bboxVertices{
@@ -263,8 +306,6 @@ void Simulation::render(const Camera& camera, float dt)
     createFrameObjects();
   }
 
-  const glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.001f) / GRID_SIZE;
-
   glViewport(0, 0, width_, height_);
 
   time_.simStep1Ms = 0.0f;
@@ -301,6 +342,8 @@ void Simulation::render(const Camera& camera, float dt)
       time_.simStep6Ms += elapsedTime / 1000000.0f;
     }
 
+    float dt = DT * options_.deltaTimeMod;
+
     // Step 1: Integrate position, do boundary handling.
     //         Write particle count to voxel grid.
     glBeginQuery(GL_TIME_ELAPSED, query[0]);
@@ -311,11 +354,7 @@ void Simulation::render(const Camera& camera, float dt)
     glUseProgram(programSimStep1_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
     glProgramUniformHandleui64ARB(programSimStep1_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programSimStep1_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programSimStep1_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programSimStep1_, 3, PARTICLE_COUNT);
-    glProgramUniform3fv(programSimStep1_, 4, 1, glm::value_ptr(GRID_SIZE));
-    glProgramUniform1f(programSimStep1_, 5, DT * options_.deltaTimeMod);
+    glProgramUniform1f(programSimStep1_, 1, dt);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -329,7 +368,6 @@ void Simulation::render(const Camera& camera, float dt)
     glUseProgram(programSimStep2_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, bufCounters_);
     glProgramUniformHandleui64ARB(programSimStep2_, 0, texGridImgHandle_);
-    glProgramUniform3iv(programSimStep2_, 1, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
       (GRID_RES.x + 4 - 1) / 4,
       (GRID_RES.y + 4 - 1) / 4,
@@ -345,9 +383,6 @@ void Simulation::render(const Camera& camera, float dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep3_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programSimStep3_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programSimStep3_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programSimStep3_, 3, PARTICLE_COUNT);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -358,7 +393,6 @@ void Simulation::render(const Camera& camera, float dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep4_, 0, texGridImgHandle_);
     glProgramUniformHandleui64ARB(programSimStep4_, 1, texVelocityImgHandle_);
-    glProgramUniform3iv(programSimStep4_, 2, 1, glm::value_ptr(GRID_RES));
     glDispatchCompute(
       (GRID_RES.x + 4 - 1) / 4,
       (GRID_RES.y + 4 - 1) / 4,
@@ -372,16 +406,6 @@ void Simulation::render(const Camera& camera, float dt)
     glUseProgram(programSimStep5_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep5_, 0, texGridImgHandle_);
-    glProgramUniform3fv(programSimStep5_, 1, 1, glm::value_ptr(invCellSize));
-    glProgramUniform3fv(programSimStep5_, 2, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform3iv(programSimStep5_, 3, 1, glm::value_ptr(GRID_RES));
-    glProgramUniform1ui(programSimStep5_, 4, PARTICLE_COUNT);
-    glProgramUniform1f(programSimStep5_, 5, MASS);
-    glProgramUniform1f(programSimStep5_, 6, KERNEL_RADIUS);
-    glProgramUniform1f(programSimStep5_, 7, weightConstKernel_);
-    glProgramUniform1f(programSimStep5_, 8, STIFFNESS);
-    glProgramUniform1f(programSimStep5_, 9, REST_DENSITY);
-    glProgramUniform1f(programSimStep5_, 10, REST_PRESSURE);
     glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);
@@ -393,18 +417,8 @@ void Simulation::render(const Camera& camera, float dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep6_, 0, texGridImgHandle_);
     glProgramUniformHandleui64ARB(programSimStep6_, 1, texVelocityHandle_);
-    glProgramUniform3fv(programSimStep6_, 2, 1, glm::value_ptr(invCellSize));
-    glProgramUniform1f(programSimStep6_, 3, DT * options_.deltaTimeMod);
-    glProgramUniform3fv(programSimStep6_, 4, 1, glm::value_ptr(GRID_SIZE));
-    glProgramUniform3fv(programSimStep6_, 5, 1, glm::value_ptr(GRID_ORIGIN));
-    glProgramUniform1ui(programSimStep6_, 6, PARTICLE_COUNT);
-    glProgramUniform3iv(programSimStep6_, 7, 1, glm::value_ptr(GRID_RES));
-    glProgramUniform3fv(programSimStep6_, 8, 1, &options_.gravity[0]);
-    glProgramUniform1f(programSimStep6_, 9, MASS);
-    glProgramUniform1f(programSimStep6_, 10, KERNEL_RADIUS);
-    glProgramUniform1f(programSimStep6_, 11, VIS_COEFF);
-    glProgramUniform1f(programSimStep6_, 12, weightConstViscosity_);
-    glProgramUniform1f(programSimStep6_, 13, weightConstPressure_);
+    glProgramUniform1f(programSimStep6_, 2, dt);
+    glProgramUniform3fv(programSimStep6_, 3, 1, &options_.gravity[0]);
     glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     glEndQuery(GL_TIME_ELAPSED);

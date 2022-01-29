@@ -80,9 +80,6 @@ namespace flut
     SimulationTimes time_;
     SimulationOptions options_;
     std::uint32_t integrationsPerFrame_;
-    float weightConstViscosity_;
-    float weightConstPressure_;
-    float weightConstKernel_;
     GLuint timerQueries_[2][7];
     GLuint programSimStep1_;
     GLuint programSimStep2_;

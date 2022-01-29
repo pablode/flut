@@ -1,5 +1,3 @@
-#version 460 core
-
 in vec3 fragPos;
 in vec3 fragColor;
 

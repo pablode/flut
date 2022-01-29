@@ -1,23 +1,11 @@
-#version 460 core
-
 #extension GL_ARB_bindless_texture: require
 
 layout (local_size_x = 64) in;
 
 layout(location = 0, r32ui, bindless_image) uniform restrict readonly uimage3D grid;
 layout(location = 1, bindless_sampler) uniform sampler3D velocity;
-layout(location = 2) uniform vec3 invCellSize;
-layout(location = 3) uniform float dt;
-layout(location = 4) uniform vec3 gridSize;
-layout(location = 5) uniform vec3 gridOrigin;
-layout(location = 6) uniform uint particleCount;
-layout(location = 7) uniform ivec3 gridRes;
-layout(location = 8) uniform vec3 gravity;
-layout(location = 9) uniform float mass;
-layout(location = 10) uniform float re;
-layout(location = 11) uniform float visCoeff;
-layout(location = 12) uniform float weightConstVis;
-layout(location = 13) uniform float weightConstPress;
+layout(location = 2) uniform float DT;
+layout(location = 3) uniform vec3 GRAVITY;
 
 struct Particle
 {
@@ -48,14 +36,14 @@ void main()
 {
   const uint particleId = gl_GlobalInvocationID.x;
 
-  if (particleId >= particleCount)
+  if (particleId >= PARTICLE_COUNT)
   {
     return;
   }
 
   const Particle particle = particles[particleId];
 
-  const ivec3 voxelId = ivec3(invCellSize * (particle.position - gridOrigin));
+  const ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
   vec3 forcePressure = vec3(0.0);
   vec3 forceViscosity = vec3(0.0);
@@ -66,7 +54,7 @@ void main()
     const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[i];
 
     if (any(lessThan(newVoxelId, ivec3(0))) ||
-        any(greaterThanEqual(newVoxelId, gridRes)))
+        any(greaterThanEqual(newVoxelId, GRID_RES)))
     {
       continue;
     }
@@ -86,7 +74,7 @@ void main()
 
       const float rLen = length(r);
 
-      if (rLen >= re)
+      if (rLen >= KERNEL_RADIUS)
       {
         continue;
       }
@@ -95,28 +83,28 @@ void main()
 
       if (rLen > 0.0)
       {
-        weightPressure = weightConstPress * pow(re - rLen, 3) * (r / rLen);
+        weightPressure = PRESS_KERNEL_WEIGHT_CONST * pow(KERNEL_RADIUS - rLen, 3) * (r / rLen);
       }
 
       const float pressure = particle.pressure + otherParticle.pressure;
 
-      forcePressure += (mass * pressure * weightPressure) / (2.0 * otherParticle.density);
+      forcePressure += (MASS * pressure * weightPressure) / (2.0 * otherParticle.density);
 
-      const float weightVis = weightConstVis * (re - rLen);
+      const float weightVis = VIS_KERNEL_WEIGHT_CONST * (KERNEL_RADIUS - rLen);
 
-      const vec3 filteredVelocity = texture(velocity, (otherParticle.position - gridOrigin) / gridSize).xyz;
+      const vec3 filteredVelocity = texture(velocity, (otherParticle.position - GRID_ORIGIN) / GRID_SIZE).xyz;
 
       const vec3 velocityDiff = filteredVelocity - particle.velocity;
 
-      forceViscosity += (mass * velocityDiff * weightVis) / otherParticle.density;
+      forceViscosity += (MASS * velocityDiff * weightVis) / otherParticle.density;
     }
   }
 
-  const vec3 forceGravity = gravity * particle.density;
+  const vec3 forceGravity = GRAVITY * particle.density;
 
-  const vec3 force = (forceViscosity * visCoeff) - forcePressure + forceGravity;
+  const vec3 force = (forceViscosity * VIS_COEFF) - forcePressure + forceGravity;
 
   const vec3 acceleration = force / particle.density;
 
-  particles[particleId].velocity += acceleration * dt;
+  particles[particleId].velocity += acceleration * DT;
 }

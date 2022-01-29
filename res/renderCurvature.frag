@@ -1,5 +1,3 @@
-#version 460 core
-
 #extension GL_ARB_bindless_texture: require
 
 const float Z_THRESHOLD = 5.0;
