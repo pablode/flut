@@ -3,8 +3,10 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <cstdint>
+#include <memory>
 
 #include "Camera.hpp"
+#include "GlQueryRetriever.hpp"
 
 namespace flut
 {
@@ -19,16 +21,7 @@ namespace flut
       std::int32_t shadingMode = 1;
     };
 
-    struct SimulationTimes
-    {
-      float simStep1Ms = 0.0f;
-      float simStep2Ms = 0.0f;
-      float simStep3Ms = 0.0f;
-      float simStep4Ms = 0.0f;
-      float simStep5Ms = 0.0f;
-      float simStep6Ms = 0.0f;
-      float renderMs = 0.0f;
-    };
+    using SimulationTimes = GlQueryRetriever::QueryTimings;
 
   public:
     constexpr static float DT = 0.0012f;
@@ -79,8 +72,8 @@ namespace flut
     std::uint64_t frame_;
     SimulationTimes time_;
     SimulationOptions options_;
+    std::unique_ptr<GlQueryRetriever> queries_;
     std::uint32_t integrationsPerFrame_;
-    GLuint timerQueries_[2][7];
     GLuint programSimStep1_;
     GLuint programSimStep2_;
     GLuint programSimStep3_;

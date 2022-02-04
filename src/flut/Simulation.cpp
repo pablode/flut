@@ -1,5 +1,6 @@
 #include "Simulation.hpp"
 #include "GlHelper.hpp"
+#include "GlQueryRetriever.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -186,18 +187,17 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   glVertexArrayAttribBinding(vao2_, 0, 0);
   glVertexArrayAttribFormat(vao2_, 0, 3, GL_FLOAT, GL_FALSE, 0);
 
-  // Timer queries
-  glCreateQueries(GL_TIME_ELAPSED, 7, &timerQueries_[0][0]);
-  glCreateQueries(GL_TIME_ELAPSED, 7, &timerQueries_[1][0]);
-  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-
   // Default state
+  glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
   glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 
   // Textures and buffers
   createFrameObjects();
+
+  // Timer queries
+  queries_ = std::make_unique<GlQueryRetriever>();
 }
 
 void flut::Simulation::createFrameObjects()
@@ -285,16 +285,11 @@ Simulation::~Simulation()
   glDeleteVertexArrays(1, &vao1_);
   glDeleteVertexArrays(1, &vao2_);
   glDeleteVertexArrays(1, &vao3_);
-  glDeleteQueries(6, &timerQueries_[0][0]);
-  glDeleteQueries(6, &timerQueries_[1][0]);
 }
 
 void Simulation::render(const Camera& camera, float dt)
 {
   ++frame_;
-
-  GLuint* lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
-  GLuint* query = timerQueries_[swapFrame_ ? 1 : 0];
 
   // Resize window if needed.
   if (width_ != newWidth_ || height_ != newHeight_)
@@ -305,47 +300,13 @@ void Simulation::render(const Camera& camera, float dt)
     createFrameObjects();
   }
 
-  glViewport(0, 0, width_, height_);
-
-  time_.simStep1Ms = 0.0f;
-  time_.simStep2Ms = 0.0f;
-  time_.simStep3Ms = 0.0f;
-  time_.simStep4Ms = 0.0f;
-  time_.simStep5Ms = 0.0f;
-  time_.simStep6Ms = 0.0f;
-  time_.renderMs = 0.0f;
-
-  if (frame_ > 1)
-  {
-    GLuint64 elapsedTime = 0;
-    glGetQueryObjectui64v(lastQuery[6], GL_QUERY_RESULT, &elapsedTime);
-    time_.renderMs = elapsedTime / 1000000.0f;
-  }
-
   for (std::uint32_t f = 0; f < integrationsPerFrame_; f++)
   {
-    if (frame_ > 1)
-    {
-      GLuint64 elapsedTime = 0;
-      glGetQueryObjectui64v(lastQuery[0], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep1Ms += elapsedTime / 1000000.0f;
-      glGetQueryObjectui64v(lastQuery[1], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep2Ms += elapsedTime / 1000000.0f;
-      glGetQueryObjectui64v(lastQuery[2], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep3Ms += elapsedTime / 1000000.0f;
-      glGetQueryObjectui64v(lastQuery[3], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep4Ms += elapsedTime / 1000000.0f;
-      glGetQueryObjectui64v(lastQuery[4], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep5Ms += elapsedTime / 1000000.0f;
-      glGetQueryObjectui64v(lastQuery[5], GL_QUERY_RESULT, &elapsedTime);
-      time_.simStep6Ms += elapsedTime / 1000000.0f;
-    }
-
     float dt = DT * options_.deltaTimeMod;
 
     // Step 1: Integrate position, do boundary handling.
     //         Write particle count to voxel grid.
-    glBeginQuery(GL_TIME_ELAPSED, query[0]);
+    queries_->beginSimQuery(0);
     const std::uint32_t fClearValue = 0;
     glClearTexImage(texGrid_, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &fClearValue);
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
@@ -356,10 +317,10 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform1f(programSimStep1_, 1, dt);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     // Step 2: Write global particle array offsets into voxel grid.
-    glBeginQuery(GL_TIME_ELAPSED, query[1]);
+    queries_->beginSimQuery(1);
     const std::uint32_t uiClearValue = 0;
     glClearNamedBufferData(bufCounters_, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &uiClearValue);
     glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -373,21 +334,21 @@ void Simulation::render(const Camera& camera, float dt)
       (GRID_RES.z + 4 - 1) / 4
     );
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     // Step 3: Write particles to new location in second particle buffer.
     //         Write particle count to voxel grid (again).
-    glBeginQuery(GL_TIME_ELAPSED, query[2]);
+    queries_->beginSimQuery(2);
     glUseProgram(programSimStep3_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles1_ : bufParticles2_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep3_, 0, texGridImgHandle_);
     glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     // Step 4: Write average voxel velocities into second 3D-texture.
-    glBeginQuery(GL_TIME_ELAPSED, query[3]);
+    queries_->beginSimQuery(3);
     glUseProgram(programSimStep4_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep4_, 0, texGridImgHandle_);
@@ -398,20 +359,20 @@ void Simulation::render(const Camera& camera, float dt)
       (GRID_RES.z + 4 - 1) / 4
     );
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     // Step 5: Compute density and pressure for each particle.
-    glBeginQuery(GL_TIME_ELAPSED, query[4]);
+    queries_->beginSimQuery(4);
     glUseProgram(programSimStep5_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep5_, 0, texGridImgHandle_);
     glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     // Step 6: Compute pressure and viscosity forces, use them to write new velocity.
     //         For the old velocity, we use the coarse 3d-texture and do trilinear HW filtering.
-    glBeginQuery(GL_TIME_ELAPSED, query[5]);
+    queries_->beginSimQuery(5);
     glUseProgram(programSimStep6_);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, swapFrame_ ? bufParticles2_ : bufParticles1_);
     glProgramUniformHandleui64ARB(programSimStep6_, 0, texGridImgHandle_);
@@ -420,17 +381,15 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniform3fv(programSimStep6_, 3, 1, &options_.gravity[0]);
     glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glEndQuery(GL_TIME_ELAPSED);
+    queries_->endQuery();
 
     swapFrame_ = !swapFrame_;
-
-    lastQuery = timerQueries_[swapFrame_ ? 0 : 1];
-    query = timerQueries_[swapFrame_ ? 1 : 0];
+    queries_->incSimIter();
   }
 
   // Step 7: Render the geometry (points or screen-space spheres).
   GLuint renderProgram;
-  glBeginQuery(GL_TIME_ELAPSED, query[6]);
+  queries_->beginRenderQuery();
   if (options_.shadingMode == 0) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     renderProgram = programRenderFlat_;
@@ -501,7 +460,11 @@ void Simulation::render(const Camera& camera, float dt)
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     glEnable(GL_DEPTH_TEST);
   }
-  glEndQuery(GL_TIME_ELAPSED);
+  queries_->endQuery();
+
+  queries_->readFinishedQueries(time_);
+
+  queries_->incFrame();
 }
 
 void Simulation::resize(std::uint32_t width, std::uint32_t height)

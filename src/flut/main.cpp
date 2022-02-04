@@ -1,6 +1,7 @@
 #include "Simulation.hpp"
 #include "Camera.hpp"
 #include "Window.hpp"
+#include "GlQueryRetriever.hpp"
 
 #include <imgui.h>
 #include <chrono>
@@ -52,21 +53,19 @@ int main(int argc, char* argv[])
     ImGui::SetNextWindowPos({50, 50});
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
-    const float frameTime = times.simStep1Ms + times.simStep2Ms + times.simStep3Ms + times.simStep4Ms +
-                            times.simStep5Ms + times.simStep6Ms + times.renderMs;
     ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
     ImGui::Text("Delta-time: %f", simulation.DT * options.deltaTimeMod);
     ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES.x, simulation.GRID_RES.y, simulation.GRID_RES.z);
-    ImGui::Text("Frame: %.2fms (%.2fms)", frameTime, deltaTime * 1000.0f);
+    ImGui::Text("Frame: %.2fms", deltaTime * 1000.0f);
 
     ImGui::Text("Step 1  Step 2  Step 3  Step 4  Step 5  Step 6  Render");
     ImGui::Text("%.2fms  %.2fms  %.2fms  %.2fms  %.2fms  %.2fms  %.2fms",
-                times.simStep1Ms, times.simStep2Ms, times.simStep3Ms,
-                times.simStep4Ms, times.simStep5Ms, times.simStep6Ms, times.renderMs);
+                times.simStempMs[0], times.simStempMs[1], times.simStempMs[2],
+                times.simStempMs[3], times.simStempMs[4], times.simStempMs[5], times.renderMs);
 
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 2.0f, nullptr, 1.0f);
 
-    ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, 20);
+    ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, flut::GlQueryRetriever::MAX_SIM_ITERS_PER_FRAME);
 
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
 

@@ -5,6 +5,8 @@ add_executable(
   Camera.hpp
   GlHelper.cpp
   GlHelper.hpp
+  GlQueryRetriever.hpp
+  GlQueryRetriever.cpp
   Simulation.cpp
   Simulation.hpp
   Window.cpp
