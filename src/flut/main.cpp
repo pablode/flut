@@ -9,14 +9,16 @@
 #include <iostream>
 #include <vector>
 
+using namespace flut;
+
 int main(int argc, char* argv[])
 {
   constexpr std::uint32_t WIDTH = 1200;
   constexpr std::uint32_t HEIGHT = 800;
 
-  flut::Window window{"flut", WIDTH, HEIGHT};
-  flut::Camera camera{window};
-  flut::Simulation simulation{WIDTH, HEIGHT};
+  Window window{"flut", WIDTH, HEIGHT};
+  Camera camera{window};
+  Simulation simulation{WIDTH, HEIGHT};
 
   window.resize([&](std::uint32_t width, std::uint32_t height) {
     simulation.resize(width, height);
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
 
     ImGui::SliderFloat("Delta-Time mod", &options.deltaTimeMod, 0.0f, 2.0f, nullptr, 1.0f);
 
-    ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, flut::GlQueryRetriever::MAX_SIM_ITERS_PER_FRAME);
+    ImGui::DragInt("Integrations per Frame", &ipF, 1.0f, 0, GlQueryRetriever::MAX_SIM_ITERS_PER_FRAME);
 
     ImGui::DragFloat3("Gravity", &options.gravity[0], 0.075f, -10.0f, 10.0f, nullptr, 1.0f);
 

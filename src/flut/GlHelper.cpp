@@ -3,6 +3,8 @@
 #include <sstream>
 #include <fstream>
 
+using namespace flut;
+
 void GlHelper::enableDebugHooks()
 {
   GLint flags;
