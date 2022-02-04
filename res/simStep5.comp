@@ -44,47 +44,56 @@ void main()
 
   float density = MASS * pow(KERNEL_RADIUS * KERNEL_RADIUS, 3) * DENSITY_KERNEL_WEIGHT_CONST;
 
+  uint voxelCount = 0;
+  uint voxelParticleCount = 0;
+  uint voxelParticleOffset = 0;
+
   #pragma unroll 1
-  for (uint i = 0; i < 27; ++i)
+  while (voxelCount < 27 || voxelParticleCount > 0)
   {
-    const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[i];
-
-    if (any(lessThan(newVoxelId, ivec3(0))) ||
-        any(greaterThanEqual(newVoxelId, GRID_RES)))
+    if (voxelParticleCount == 0)
     {
-      continue;
-    }
+      const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
+      voxelCount++;
 
-    const uint voxelValue = imageLoad(grid, newVoxelId).r;
-
-    const uint voxelParticleOffset = (voxelValue >> 8);
-    const uint voxelParticleCount = (voxelValue & 0xFF);
-
-    for (uint p = 0; p < voxelParticleCount; ++p)
-    {
-      const uint otherParticleId = voxelParticleOffset + p;
-
-      const vec3 otherParticlePos = particles[otherParticleId].position;
-
-      const vec3 r = particle.position - otherParticlePos;
-
-      const float rLen = length(r);
-
-      if (rLen >= KERNEL_RADIUS || particleId == otherParticleId)
+      if (any(lessThan(newVoxelId, ivec3(0))) || any(greaterThanEqual(newVoxelId, GRID_RES)))
       {
         continue;
       }
 
-      const float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * DENSITY_KERNEL_WEIGHT_CONST;
+      const uint voxelValue = imageLoad(grid, newVoxelId).r;
+      voxelParticleOffset = (voxelValue >> 8);
+      voxelParticleCount = (voxelValue & 0xFF);
 
-      density += MASS * weight;
+      if (voxelParticleCount == 0)
+      {
+        continue;
+      }
     }
+
+    voxelParticleCount--;
+
+    const uint otherParticleId = voxelParticleOffset + voxelParticleCount;
+
+    const vec3 otherParticlePos = particles[otherParticleId].position;
+
+    const vec3 r = particle.position - otherParticlePos;
+
+    const float rLen = length(r);
+
+    if (rLen >= KERNEL_RADIUS || particleId == otherParticleId)
+    {
+      continue;
+    }
+
+    const float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * DENSITY_KERNEL_WEIGHT_CONST;
+
+    density += MASS * weight;
   }
 
   const float pressure = REST_PRESSURE + STIFFNESS_K * (density - REST_DENSITY);
 
   particle.density = density;
-
   particle.pressure = pressure;
 
   particles[particleId] = particle;
