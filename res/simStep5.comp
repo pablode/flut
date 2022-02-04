@@ -42,7 +42,7 @@ void main()
 
   const ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
-  float density = MASS * pow(KERNEL_RADIUS * KERNEL_RADIUS, 3) * DENSITY_KERNEL_WEIGHT_CONST;
+  float density = 0.0;
 
   uint voxelCount = 0;
   uint voxelParticleCount = 0;
@@ -81,7 +81,7 @@ void main()
 
     const float rLen = length(r);
 
-    if (rLen >= KERNEL_RADIUS || particleId == otherParticleId)
+    if (rLen >= KERNEL_RADIUS)
     {
       continue;
     }
