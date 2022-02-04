@@ -141,14 +141,13 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 
   // Velocity texture
   glCreateTextures(GL_TEXTURE_3D, 1, &texVelocity_);
+  glTextureParameteri(texVelocity_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTextureParameteri(texVelocity_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTextureStorage3D(texVelocity_, 1, GL_RGBA32F, GRID_RES.x, GRID_RES.y, GRID_RES.z);
   texVelocityHandle_ = glGetTextureHandleARB(texVelocity_);
   glMakeTextureHandleResidentARB(texVelocityHandle_);
   texVelocityImgHandle_ = glGetImageHandleARB(texVelocity_, 0, GL_FALSE, 0, GL_RGBA32F);
   glMakeImageHandleResidentARB(texVelocityImgHandle_, GL_READ_WRITE);
-
-  glTextureParameteri(texVelocity_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTextureParameteri(texVelocity_, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   // Initial particles
   std::vector<Particle> particles;
