@@ -48,7 +48,7 @@ namespace flut
     const std::uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;
 
   private:
-    constexpr static std::uint32_t SMOOTH_ITERATIONS = 30;
+    constexpr static std::uint32_t SMOOTH_ITERATIONS = 50;
 
   public:
     Simulation(std::uint32_t width, std::uint32_t height);
