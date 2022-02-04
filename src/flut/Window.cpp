@@ -9,13 +9,13 @@
 using namespace flut;
 
 Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
-  : shouldClose_{false}
+  : m_shouldClose{false}
 {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
     throw std::runtime_error(SDL_GetError());
   }
 
-  window_ = SDL_CreateWindow(
+  m_window = SDL_CreateWindow(
     title,
     SDL_WINDOWPOS_CENTERED,
     SDL_WINDOWPOS_CENTERED,
@@ -24,7 +24,7 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
     SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
   );
 
-  if (!window_) {
+  if (!m_window) {
     throw std::runtime_error(SDL_GetError());
   }
 
@@ -37,9 +37,9 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 #endif
 
-  context_ = SDL_GL_CreateContext(window_);
+  m_context = SDL_GL_CreateContext(m_window);
 
-  if (!context_) {
+  if (!m_context) {
     throw std::runtime_error(SDL_GetError());
   }
 
@@ -62,15 +62,15 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
   printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);
   fflush(stdout);
 
-  ImGui_ImplSdlGlad_Init(window_);
-  ImGui_ImplSdlGlad_NewFrame(window_);
+  ImGui_ImplSdlGlad_Init(m_window);
+  ImGui_ImplSdlGlad_NewFrame(m_window);
 }
 
 Window::~Window()
 {
   ImGui_ImplSdlGlad_Shutdown();
-  SDL_GL_DeleteContext(context_);
-  SDL_DestroyWindow(window_);
+  SDL_GL_DeleteContext(m_context);
+  SDL_DestroyWindow(m_window);
   SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
@@ -87,7 +87,7 @@ void Window::pollEvents()
 
     if (event.type == SDL_QUIT)
     {
-      shouldClose_ = true;
+      m_shouldClose = true;
       continue;
     }
     if (event.type != SDL_WINDOWEVENT)
@@ -101,8 +101,8 @@ void Window::pollEvents()
     case SDL_WINDOWEVENT_SIZE_CHANGED:
       const auto width = static_cast<std::uint32_t>(event.window.data1);
       const auto height = static_cast<std::uint32_t>(event.window.data2);
-      if (resizeCallback_) {
-        resizeCallback_(width, height);
+      if (m_resizeCallback) {
+        m_resizeCallback(width, height);
       }
       break;
     }
@@ -111,27 +111,27 @@ void Window::pollEvents()
 
 bool Window::shouldClose()
 {
-  return shouldClose_;
+  return m_shouldClose;
 }
 
 void Window::swap()
 {
   ImGui::Render();
-  SDL_GL_SwapWindow(window_);
-  ImGui_ImplSdlGlad_NewFrame(window_);
+  SDL_GL_SwapWindow(m_window);
+  ImGui_ImplSdlGlad_NewFrame(m_window);
 }
 
 std::uint32_t Window::width() const
 {
   int width;
-  SDL_GL_GetDrawableSize(window_, &width, nullptr);
+  SDL_GL_GetDrawableSize(m_window, &width, nullptr);
   return static_cast<std::uint32_t>(width);
 }
 
 std::uint32_t Window::height() const
 {
   int height;
-  SDL_GL_GetDrawableSize(window_, nullptr, &height);
+  SDL_GL_GetDrawableSize(m_window, nullptr, &height);
   return static_cast<std::uint32_t>(height);
 }
 
@@ -168,5 +168,5 @@ bool Window::keyDown() const
 
 void Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback)
 {
-  resizeCallback_ = callback;
+  m_resizeCallback = callback;
 }

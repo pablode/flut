@@ -34,19 +34,19 @@ namespace flut
     void recalcProjection();
 
   private:
-    const Window& window_;
-    std::uint32_t width_;
-    std::uint32_t height_;
-    glm::mat4 view_;
-    glm::mat4 projection_;
-    glm::mat4 invProjection_;
-    glm::vec3 position_;
-    glm::vec3 center_;
-    glm::vec3 up_;
-    std::int32_t oldMouseX_;
-    std::int32_t oldMouseY_;
-    float radius_;
-    float theta_;
-    float phi_;
+    const Window& m_window;
+    std::uint32_t m_width;
+    std::uint32_t m_height;
+    glm::mat4 m_view;
+    glm::mat4 m_projection;
+    glm::mat4 m_invProjection;
+    glm::vec3 m_position;
+    glm::vec3 m_center;
+    glm::vec3 m_up;
+    std::int32_t m_oldMouseX;
+    std::int32_t m_oldMouseY;
+    float m_radius;
+    float m_theta;
+    float m_phi;
   };
 }

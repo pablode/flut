@@ -37,9 +37,9 @@ namespace flut
     void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
 
   private:
-    bool shouldClose_;
-    SDL_Window* window_;
-    SDL_GLContext context_;
-    std::function<void(std::uint32_t, std::uint32_t)> resizeCallback_;
+    bool m_shouldClose;
+    SDL_Window* m_window;
+    SDL_GLContext m_context;
+    std::function<void(std::uint32_t, std::uint32_t)> m_resizeCallback;
   };
 }
