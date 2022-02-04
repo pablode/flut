@@ -24,20 +24,20 @@ layout(location = 0, r32ui, bindless_image) uniform restrict uimage3D grid;
 
 void main()
 {
-  const uint inParticleId = gl_GlobalInvocationID.x;
+  uint inParticleId = gl_GlobalInvocationID.x;
 
   if (inParticleId >= PARTICLE_COUNT)
   {
     return;
   }
 
-  const Particle particle = inParticles[inParticleId];
+  Particle particle = inParticles[inParticleId];
 
-  const ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
+  ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
-  const uint voxelValue = imageAtomicAdd(grid, voxelCoord, 1);
+  uint voxelValue = imageAtomicAdd(grid, voxelCoord, 1);
 
-  const uint outParticleId = (voxelValue >> 8) + (voxelValue & 0xFF);
+  uint outParticleId = (voxelValue >> 8) + (voxelValue & 0xFF);
 
   outParticles[outParticleId] = particle;
 }

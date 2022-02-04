@@ -14,7 +14,7 @@ shared uint globalParticleBaseOffset;
 
 void main()
 {
-  const ivec3 voxelId = ivec3(gl_GlobalInvocationID);
+  ivec3 voxelId = ivec3(gl_GlobalInvocationID);
 
   if (any(greaterThanEqual(voxelId, GRID_RES)))
   {
@@ -28,9 +28,9 @@ void main()
 
   barrier();
 
-  const uint voxelParticleCount = imageLoad(grid, voxelId).x;
+  uint voxelParticleCount = imageLoad(grid, voxelId).x;
 
-  const uint localParticleOffset = atomicAdd(localParticleCount, voxelParticleCount);
+  uint localParticleOffset = atomicAdd(localParticleCount, voxelParticleCount);
 
   barrier();
 
@@ -41,7 +41,7 @@ void main()
 
   barrier();
 
-  const uint globalParticleOffset = globalParticleBaseOffset + localParticleOffset;
+  uint globalParticleOffset = globalParticleBaseOffset + localParticleOffset;
 
   imageStore(grid, voxelId, uvec4(globalParticleOffset << 8));
 }

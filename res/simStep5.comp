@@ -31,7 +31,7 @@ const ivec3 NEIGHBORHOOD_LUT[27] = {
 
 void main()
 {
-  const uint particleId = gl_GlobalInvocationID.x;
+  uint particleId = gl_GlobalInvocationID.x;
 
   if (particleId >= PARTICLE_COUNT)
   {
@@ -40,7 +40,7 @@ void main()
 
   Particle particle = particles[particleId];
 
-  const ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
+  ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
   float density = 0.0;
 
@@ -53,7 +53,7 @@ void main()
   {
     if (voxelParticleCount == 0)
     {
-      const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
+      ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
       voxelCount++;
 
       if (any(lessThan(newVoxelId, ivec3(0))) || any(greaterThanEqual(newVoxelId, GRID_RES)))
@@ -61,7 +61,7 @@ void main()
         continue;
       }
 
-      const uint voxelValue = imageLoad(grid, newVoxelId).r;
+      uint voxelValue = imageLoad(grid, newVoxelId).r;
       voxelParticleOffset = (voxelValue >> 8);
       voxelParticleCount = (voxelValue & 0xFF);
 
@@ -73,25 +73,24 @@ void main()
 
     voxelParticleCount--;
 
-    const uint otherParticleId = voxelParticleOffset + voxelParticleCount;
+    uint otherParticleId = voxelParticleOffset + voxelParticleCount;
+    vec3 otherParticlePos = particles[otherParticleId].position;
 
-    const vec3 otherParticlePos = particles[otherParticleId].position;
+    vec3 r = particle.position - otherParticlePos;
 
-    const vec3 r = particle.position - otherParticlePos;
-
-    const float rLen = length(r);
+    float rLen = length(r);
 
     if (rLen >= KERNEL_RADIUS)
     {
       continue;
     }
 
-    const float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * DENSITY_KERNEL_WEIGHT_CONST;
+    float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * DENSITY_KERNEL_WEIGHT_CONST;
 
     density += MASS * weight;
   }
 
-  const float pressure = REST_PRESSURE + STIFFNESS_K * (density - REST_DENSITY);
+  float pressure = REST_PRESSURE + STIFFNESS_K * (density - REST_DENSITY);
 
   particle.density = density;
   particle.pressure = pressure;

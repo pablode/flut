@@ -22,21 +22,21 @@ const float SAFE_BOUNDS = 0.001;
 
 void main()
 {
-  const uint particleId = gl_GlobalInvocationID.x;
+  uint particleId = gl_GlobalInvocationID.x;
 
   if (particleId >= PARTICLE_COUNT)
   {
     return;
   }
 
-  const Particle particle = particles[particleId];
+  Particle particle = particles[particleId];
 
   vec3 newVelo = particle.velocity;
   vec3 newPos = particle.position + newVelo * dt;
 
-  const float wallDamping = 0.5;
-  const vec3 boundsL = GRID_ORIGIN + SAFE_BOUNDS;
-  const vec3 boundsH = GRID_ORIGIN + GRID_SIZE - SAFE_BOUNDS;
+  float wallDamping = 0.5;
+  vec3 boundsL = GRID_ORIGIN + SAFE_BOUNDS;
+  vec3 boundsH = GRID_ORIGIN + GRID_SIZE - SAFE_BOUNDS;
 
   if (newPos.x < boundsL.x) { newVelo.x *= -wallDamping; newPos.x = boundsL.x; }
   if (newPos.x > boundsH.x) { newVelo.x *= -wallDamping; newPos.x = boundsH.x; }
@@ -48,7 +48,7 @@ void main()
   particles[particleId].velocity = newVelo;
   particles[particleId].position = newPos;
 
-  const ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (newPos - GRID_ORIGIN));
+  ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (newPos - GRID_ORIGIN));
 
   imageAtomicAdd(grid, voxelCoord, 1);
 }

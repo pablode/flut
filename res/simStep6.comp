@@ -34,16 +34,16 @@ const ivec3 NEIGHBORHOOD_LUT[27] = {
 
 void main()
 {
-  const uint particleId = gl_GlobalInvocationID.x;
+  uint particleId = gl_GlobalInvocationID.x;
 
   if (particleId >= PARTICLE_COUNT)
   {
     return;
   }
 
-  const Particle particle = particles[particleId];
+  Particle particle = particles[particleId];
 
-  const ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
+  ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));
 
   vec3 forcePressure = vec3(0.0);
   vec3 forceViscosity = vec3(0.0);
@@ -57,7 +57,7 @@ void main()
   {
     if (voxelParticleCount == 0)
     {
-      const ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
+      ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
       voxelCount++;
 
       if (any(lessThan(newVoxelId, ivec3(0))) || any(greaterThanEqual(newVoxelId, GRID_RES)))
@@ -65,7 +65,7 @@ void main()
         continue;
       }
 
-      const uint voxelValue = imageLoad(grid, newVoxelId).r;
+      uint voxelValue = imageLoad(grid, newVoxelId).r;
       voxelParticleOffset = (voxelValue >> 8);
       voxelParticleCount = (voxelValue & 0xFF);
 
@@ -77,13 +77,13 @@ void main()
 
     voxelParticleCount--;
 
-    const uint otherParticleId = voxelParticleOffset + voxelParticleCount;
+    uint otherParticleId = voxelParticleOffset + voxelParticleCount;
 
-    const Particle otherParticle = particles[otherParticleId];
+    Particle otherParticle = particles[otherParticleId];
 
-    const vec3 r = particle.position - otherParticle.position;
+    vec3 r = particle.position - otherParticle.position;
 
-    const float rLen = length(r);
+    float rLen = length(r);
 
     if (rLen >= KERNEL_RADIUS)
     {
@@ -97,24 +97,24 @@ void main()
       weightPressure = PRESS_KERNEL_WEIGHT_CONST * pow(KERNEL_RADIUS - rLen, 3) * (r / rLen);
     }
 
-    const float pressure = particle.pressure + otherParticle.pressure;
+    float pressure = particle.pressure + otherParticle.pressure;
 
     forcePressure += (MASS * pressure * weightPressure) / (2.0 * otherParticle.density);
 
-    const float weightVis = VIS_KERNEL_WEIGHT_CONST * (KERNEL_RADIUS - rLen);
+    float weightVis = VIS_KERNEL_WEIGHT_CONST * (KERNEL_RADIUS - rLen);
 
-    const vec3 filteredVelocity = texture(velocity, (otherParticle.position - GRID_ORIGIN) / GRID_SIZE).xyz;
+    vec3 filteredVelocity = texture(velocity, (otherParticle.position - GRID_ORIGIN) / GRID_SIZE).xyz;
 
-    const vec3 velocityDiff = filteredVelocity - particle.velocity;
+    vec3 velocityDiff = filteredVelocity - particle.velocity;
 
     forceViscosity += (MASS * velocityDiff * weightVis) / otherParticle.density;
   }
 
-  const vec3 forceGravity = GRAVITY * particle.density;
+  vec3 forceGravity = GRAVITY * particle.density;
 
-  const vec3 force = (forceViscosity * VIS_COEFF) - forcePressure + forceGravity;
+  vec3 force = (forceViscosity * VIS_COEFF) - forcePressure + forceGravity;
 
-  const vec3 acceleration = force / particle.density;
+  vec3 acceleration = force / particle.density;
 
   particles[particleId].velocity += acceleration * DT;
 }

@@ -20,16 +20,16 @@ layout(location = 1, rgba32f, bindless_image) uniform restrict writeonly image3D
 
 void main()
 {
-  const ivec3 voxelCoord = ivec3(gl_GlobalInvocationID);
+  ivec3 voxelCoord = ivec3(gl_GlobalInvocationID);
 
   if (any(greaterThanEqual(voxelCoord, GRID_RES)))
   {
     return;
   }
 
-  const uint voxelValue = imageLoad(grid, voxelCoord).x;
-  const uint particleCount = (voxelValue & 0xFF);
-  const uint particleOffset = (voxelValue >> 8);
+  uint voxelValue = imageLoad(grid, voxelCoord).x;
+  uint particleCount = (voxelValue & 0xFF);
+  uint particleOffset = (voxelValue >> 8);
 
   vec3 voxelVelocity = vec3(0.0);
 
