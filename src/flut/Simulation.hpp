@@ -18,7 +18,7 @@ namespace flut
       float gravity[3] = {0.0f, -9.81f, 0.0f};
       float deltaTimeMod = 1.0f;
       std::int32_t colorMode = 0;
-      float pointScale = 0.5f;
+      float pointScale = 0.75f;
     };
 
     using SimulationTimes = GlQueryRetriever::QueryTimings;
