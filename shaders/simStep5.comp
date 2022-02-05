@@ -85,7 +85,7 @@ void main()
       continue;
     }
 
-    float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * DENSITY_KERNEL_WEIGHT_CONST;
+    float weight = pow(KERNEL_RADIUS * KERNEL_RADIUS - rLen * rLen, 3) * POLY6_KERNEL_WEIGHT_CONST;
 
     density += MASS * weight;
   }

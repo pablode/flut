@@ -94,7 +94,7 @@ void main()
 
     if (rLen > 0.0)
     {
-      weightPressure = PRESS_KERNEL_WEIGHT_CONST * pow(KERNEL_RADIUS - rLen, 3) * (r / rLen);
+      weightPressure = SPIKY_KERNEL_WEIGHT_CONST * pow(KERNEL_RADIUS - rLen, 3) * (r / rLen);
     }
 
     float pressure = particle.pressure + otherParticle.pressure;

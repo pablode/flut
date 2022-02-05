@@ -40,8 +40,8 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.001f) / GRID_SIZE;
 
     float viscosityKernelWeightConst = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
-    float pressureKernelWeightConst = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
-    float densityKernelWeightConst = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
+    float spikyKernelWeightConst = static_cast<float>(15.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
+    float poly6KernelWeightConst = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
 
     m_programSimStep1 = GlHelper::createComputeShader(SHADERS_DIR "/simStep1.comp", {
       { "INV_CELL_SIZE",  invCellSize },
@@ -71,7 +71,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "PARTICLE_COUNT",              PARTICLE_COUNT },
       { "MASS",                        MASS },
       { "KERNEL_RADIUS",               KERNEL_RADIUS },
-      { "DENSITY_KERNEL_WEIGHT_CONST", densityKernelWeightConst },
+      { "POLY6_KERNEL_WEIGHT_CONST",   poly6KernelWeightConst },
       { "STIFFNESS_K",                 STIFFNESS },
       { "REST_DENSITY",                REST_DENSITY },
       { "REST_PRESSURE",               REST_PRESSURE }
@@ -87,7 +87,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "KERNEL_RADIUS",               KERNEL_RADIUS },
       { "VIS_COEFF",                   VIS_COEFF },
       { "VIS_KERNEL_WEIGHT_CONST",     viscosityKernelWeightConst },
-      { "PRESS_KERNEL_WEIGHT_CONST",   pressureKernelWeightConst }
+      { "SPIKY_KERNEL_WEIGHT_CONST",   spikyKernelWeightConst }
     });
 
     m_programRenderGeometry = GlHelper::createVertFragShader(SHADERS_DIR "/renderGeometry.vert", SHADERS_DIR "/renderGeometry.frag");
