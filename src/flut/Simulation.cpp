@@ -194,17 +194,8 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   glNamedBufferStorage(m_bufParticles2, size, particles.data(), 0);
 
   glCreateVertexArrays(1, &m_vao1);
-  glEnableVertexArrayAttrib(m_vao1, 0);
-  glVertexArrayVertexBuffer(m_vao1, 0, m_bufParticles1, 0, sizeof(Particle));
-  glVertexArrayAttribBinding(m_vao1, 0, 0);
-  glVertexArrayAttribFormat(m_vao1, 0, 3, GL_FLOAT, GL_FALSE, 0);
   glVertexArrayElementBuffer(m_vao1, m_bufBillboards);
-
   glCreateVertexArrays(1, &m_vao2);
-  glEnableVertexArrayAttrib(m_vao2, 0);
-  glVertexArrayVertexBuffer(m_vao2, 0, m_bufParticles2, 0, sizeof(Particle));
-  glVertexArrayAttribBinding(m_vao2, 0, 0);
-  glVertexArrayAttribFormat(m_vao2, 0, 3, GL_FLOAT, GL_FALSE, 0);
   glVertexArrayElementBuffer(m_vao2, m_bufBillboards);
 
   // Default state
