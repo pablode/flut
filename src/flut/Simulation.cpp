@@ -43,28 +43,28 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     float pressureKernelWeightConst = static_cast<float>(45.0f / (M_PI * std::pow(KERNEL_RADIUS, 6)));
     float densityKernelWeightConst = static_cast<float>(315.0f / (64.0f * M_PI * std::pow(KERNEL_RADIUS, 9)));
 
-    m_programSimStep1 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep1.comp", {
+    m_programSimStep1 = GlHelper::createComputeShader(SHADERS_DIR "/simStep1.comp", {
       { "INV_CELL_SIZE",  invCellSize },
       { "GRID_ORIGIN",    GRID_ORIGIN },
       { "PARTICLE_COUNT", PARTICLE_COUNT },
       { "GRID_SIZE",      GRID_SIZE }
     });
 
-    m_programSimStep2 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep2.comp", {
+    m_programSimStep2 = GlHelper::createComputeShader(SHADERS_DIR "/simStep2.comp", {
       { "GRID_RES",       GRID_RES }
     });
 
-    m_programSimStep3 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep3.comp", {
+    m_programSimStep3 = GlHelper::createComputeShader(SHADERS_DIR "/simStep3.comp", {
       { "INV_CELL_SIZE",  invCellSize },
       { "GRID_ORIGIN",    GRID_ORIGIN },
       { "PARTICLE_COUNT", PARTICLE_COUNT }
     });
 
-    m_programSimStep4 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep4.comp", {
+    m_programSimStep4 = GlHelper::createComputeShader(SHADERS_DIR "/simStep4.comp", {
       { "GRID_RES",       GRID_RES }
     });
 
-    m_programSimStep5 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep5.comp", {
+    m_programSimStep5 = GlHelper::createComputeShader(SHADERS_DIR "/simStep5.comp", {
       { "INV_CELL_SIZE",               invCellSize },
       { "GRID_ORIGIN",                 GRID_ORIGIN },
       { "GRID_RES",                    GRID_RES },
@@ -77,7 +77,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "REST_PRESSURE",               REST_PRESSURE }
     });
 
-    m_programSimStep6 = GlHelper::createComputeShader(RESOURCES_DIR "/simStep6.comp", {
+    m_programSimStep6 = GlHelper::createComputeShader(SHADERS_DIR "/simStep6.comp", {
       { "INV_CELL_SIZE",               invCellSize },
       { "GRID_SIZE",                   GRID_SIZE },
       { "GRID_ORIGIN",                 GRID_ORIGIN },
@@ -90,9 +90,9 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "PRESS_KERNEL_WEIGHT_CONST",   pressureKernelWeightConst }
     });
 
-    m_programRenderGeometry = GlHelper::createVertFragShader(RESOURCES_DIR "/renderGeometry.vert", RESOURCES_DIR "/renderGeometry.frag");
-    m_programRenderCurvature = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderCurvature.frag");
-    m_programRenderShading = GlHelper::createVertFragShader(RESOURCES_DIR "/renderBoundingBox.vert", RESOURCES_DIR "/renderShading.frag");
+    m_programRenderGeometry = GlHelper::createVertFragShader(SHADERS_DIR "/renderGeometry.vert", SHADERS_DIR "/renderGeometry.frag");
+    m_programRenderCurvature = GlHelper::createVertFragShader(SHADERS_DIR "/renderBoundingBox.vert", SHADERS_DIR "/renderCurvature.frag");
+    m_programRenderShading = GlHelper::createVertFragShader(SHADERS_DIR "/renderBoundingBox.vert", SHADERS_DIR "/renderShading.frag");
   }
 
   // Bounding box

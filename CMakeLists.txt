@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(FLUT_OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Location of build process output.")
-set(FLUT_RESOURCES_DIR ${CMAKE_SOURCE_DIR}/res CACHE PATH "Location of the resources folder.")
+set(FLUT_SHADERS_DIR "${CMAKE_SOURCE_DIR}/shaders" CACHE PATH "Location of the shaders folder.")
 set(FLUT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src" CACHE PATH "Location of the source root folder.")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${FLUT_OUTPUT_DIR}")

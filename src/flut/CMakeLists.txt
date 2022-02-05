@@ -28,7 +28,7 @@ endif()
 
 target_compile_definitions(
   flut PRIVATE
-  RESOURCES_DIR="${FLUT_RESOURCES_DIR}"
+  SHADERS_DIR="${FLUT_SHADERS_DIR}"
 )
 
 target_link_libraries(
