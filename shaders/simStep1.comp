@@ -45,8 +45,10 @@ void main()
   if (newPos.z < boundsL.z) { newVelo.z *= -wallDamping; newPos.z = boundsL.z; }
   if (newPos.z > boundsH.z) { newVelo.z *= -wallDamping; newPos.z = boundsH.z; }
 
-  particles[particleId].velocity = newVelo;
-  particles[particleId].position = newPos;
+  particle.velocity = newVelo;
+  particle.position = newPos;
+
+  particles[particleId] = particle;
 
   ivec3 voxelCoord = ivec3(INV_CELL_SIZE * (newPos - GRID_ORIGIN));
 
