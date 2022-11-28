@@ -16,11 +16,6 @@ void main()
 {
   ivec3 voxelId = ivec3(gl_GlobalInvocationID);
 
-  if (any(greaterThanEqual(voxelId, GRID_RES)))
-  {
-    return;
-  }
-
   if (gl_LocalInvocationIndex == 0)
   {
     localParticleCount = 0;
