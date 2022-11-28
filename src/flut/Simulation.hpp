@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glad/glad.h>
-#include <cstdint>
+#include <stdint.h>
 #include <memory>
 
 #include "Camera.hpp"

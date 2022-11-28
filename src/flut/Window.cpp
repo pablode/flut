@@ -4,7 +4,7 @@
 #include <imgui_impl_sdl_glad.h>
 #include <glad/glad.h>
 #include <stdexcept>
-#include <cstdio>
+#include <stdio.h>
 
 using namespace flut;
 

@@ -2,7 +2,6 @@
 #include "Window.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <math.h>
 
 using namespace flut;
