@@ -33,7 +33,7 @@ namespace flut
     constexpr static float VIS_COEFF = 0.035f;
     constexpr static float REST_DENSITY = 998.27f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static std::uint32_t PARTICLE_COUNT = 100000;
+    constexpr static std::uint32_t MIN_PARTICLE_COUNT = 100000;
 
     const glm::vec3 GRID_SIZE = glm::vec3{ 11.0f, 8.0f, 2.5f } * glm::vec3{ 2.0f };
     const glm::vec3 GRID_ORIGIN = GRID_SIZE * -0.5f;
@@ -42,6 +42,7 @@ namespace flut
 
   private:
     constexpr static std::uint32_t SMOOTH_ITERATIONS = 50;
+    constexpr static std::uint32_t MAX_GROUP_SIZE = 512;
 
   public:
     Simulation(std::uint32_t width, std::uint32_t height);
@@ -59,6 +60,8 @@ namespace flut
 
     void setIntegrationsPerFrame(std::uint32_t ipF);
 
+    uint32_t particleCount() const;
+
   private:
     void createFrameObjects();
 
@@ -74,6 +77,7 @@ namespace flut
     SimulationOptions m_options;
     std::unique_ptr<GlQueryRetriever> m_queries;
     std::uint32_t m_integrationsPerFrame;
+    std::uint32_t m_particleCount;
     GLuint m_programSimStep1;
     GLuint m_programSimStep2;
     GLuint m_programSimStep3;

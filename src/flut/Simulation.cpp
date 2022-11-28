@@ -35,6 +35,9 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   GlHelper::enableDebugHooks();
 #endif
 
+  // Pad particle count so that we can get rid of bounds checks in shaders.
+  m_particleCount = (MIN_PARTICLE_COUNT + MAX_GROUP_SIZE - 1) / MAX_GROUP_SIZE * MAX_GROUP_SIZE;
+
   // Shaders
   {
     glm::vec3 invCellSize = glm::vec3(GRID_RES) * (1.0f - 0.001f) / GRID_SIZE;
@@ -46,7 +49,6 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     m_programSimStep1 = GlHelper::createComputeShader(SHADERS_DIR "/simStep1.comp", {
       { "INV_CELL_SIZE",  invCellSize },
       { "GRID_ORIGIN",    GRID_ORIGIN },
-      { "PARTICLE_COUNT", PARTICLE_COUNT },
       { "GRID_SIZE",      GRID_SIZE }
     });
 
@@ -56,8 +58,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 
     m_programSimStep3 = GlHelper::createComputeShader(SHADERS_DIR "/simStep3.comp", {
       { "INV_CELL_SIZE",  invCellSize },
-      { "GRID_ORIGIN",    GRID_ORIGIN },
-      { "PARTICLE_COUNT", PARTICLE_COUNT }
+      { "GRID_ORIGIN",    GRID_ORIGIN }
     });
 
     m_programSimStep4 = GlHelper::createComputeShader(SHADERS_DIR "/simStep4.comp", {
@@ -68,7 +69,6 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "INV_CELL_SIZE",               invCellSize },
       { "GRID_ORIGIN",                 GRID_ORIGIN },
       { "GRID_RES",                    GRID_RES },
-      { "PARTICLE_COUNT",              PARTICLE_COUNT },
       { "MASS",                        MASS },
       { "KERNEL_RADIUS",               KERNEL_RADIUS },
       { "POLY6_KERNEL_WEIGHT_CONST",   poly6KernelWeightConst },
@@ -82,7 +82,6 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
       { "GRID_SIZE",                   GRID_SIZE },
       { "GRID_ORIGIN",                 GRID_ORIGIN },
       { "GRID_RES",                    GRID_RES },
-      { "PARTICLE_COUNT",              PARTICLE_COUNT },
       { "MASS",                        MASS },
       { "KERNEL_RADIUS",               KERNEL_RADIUS },
       { "VIS_COEFF",                   VIS_COEFF },
@@ -155,7 +154,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     uint32_t billboardVertexCount = 4;
     uint32_t billboardIndices[] = { 0, 1, 2, 2, 1, 3 };
 
-    std::vector<uint32_t> indices(billboardIndexCount * PARTICLE_COUNT);
+    std::vector<uint32_t> indices(billboardIndexCount * m_particleCount);
 
     for (uint32_t i = 0; i < indices.size(); i++)
     {
@@ -170,8 +169,8 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
 
   // Initial particles
   std::vector<Particle> particles;
-  particles.resize(PARTICLE_COUNT);
-  for (std::uint32_t i = 0; i < PARTICLE_COUNT; ++i)
+  particles.resize(m_particleCount);
+  for (std::uint32_t i = 0; i < m_particleCount; ++i)
   {
     Particle& p = particles[i];
     const float x = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE.x * 0.5);
@@ -187,7 +186,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     p.pressure = 0.0f;
   }
 
-  const auto size = PARTICLE_COUNT * sizeof(Particle);
+  const auto size = m_particleCount * sizeof(Particle);
   glCreateBuffers(1, &m_bufParticles1);
   glCreateBuffers(1, &m_bufParticles2);
   glNamedBufferStorage(m_bufParticles1, size, particles.data(), 0);
@@ -313,6 +312,11 @@ void Simulation::render(const Camera& camera, float dt)
   {
     float dt = DT * m_options.deltaTimeMod;
 
+    auto singleDimGroupCountForParticles = [this](uint32_t groupSize) {
+      assert(groupSize <= MAX_GROUP_SIZE && (m_particleCount % groupSize) == 0);
+      return m_particleCount / groupSize;
+    };
+
     // Step 1: Integrate position, do boundary handling.
     //         Write particle count to voxel grid.
     m_queries->beginSimQuery(0);
@@ -324,7 +328,7 @@ void Simulation::render(const Camera& camera, float dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_swapFrame ? m_bufParticles1 : m_bufParticles2);
     glProgramUniformHandleui64ARB(m_programSimStep1, 0, m_texGridImgHandle);
     glProgramUniform1f(m_programSimStep1, 1, dt);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
+    glDispatchCompute(singleDimGroupCountForParticles(32), 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
     m_queries->endQuery();
 
@@ -352,7 +356,7 @@ void Simulation::render(const Camera& camera, float dt)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_swapFrame ? m_bufParticles1 : m_bufParticles2);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_swapFrame ? m_bufParticles2 : m_bufParticles1);
     glProgramUniformHandleui64ARB(m_programSimStep3, 0, m_texGridImgHandle);
-    glDispatchCompute((PARTICLE_COUNT + 32 - 1) / 32, 1, 1);
+    glDispatchCompute(singleDimGroupCountForParticles(32), 1, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     m_queries->endQuery();
 
@@ -375,7 +379,7 @@ void Simulation::render(const Camera& camera, float dt)
     glUseProgram(m_programSimStep5);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_swapFrame ? m_bufParticles2 : m_bufParticles1);
     glProgramUniformHandleui64ARB(m_programSimStep5, 0, m_texGridImgHandle);
-    glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
+    glDispatchCompute(singleDimGroupCountForParticles(64), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     m_queries->endQuery();
 
@@ -388,7 +392,7 @@ void Simulation::render(const Camera& camera, float dt)
     glProgramUniformHandleui64ARB(m_programSimStep6, 1, m_texVelocityHandle);
     glProgramUniform1f(m_programSimStep6, 2, dt);
     glProgramUniform3fv(m_programSimStep6, 3, 1, &m_options.gravity[0]);
-    glDispatchCompute((PARTICLE_COUNT + 64 - 1) / 64, 1, 1);
+    glDispatchCompute(singleDimGroupCountForParticles(64), 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     m_queries->endQuery();
 
@@ -414,11 +418,11 @@ void Simulation::render(const Camera& camera, float dt)
   glProgramUniform3fv(m_programRenderGeometry, 3, 1, glm::value_ptr(GRID_SIZE));
   glProgramUniform3fv(m_programRenderGeometry, 4, 1, glm::value_ptr(GRID_ORIGIN));
   glProgramUniform3iv(m_programRenderGeometry, 5, 1, glm::value_ptr(GRID_RES));
-  glProgramUniform1ui(m_programRenderGeometry, 6, PARTICLE_COUNT);
+  glProgramUniform1ui(m_programRenderGeometry, 6, m_particleCount);
   glProgramUniform1f(m_programRenderGeometry, 7, pointRadius);
   glProgramUniform1i(m_programRenderGeometry, 8, m_options.colorMode);
   glBindVertexArray(m_swapFrame ? m_vao2 : m_vao1);
-  const uint32_t index_count = 6 * PARTICLE_COUNT;
+  const uint32_t index_count = 6 * m_particleCount;
   glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
 
   // Step 7.1: Perform curvature flow (multiple iterations).
@@ -484,4 +488,9 @@ const Simulation::SimulationTimes& Simulation::times() const
 void flut::Simulation::setIntegrationsPerFrame(std::uint32_t ipF)
 {
   m_integrationsPerFrame = ipF;
+}
+
+uint32_t flut::Simulation::particleCount() const
+{
+  return m_particleCount;
 }

@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     ImGui::SetNextWindowPos({50, 50});
     ImGui::Begin("SPH GPU Fluid Simulation", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
-    ImGui::Text("Particles: %d", simulation.PARTICLE_COUNT);
+    ImGui::Text("Particles: %d", simulation.particleCount());
     ImGui::Text("Delta-time: %f", simulation.DT * options.deltaTimeMod);
     ImGui::Text("Grid: %dx%dx%d", simulation.GRID_RES.x, simulation.GRID_RES.y, simulation.GRID_RES.z);
     ImGui::Text("Frame: %.2fms", deltaTime * 1000.0f);

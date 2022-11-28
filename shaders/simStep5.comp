@@ -33,11 +33,6 @@ void main()
 {
   uint particleId = gl_GlobalInvocationID.x;
 
-  if (particleId >= PARTICLE_COUNT)
-  {
-    return;
-  }
-
   Particle particle = particles[particleId];
 
   ivec3 voxelId = ivec3(INV_CELL_SIZE * (particle.position - GRID_ORIGIN));

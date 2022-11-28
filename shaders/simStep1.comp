@@ -24,11 +24,6 @@ void main()
 {
   uint particleId = gl_GlobalInvocationID.x;
 
-  if (particleId >= PARTICLE_COUNT)
-  {
-    return;
-  }
-
   Particle particle = particles[particleId];
 
   vec3 newVelo = particle.velocity;
