@@ -9,7 +9,7 @@ namespace flut
   class Window
   {
   public:
-    Window(const char* title, std::uint32_t width, std::uint32_t height);
+    Window(const char* title, uint32_t width, uint32_t height);
 
     ~Window();
 
@@ -20,13 +20,13 @@ namespace flut
 
     void swap();
 
-    std::uint32_t width() const;
+    uint32_t width() const;
 
-    std::uint32_t height() const;
+    uint32_t height() const;
 
-    std::int32_t mouseX() const;
+    int32_t mouseX() const;
 
-    std::int32_t mouseY() const;
+    int32_t mouseY() const;
 
     bool mouseDown() const;
 
@@ -34,12 +34,12 @@ namespace flut
 
     bool keyDown() const;
 
-    void resize(std::function<void(std::uint32_t, std::uint32_t)> callback);
+    void resize(std::function<void(uint32_t, uint32_t)> callback);
 
   private:
     bool m_shouldClose;
     SDL_Window* m_window;
     SDL_GLContext m_context;
-    std::function<void(std::uint32_t, std::uint32_t)> m_resizeCallback;
+    std::function<void(uint32_t, uint32_t)> m_resizeCallback;
   };
 }

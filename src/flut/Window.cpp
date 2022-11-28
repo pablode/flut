@@ -8,7 +8,7 @@
 
 using namespace flut;
 
-Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
+Window::Window(const char* title, uint32_t width, uint32_t height)
   : m_shouldClose{false}
 {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
@@ -99,8 +99,8 @@ void Window::pollEvents()
     {
     case SDL_WINDOWEVENT_RESIZED:
     case SDL_WINDOWEVENT_SIZE_CHANGED:
-      const auto width = static_cast<std::uint32_t>(event.window.data1);
-      const auto height = static_cast<std::uint32_t>(event.window.data2);
+      const auto width = static_cast<uint32_t>(event.window.data1);
+      const auto height = static_cast<uint32_t>(event.window.data2);
       if (m_resizeCallback) {
         m_resizeCallback(width, height);
       }
@@ -121,28 +121,28 @@ void Window::swap()
   ImGui_ImplSdlGlad_NewFrame(m_window);
 }
 
-std::uint32_t Window::width() const
+uint32_t Window::width() const
 {
   int width;
   SDL_GL_GetDrawableSize(m_window, &width, nullptr);
-  return static_cast<std::uint32_t>(width);
+  return static_cast<uint32_t>(width);
 }
 
-std::uint32_t Window::height() const
+uint32_t Window::height() const
 {
   int height;
   SDL_GL_GetDrawableSize(m_window, nullptr, &height);
-  return static_cast<std::uint32_t>(height);
+  return static_cast<uint32_t>(height);
 }
 
-std::int32_t Window::mouseX() const
+int32_t Window::mouseX() const
 {
   int x;
   SDL_GetMouseState(&x, nullptr);
   return x;
 }
 
-std::int32_t Window::mouseY() const
+int32_t Window::mouseY() const
 {
   int y;
   SDL_GetMouseState(nullptr, &y);
@@ -166,7 +166,7 @@ bool Window::keyDown() const
   return states[SDL_SCANCODE_S] != 0;
 }
 
-void Window::resize(std::function<void(std::uint32_t, std::uint32_t)> callback)
+void Window::resize(std::function<void(uint32_t, uint32_t)> callback)
 {
   m_resizeCallback = callback;
 }

@@ -22,7 +22,7 @@ struct Particle
   float pressure;
 };
 
-Simulation::Simulation(std::uint32_t width, std::uint32_t height)
+Simulation::Simulation(uint32_t width, uint32_t height)
   : m_width(width)
   , m_height(height)
   , m_newWidth(width)
@@ -108,7 +108,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   glCreateBuffers(1, &m_bufBBoxVertices);
   glNamedBufferStorage(m_bufBBoxVertices, bboxVertices.size() * sizeof(float) * 3, glm::value_ptr(bboxVertices.data()[0]), 0);
 
-  const std::vector<std::uint32_t> bboxIndices {
+  const std::vector<uint32_t> bboxIndices {
     0, 1, 2, 2, 3, 0,
     1, 5, 6, 6, 2, 1,
     7, 6, 5, 5, 4, 7,
@@ -117,7 +117,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
     3, 2, 6, 6, 7, 3
   };
   glCreateBuffers(1, &m_bufBBoxIndices);
-  glNamedBufferStorage(m_bufBBoxIndices, bboxIndices.size() * sizeof(std::uint32_t), bboxIndices.data(), 0);
+  glNamedBufferStorage(m_bufBBoxIndices, bboxIndices.size() * sizeof(uint32_t), bboxIndices.data(), 0);
 
   glCreateVertexArrays(1, &m_vao3);
   glEnableVertexArrayAttrib(m_vao3, 0);
@@ -170,7 +170,7 @@ Simulation::Simulation(std::uint32_t width, std::uint32_t height)
   // Initial particles
   std::vector<Particle> particles;
   particles.resize(m_particleCount);
-  for (std::uint32_t i = 0; i < m_particleCount; ++i)
+  for (uint32_t i = 0; i < m_particleCount; ++i)
   {
     Particle& p = particles[i];
     const float x = ((std::rand() % 10000) / 10000.0f) * (GRID_SIZE.x * 0.5);
@@ -308,7 +308,7 @@ void Simulation::render(const Camera& camera, float dt)
     createFrameObjects();
   }
 
-  for (std::uint32_t f = 0; f < m_integrationsPerFrame; f++)
+  for (uint32_t f = 0; f < m_integrationsPerFrame; f++)
   {
     float dt = DT * m_options.deltaTimeMod;
 
@@ -320,7 +320,7 @@ void Simulation::render(const Camera& camera, float dt)
     // Step 1: Integrate position, do boundary handling.
     //         Write particle count to voxel grid.
     m_queries->beginSimQuery(0);
-    const std::uint32_t fClearValue = 0;
+    const uint32_t fClearValue = 0;
     glClearTexImage(m_texGrid, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &fClearValue);
     glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT);
 
@@ -334,7 +334,7 @@ void Simulation::render(const Camera& camera, float dt)
 
     // Step 2: Write global particle array offsets into voxel grid.
     m_queries->beginSimQuery(1);
-    const std::uint32_t uiClearValue = 0;
+    const uint32_t uiClearValue = 0;
     glClearNamedBufferData(m_bufCounters, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &uiClearValue);
     glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
@@ -435,7 +435,7 @@ void Simulation::render(const Camera& camera, float dt)
   GLuint64 inputDepthTexHandle = m_texDepthHandle;
   bool swap = false;
 
-  for (std::uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
+  for (uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, swap ? m_fbo3 : m_fbo2);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -469,7 +469,7 @@ void Simulation::render(const Camera& camera, float dt)
   m_queries->incFrame();
 }
 
-void Simulation::resize(std::uint32_t width, std::uint32_t height)
+void Simulation::resize(uint32_t width, uint32_t height)
 {
   m_newWidth = width;
   m_newHeight = height;
@@ -485,7 +485,7 @@ const Simulation::SimulationTimes& Simulation::times() const
   return m_time;
 }
 
-void flut::Simulation::setIntegrationsPerFrame(std::uint32_t ipF)
+void flut::Simulation::setIntegrationsPerFrame(uint32_t ipF)
 {
   m_integrationsPerFrame = ipF;
 }

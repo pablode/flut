@@ -35,16 +35,16 @@ namespace flut
 
   private:
     const Window& m_window;
-    std::uint32_t m_width;
-    std::uint32_t m_height;
+    uint32_t m_width;
+    uint32_t m_height;
     glm::mat4 m_view;
     glm::mat4 m_projection;
     glm::mat4 m_invProjection;
     glm::vec3 m_position;
     glm::vec3 m_center;
     glm::vec3 m_up;
-    std::int32_t m_oldMouseX;
-    std::int32_t m_oldMouseY;
+    int32_t m_oldMouseX;
+    int32_t m_oldMouseY;
     float m_radius;
     float m_theta;
     float m_phi;

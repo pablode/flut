@@ -13,14 +13,14 @@ using namespace flut;
 
 int main(int argc, char* argv[])
 {
-  constexpr std::uint32_t WIDTH = 1200;
-  constexpr std::uint32_t HEIGHT = 800;
+  constexpr uint32_t WIDTH = 1200;
+  constexpr uint32_t HEIGHT = 800;
 
   Window window{"flut", WIDTH, HEIGHT};
   Camera camera{window};
   Simulation simulation{WIDTH, HEIGHT};
 
-  window.resize([&](std::uint32_t width, std::uint32_t height) {
+  window.resize([&](uint32_t width, uint32_t height) {
     simulation.resize(width, height);
   });
 

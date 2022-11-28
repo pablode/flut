@@ -17,7 +17,7 @@ namespace flut
     {
       float gravity[3] = {0.0f, -9.81f, 0.0f};
       float deltaTimeMod = 1.0f;
-      std::int32_t colorMode = 0;
+      int32_t colorMode = 0;
       float pointScale = 0.75f;
     };
 
@@ -33,32 +33,32 @@ namespace flut
     constexpr static float VIS_COEFF = 0.035f;
     constexpr static float REST_DENSITY = 998.27f;
     constexpr static float REST_PRESSURE = 0.0f;
-    constexpr static std::uint32_t MIN_PARTICLE_COUNT = 100000;
+    constexpr static uint32_t MIN_PARTICLE_COUNT = 100000;
 
     const glm::vec3 GRID_SIZE = glm::vec3{ 11.0f, 8.0f, 2.5f } * glm::vec3{ 2.0f };
     const glm::vec3 GRID_ORIGIN = GRID_SIZE * -0.5f;
     const glm::ivec3 GRID_RES = glm::ivec3((GRID_SIZE / CELL_SIZE) + 1.0f);
-    const std::uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;
+    const uint32_t GRID_VOXEL_COUNT = GRID_RES.x * GRID_RES.y * GRID_RES.z;
 
   private:
-    constexpr static std::uint32_t SMOOTH_ITERATIONS = 50;
-    constexpr static std::uint32_t MAX_GROUP_SIZE = 512;
+    constexpr static uint32_t SMOOTH_ITERATIONS = 50;
+    constexpr static uint32_t MAX_GROUP_SIZE = 512;
 
   public:
-    Simulation(std::uint32_t width, std::uint32_t height);
+    Simulation(uint32_t width, uint32_t height);
 
     ~Simulation();
 
   public:
     void render(const Camera& camera, float dt);
 
-    void resize(std::uint32_t width, std::uint32_t height);
+    void resize(uint32_t width, uint32_t height);
 
     SimulationOptions& options();
 
     const SimulationTimes& times() const;
 
-    void setIntegrationsPerFrame(std::uint32_t ipF);
+    void setIntegrationsPerFrame(uint32_t ipF);
 
     uint32_t particleCount() const;
 
@@ -68,16 +68,16 @@ namespace flut
     void deleteFrameObjects();
 
   private:
-    std::uint32_t m_width;
-    std::uint32_t m_height;
-    std::uint32_t m_newWidth;
-    std::uint32_t m_newHeight;
-    std::uint64_t m_frame;
+    uint32_t m_width;
+    uint32_t m_height;
+    uint32_t m_newWidth;
+    uint32_t m_newHeight;
+    uint64_t m_frame;
     SimulationTimes m_time;
     SimulationOptions m_options;
     std::unique_ptr<GlQueryRetriever> m_queries;
-    std::uint32_t m_integrationsPerFrame;
-    std::uint32_t m_particleCount;
+    uint32_t m_integrationsPerFrame;
+    uint32_t m_particleCount;
     GLuint m_programSimStep1;
     GLuint m_programSimStep2;
     GLuint m_programSimStep3;
