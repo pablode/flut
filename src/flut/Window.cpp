@@ -21,7 +21,7 @@ Window::Window(const char* title, std::uint32_t width, std::uint32_t height)
     SDL_WINDOWPOS_CENTERED,
     width,
     height,
-    SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+    SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL
   );
 
   if (!m_window) {
