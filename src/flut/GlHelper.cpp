@@ -5,6 +5,19 @@
 
 using namespace flut;
 
+void _gladPostCallback(char* name, void* funcptr, int len_args, ...)
+{
+  if (!strcmp(name, "glGetError")) {
+    return;
+  }
+  GLenum errorCode = glGetError();
+  if (errorCode != GL_NO_ERROR) {
+    do {
+      fprintf(stderr, "GL/ERROR: 0x%04x in %s\n", errorCode, name);
+    } while ((errorCode = glGetError()) != GL_NO_ERROR);
+  }
+}
+
 void GlHelper::enableDebugHooks()
 {
   GLint flags;
@@ -24,17 +37,7 @@ void GlHelper::enableDebugHooks()
   }
   fflush(stdout);
 
-  glad_set_post_callback((GLADcallback)[](const char* name, void* funcptr, int len_args, ...) {
-    if (!strcmp(name, "glGetError")) {
-      return;
-    }
-    GLenum errorCode = glGetError();
-    if (errorCode != GL_NO_ERROR) {
-      do {
-        fprintf(stderr, "GL/ERROR: 0x%04x in %s\n", errorCode, name);
-      } while ((errorCode = glGetError()) != GL_NO_ERROR);
-    }
-  });
+  glad_set_post_callback((GLADcallback) _gladPostCallback);
 }
 
 std::string GlHelper::loadFileText(const std::string& filePath)

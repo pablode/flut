@@ -27,7 +27,7 @@ namespace flut
     void incFrame();
     void incSimIter();
 
-    void beginSimQuery(int stepIdx);
+    void beginSimQuery(uint32_t stepIdx);
     void beginRenderQuery();
     void endQuery();
 

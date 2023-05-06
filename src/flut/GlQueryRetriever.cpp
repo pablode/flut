@@ -49,7 +49,7 @@ void GlQueryRetriever::incSimIter()
   m_simIterCounts[m_head]++;
 }
 
-void GlQueryRetriever::beginSimQuery(int stepIdx)
+void GlQueryRetriever::beginSimQuery(uint32_t stepIdx)
 {
   assert(m_currSimIter < MAX_SIM_ITERS_PER_FRAME);
   assert(stepIdx < SIM_STEP_COUNT);
