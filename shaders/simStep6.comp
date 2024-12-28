@@ -55,7 +55,7 @@ void main()
       ivec3 newVoxelId = voxelId + NEIGHBORHOOD_LUT[voxelCount];
       voxelCount++;
 
-      if (any(lessThan(newVoxelId, ivec3(0))) || any(greaterThanEqual(newVoxelId, GRID_RES)))
+      if (any(greaterThanEqual(uvec3(newVoxelId), GRID_RES)))
       {
         continue;
       }
