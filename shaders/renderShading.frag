@@ -1,6 +1,6 @@
 #extension GL_ARB_bindless_texture: require
 
-const vec3 LIGHT_POS = vec3(0.0, 1.0, 0.0);
+const vec3 LIGHT_POS = vec3(0.0, 10.0, 0.0);
 const float AMBIENT_COEFF = 0.3;
 const float SHININESS = 25.0;
 
