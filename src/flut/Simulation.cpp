@@ -429,21 +429,22 @@ void Simulation::render(const Camera& camera, float dt)
   glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
 
   // Step 7.1: Perform curvature flow (multiple iterations).
+  const uint32_t bboxTriVertexCount = 36;
   glDisable(GL_DEPTH_TEST);
   glBindVertexArray(m_vao3);
   glUseProgram(m_programRenderCurvature);
   glProgramUniformMatrix4fv(m_programRenderCurvature, 0, 1, GL_FALSE, glm::value_ptr(vp));
   glProgramUniformMatrix4fv(m_programRenderCurvature, 2, 1, GL_FALSE, glm::value_ptr(projection));
   glProgramUniform2i(m_programRenderCurvature, 3, m_width, m_height);
+
   GLuint64 inputDepthTexHandle = m_texDepthHandle;
   bool swap = false;
-
   for (uint32_t i = 0; i < SMOOTH_ITERATIONS; ++i)
   {
     glBindFramebuffer(GL_FRAMEBUFFER, swap ? m_fbo3 : m_fbo2);
     glClear(GL_COLOR_BUFFER_BIT);
     glProgramUniformHandleui64ARB(m_programRenderCurvature, 1, inputDepthTexHandle);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, bboxTriVertexCount, GL_UNSIGNED_INT, nullptr);
     inputDepthTexHandle = swap ? m_texTemp2Handle : m_texTemp1Handle;
     swap = !swap;
   }
@@ -462,7 +463,7 @@ void Simulation::render(const Camera& camera, float dt)
   glProgramUniform1ui(m_programRenderShading, 4, m_height);
   glProgramUniformMatrix4fv(m_programRenderShading, 5, 1, GL_FALSE, glm::value_ptr(invProjection));
   glProgramUniformMatrix4fv(m_programRenderShading, 6, 1, GL_FALSE, glm::value_ptr(view));
-  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, bboxTriVertexCount, GL_UNSIGNED_INT, nullptr);
   glEnable(GL_DEPTH_TEST);
 
   m_queries->endQuery();
