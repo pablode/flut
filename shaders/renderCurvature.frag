@@ -2,8 +2,6 @@
 
 const float Z_THRESHOLD = 5.0;
 const float SMOOTH_DT = 0.0005;
-const float NEAR = 0.01;
-const float FAR = 1000.0;
 
 layout (location = 0) uniform mat4 MVP;
 layout (location = 1, bindless_sampler) uniform sampler2D depthTex;

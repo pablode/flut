@@ -8,11 +8,13 @@ namespace flut
 {
   class Camera
   {
+  public:
+    constexpr static float NEAR_PLANE = 0.01f;
+    constexpr static float FAR_PLANE = 1000.0f;
+
   private:
     constexpr static float FOV = static_cast<float>(60.0f * M_PI / 180.0f);
     constexpr static float SENSITIVITY = 0.005f;
-    constexpr static float NEAR_PLANE = 0.01f;
-    constexpr static float FAR_PLANE = 1000.0f;
     constexpr static float INITIAL_RADIUS = 18.0f;
 
   public:

@@ -90,7 +90,10 @@ Simulation::Simulation(uint32_t width, uint32_t height)
     });
 
     m_programRenderGeometry = GlHelper::createVertFragShader(SHADERS_DIR "/renderGeometry.vert", SHADERS_DIR "/renderGeometry.frag");
-    m_programRenderCurvature = GlHelper::createVertFragShader(SHADERS_DIR "/renderBoundingBox.vert", SHADERS_DIR "/renderCurvature.frag");
+    m_programRenderCurvature = GlHelper::createVertFragShader(SHADERS_DIR "/renderBoundingBox.vert", SHADERS_DIR "/renderCurvature.frag", {
+      { "NEAR",           Camera::NEAR_PLANE },
+      { "FAR",            Camera::FAR_PLANE }
+    });
     m_programRenderShading = GlHelper::createVertFragShader(SHADERS_DIR "/renderBoundingBox.vert", SHADERS_DIR "/renderShading.frag");
   }
 
