@@ -46,10 +46,6 @@ Window::Window(const char* title, uint32_t width, uint32_t height)
     abort();
   }
 
-  if (SDL_GL_SetSwapInterval(1)) {
-    printf("Warning: Unable to activate VSync.\n");
-  }
-
   if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
     fprintf(stderr, "Unable to initialize Glad");
     abort();
