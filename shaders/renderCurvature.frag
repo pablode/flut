@@ -25,7 +25,14 @@ vec4 depthToEyeSpaceZ(vec4 depth)
 void main(void)
 {
   const vec2 coords = gl_FragCoord.xy / res;
+  const vec2 dx = vec2(1.0 / res.x, 0.0);
+  const vec2 dy = vec2(0.0, 1.0 / res.y);
+
   const float z = texture(depthTex, coords).x;
+  const float zRight = texture(depthTex, coords + dx).x;
+  const float zLeft = texture(depthTex, coords - dx).x;
+  const float zTop = texture(depthTex, coords + dy).x;
+  const float zBottom = texture(depthTex, coords - dy).x;
 
   if (z == 1.0)
   {
@@ -33,19 +40,9 @@ void main(void)
     return;
   }
 
-  // Gradient step
-  const vec2 dx = vec2(1.0 / res.x, 0.0);
-  const vec2 dy = vec2(0.0, 1.0 / res.y);
-
-  // Direct neighbors (dz/dx)
-  const float right = texture(depthTex, coords + dx).x;
-  const float left = texture(depthTex, coords - dx).x;
-  const float top = texture(depthTex, coords + dy).x;
-  const float bottom = texture(depthTex, coords - dy).x;
-
   // Disallow large changes in depth
   const float eyeZ = depthToEyeSpaceZ(z);
-  const vec4 neighborEyeZ = depthToEyeSpaceZ(vec4(right, left, top, bottom));
+  const vec4 neighborEyeZ = depthToEyeSpaceZ(vec4(zRight, zLeft, zTop, zBottom));
   const vec4 zDiff = abs(eyeZ - neighborEyeZ);
 
   if (any(greaterThan(zDiff, vec4(Z_THRESHOLD))))
@@ -56,18 +53,18 @@ void main(void)
 
   // Gradient (first derivative) with border handling
   const float dzdx = (gl_FragCoord.x <= 1 || gl_FragCoord.x >= res.x - 1 ||
-                      right == 1.0 || left == 1.0) ? 0.0 : 0.5 * (right - left);
+                      zRight == 1.0 || zLeft == 1.0) ? 0.0 : 0.5 * (zRight - zLeft);
   const float dzdy = (gl_FragCoord.y <= 1 || gl_FragCoord.y >= res.y - 1 ||
-                      top == 1.0 || bottom == 1.0) ? 0.0 : 0.5 * (top - bottom);
+                      zTop == 1.0 || zBottom == 1.0) ? 0.0 : 0.5 * (zTop - zBottom);
 
   // Diagonal neighbors
-  const float topRight = texture(depthTex, coords + dx + dy).x;
-  const float bottomLeft = texture(depthTex, coords - dx - dy).x;
-  const float bottomRight = texture(depthTex, coords + dx - dy).x;
-  const float topLeft = texture(depthTex, coords - dx + dy).x;
+  const float zTopRight = texture(depthTex, coords + dx + dy).x;
+  const float zBottomLeft = texture(depthTex, coords - dx - dy).x;
+  const float zBottomRight = texture(depthTex, coords + dx - dy).x;
+  const float zTopLeft = texture(depthTex, coords - dx + dy).x;
 
   // Use central difference (for better results)
-  const float dzdxy = (+topRight + bottomLeft - bottomRight - topLeft) * 0.25;
+  const float dzdxy = (zTopRight + zBottomLeft - zBottomRight - zTopLeft) * 0.25;
 
   // Equation (3)
   const float Fx = -projection[0][0]; // 2n / (r-l)
@@ -80,8 +77,8 @@ void main(void)
   // Equation (5)
   const float D = Cy2 * (dzdx * dzdx) + Cx2 * (dzdy * dzdy) + Cx2 * Cy2 * (z * z);
 
-  const float dzdx2 = right + left - z * 2.0;
-  const float dzdy2 = top + bottom - z * 2.0;
+  const float dzdx2 = zRight + zLeft - z * 2.0;
+  const float dzdy2 = zTop + zBottom - z * 2.0;
   const float dDdx = 2.0 * Cy2 * dzdx * dzdx2 + 2.0 * Cx2 * dzdy * dzdxy + 2.0 * Cx2 * Cy2 * z * dzdx;
   const float dDdy = 2.0 * Cy2 * dzdx * dzdxy + 2.0 * Cx2 * dzdy * dzdy2 + 2.0 * Cx2 * Cy2 * z * dzdy;
 
