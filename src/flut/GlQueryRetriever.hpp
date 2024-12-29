@@ -8,7 +8,7 @@ namespace flut
   class GlQueryRetriever
   {
   public:
-    constexpr static uint32_t MAX_SIM_ITERS_PER_FRAME = 20;
+    constexpr static uint32_t MAX_SIM_ITERS_PER_FRAME = 40;
     constexpr static uint32_t SIM_STEP_COUNT = 6;
 
     struct QueryTimings
