@@ -19,7 +19,7 @@ layout (location = 8) uniform int colorMode;
 
 void main(void)
 {
-  finalColor = color;
+    finalColor = color;
 
 #ifdef SPHERE
     vec3 N;
@@ -29,7 +29,9 @@ void main(void)
     float r2 = dot(N.xy, N.xy);
 
     if (r2 > 1.0)
+    {
         discard;
+    }
 
 #ifdef DEPTH_REPLACEMENT
     N.z = sqrt(1.0 - r2);

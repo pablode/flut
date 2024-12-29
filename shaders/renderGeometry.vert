@@ -1,6 +1,6 @@
 const float FLOAT_MIN = 1.175494351e-38;
 const float GRID_EPS = 0.000001;
-const float MAX_DENSITY = 50.0;
+const float MAX_DENSITY = 30.0;
 const vec3 PARTICLE_COLOR = vec3(0.0, 0.0, 0.6);
 
 struct Particle
@@ -30,23 +30,15 @@ out vec3 color;
 out vec3 centerPos;
 out vec2 uv;
 
-vec2 UVS[4] = {
-    vec2(0,0),
-    vec2(1,0),
-    vec2(0,1),
-    vec2(1,1)
-};
-vec2 OFFSETS[4] = {
-    vec2(-1,-1),
-    vec2(-1,+1),
-    vec2(+1,-1),
-    vec2(+1,+1)
-};
+vec2 UVS[4] = { vec2(0,0), vec2(1,0), vec2(0,1), vec2(1,1) };
+vec2 OFFSETS[4] = { vec2(-1,-1), vec2(-1,+1), vec2(+1,-1), vec2(+1,+1) };
 
 void main()
 {
   uint gid = gl_VertexID / 4;
   uint lid = gl_VertexID % 4;
+
+  vec3 particlePos = particles[gid].position;
 
   if (colorMode == 0)
   {
@@ -74,28 +66,19 @@ void main()
   }
   else if (colorMode == 4)
   {
-    vec3 particlePos = particles[gid].position;
     vec3 normPos = (particlePos - gridOrigin) / gridSize;
     ivec3 voxelCoord = ivec3(normPos * (1.0f - GRID_EPS) * gridRes);
     color = vec3(voxelCoord) / gridRes;
   }
 
-  vec3 wsCenterPos = vec3(
-    particles[gid].position[0],
-    particles[gid].position[1],
-    particles[gid].position[2]
-  );
-
-  centerPos = (V * vec4(wsCenterPos, 1.0)).xyz;
+  centerPos = (V * vec4(particlePos, 1.0)).xyz;
   uv = UVS[lid];
 
   vec3 wsCameraRight = vec3(V[0][0], V[1][0], V[2][0]);
   vec3 wsCameraUp = vec3(V[0][1], V[1][1], V[2][1]);
   vec3 wsCameraForward = vec3(V[0][2], V[1][2], V[2][2]);
 
-  vec3 wsVertPos =
-    wsCenterPos +
-    (wsCameraRight * OFFSETS[lid].x + wsCameraUp * OFFSETS[lid].y) * pointRadius;
+  vec3 wsVertPos = particlePos + (wsCameraRight * OFFSETS[lid].x + wsCameraUp * OFFSETS[lid].y) * pointRadius;
 
   gl_Position = VP * vec4(wsVertPos, 1.0);
 }
