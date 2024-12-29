@@ -12,7 +12,8 @@ Window::Window(const char* title, uint32_t width, uint32_t height)
   : m_shouldClose{false}
 {
   if (SDL_InitSubSystem(SDL_INIT_VIDEO)) {
-    throw std::runtime_error(SDL_GetError());
+    fprintf(stderr, "%s", SDL_GetError());
+    abort();
   }
 
   m_window = SDL_CreateWindow(
@@ -25,7 +26,8 @@ Window::Window(const char* title, uint32_t width, uint32_t height)
   );
 
   if (!m_window) {
-    throw std::runtime_error(SDL_GetError());
+    fprintf(stderr, "%s", SDL_GetError());
+    abort();
   }
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -40,7 +42,8 @@ Window::Window(const char* title, uint32_t width, uint32_t height)
   m_context = SDL_GL_CreateContext(m_window);
 
   if (!m_context) {
-    throw std::runtime_error(SDL_GetError());
+    fprintf(stderr, "%s", SDL_GetError());
+    abort();
   }
 
   if (SDL_GL_SetSwapInterval(1)) {
@@ -48,15 +51,18 @@ Window::Window(const char* title, uint32_t width, uint32_t height)
   }
 
   if (!gladLoadGLLoader(SDL_GL_GetProcAddress)) {
-    throw std::runtime_error("Unable to initialize Glad.");
+    fprintf(stderr, "Unable to initialize Glad");
+    abort();
   }
 
   if (GLVersion.major < 4 || (GLVersion.major == 4 && GLVersion.minor < 6)) {
-    throw std::runtime_error("OpenGL 4.6 required.");
+    fprintf(stderr, "OpenGL 4.6 required");
+    abort();
   }
 
   if (!GLAD_GL_ARB_bindless_texture) {
-    throw std::runtime_error("GL_ARB_bindless_texture extension is required.");
+    fprintf(stderr, "GL_ARB_bindless_texture extension is required");
+    abort();
   }
 
   printf("OpenGL Version %d.%d loaded.\n", GLVersion.major, GLVersion.minor);

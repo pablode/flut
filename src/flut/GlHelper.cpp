@@ -44,7 +44,8 @@ std::string GlHelper::loadFileText(const std::string& filePath)
 {
   std::ifstream file{ filePath, std::ios_base::in | std::ios_base::binary };
   if (!file.is_open()) {
-    throw std::runtime_error("Unable to open file: " + filePath);
+    fprintf(stderr, "Unable to open file %s", filePath.c_str());
+    abort();
   }
 
   std::string text;
@@ -77,7 +78,8 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
   GLuint handle = glCreateProgram();
 
   if (!handle) {
-    throw std::runtime_error("Unable to create shader program.");
+    fprintf(stderr, "Unable to create shader program.");
+    abort();
   }
 
   std::string vertSource = loadFileText(vertPath);
@@ -97,12 +99,14 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
   {
     glGetShaderiv(vertHandle, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength == 0) {
-      throw std::runtime_error("Unable to compile shader.");
+      fprintf(stderr, "Unable to compile shader");
+      abort();
     }
     std::vector<char> errorMessage(logLength + 1);
     glGetShaderInfoLog(vertHandle, logLength, nullptr, &errorMessage.front());
     std::string message(errorMessage.begin(), errorMessage.end());
-    throw std::runtime_error("Unable to compile shader: " + message);
+    fprintf(stderr, "Unable to compile shader: %s", message.c_str());
+    abort();
   }
 
   std::string fragSource = loadFileText(fragPath);
@@ -120,12 +124,14 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
   {
     glGetShaderiv(fragHandle, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength == 0) {
-      throw std::runtime_error("Unable to compile shader.");
+      fprintf(stderr, "Unable to compile shader");
+      abort();
     }
     std::vector<char> errorMessage(logLength + 1);
     glGetShaderInfoLog(fragHandle, logLength, nullptr, &errorMessage.front());
     std::string message(errorMessage.begin(), errorMessage.end());
-    throw std::runtime_error("Unable to compile shader: " + message);
+    fprintf(stderr, "Unable to compile shader: %s", message.c_str());
+    abort();
   }
 
   glAttachShader(handle, vertHandle);
@@ -138,12 +144,14 @@ GLuint GlHelper::createVertFragShader(const char* vertPath, const char* fragPath
   {
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength == 0) {
-      throw std::runtime_error("Unable to link program.");
+      fprintf(stderr, "Unable to link program");
+      abort();
     }
     std::vector<char> errorMessage(logLength + 1);
     glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
     std::string message(errorMessage.begin(), errorMessage.end());
-    throw std::runtime_error("Unable to link program: " + message);
+    fprintf(stderr, "Unable to link program: %s", message.c_str());
+    abort();
   }
 
   glDetachShader(handle, vertHandle);
@@ -178,12 +186,14 @@ GLuint GlHelper::createComputeShader(const char* path, std::vector<ShaderDefine>
   {
     glGetShaderiv(sourceHandle, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength == 0) {
-      throw std::runtime_error("Unable to compile shader.");
+      fprintf(stderr, "Unable to compile shader");
+      abort();
     }
     std::vector<char> errorMessage(logLength + 1);
     glGetShaderInfoLog(sourceHandle, logLength, nullptr, &errorMessage.front());
     std::string message(errorMessage.begin(), errorMessage.end());
-    throw std::runtime_error("Unable to compile shader: " + message);
+    fprintf(stderr, "Unable to compile shader: %s", message.c_str());
+    abort();
   }
 
   glAttachShader(handle, sourceHandle);
@@ -195,12 +205,14 @@ GLuint GlHelper::createComputeShader(const char* path, std::vector<ShaderDefine>
   {
     glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
     if (logLength == 0) {
-      throw std::runtime_error("Unable to link program.");
+      fprintf(stderr, "Unable to link program");
+      abort();
     }
     std::vector<char> errorMessage(logLength + 1);
     glGetProgramInfoLog(handle, logLength, nullptr, &errorMessage.front());
     std::string message(errorMessage.begin(), errorMessage.end());
-    throw std::runtime_error("Unable to link program: " + message);
+    fprintf(stderr, "Unable to link program: %s", message.c_str());
+    abort();
   }
 
   glDetachShader(handle, sourceHandle);
