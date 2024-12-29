@@ -69,7 +69,7 @@ void main()
 
   // Specular (Blinn-Phong)
   const vec3 incidence = normalize(lightPosEye - eyeSpacePos.xyz);
-  const vec3 viewDir = normalize(vec3(0.0) - eyeSpacePos.xyz);
+  const vec3 viewDir = normalize(-eyeSpacePos.xyz);
   const vec3 halfDir = normalize(incidence + viewDir);
   const float cosAngle = max(dot(halfDir, normal), 0.0);
   const float scoeff = pow(cosAngle, SHININESS);

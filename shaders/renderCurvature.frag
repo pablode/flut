@@ -52,7 +52,7 @@ void main(void)
   // Mean Curvature (7)(8)(6)
   float Ex = 0.5 * dzdx * dDdx - dzdx2 * D;
   float Ey = 0.5 * dzdy * dDdy - dzdy2 * D;
-  float H2 = (Cy * Ex + Cx * Ey) / pow(D, 3.0 / 2.0);
+  float H2 = (Cy * Ex + Cx * Ey) / pow(D, 1.5);
 
   // Discontinuity handling
   bool screenEdge = (gl_FragCoord.xy == ivec2(0.0)) || (gl_FragCoord.xy == (res - ivec2(1)));
